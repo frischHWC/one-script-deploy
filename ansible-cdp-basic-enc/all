@@ -103,4 +103,4 @@ cloudera_manager_external_auth:
 # Other required configs
 
 local_temp_dir: /tmp
-skip_user_group_init: false
+skip_user_group_init: true

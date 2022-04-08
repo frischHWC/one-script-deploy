@@ -1,0 +1,25 @@
+---
+cluster_definition: environment/
+cloudera_manager_version: ${CM_VERSION}
+cloudera_manager_license_type: enterprise
+cloudera_manager_license_file: ~/license.txt
+cloudera_manager_repo_username: ${PAYWALL_USER}
+cloudera_manager_repo_password: ${PAYWALL_PASSWORD}
+cloudera_manager_repo_url: ${CM_REPO}
+
+cloudera_manager_repo_key: https://archive.cloudera.com/p/cm5/redhat/7/x86_64/cm/RPM-GPG-KEY-cloudera
+cloudera_manager_database_prepare_script: /usr/share/cmf/schema/scm_prepare_database.sh
+
+
+default_password: ${DEFAULT_PASSWORD}
+kerberos_activated: ${KERBEROS}
+hbase_auth: ${HBASE_AUTH}
+tls_activated: ${TLS}
+cluster_name: ${CLUSTER_NAME}
+realm_user: ${REALM}
+
+cdh_repo: ${CDH_REPO}
+
+auto_tls: ${TLS}
+
+debug: ${DEBUG}

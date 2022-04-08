@@ -1,0 +1,129 @@
+---
+### GET SOLR CONFIGS ###
+
+- set_fact:
+    solr_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'SOLR'].name | [1]"
+
+- name: DEBUG - solr_service_name
+  debug:
+    msg: "{{ solr_service_name }}"
+  when: debug | default(false)
+
+
+- name: Get SolR full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ solr_service_name }}/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/solr_full_config.json
+  register: solr_full_config
+
+- name: DEBUG - solr_full_config
+  debug:
+    msg: "{{ solr_full_config }}"
+  when: debug | default(false)
+
+
+- name: Get SolR roles repartition
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ solr_service_name }}/roles"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/solr_roles.json
+  register: solr_roles
+
+- name: DEBUG - solr_roles
+  debug:
+    msg: "{{ solr_roles }}"
+  when: debug | default(false)
+
+
+### SET SolR CONFIGS ###
+
+# Set SoLR protocol
+
+- set_fact:
+    solr_ssl: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'solr_use_ssl'].value | [0]"
+
+- set_fact:
+    solr_ssl: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'solr_use_ssl'].default | [0]"
+  when: solr_ssl == ""
+
+- name: DEBUG - solr_ssl
+  debug:
+    msg: "{{ solr_ssl }}"
+  when: debug | default(false)
+
+- set_fact:
+    solr_protocol: "{{ 'https' if solr_ssl else 'http' }}"
+
+- name: DEBUG - solr_protocol
+  debug:
+    msg: "{{ solr_protocol }}"
+  when: debug | default(false)
+
+
+# Set SolR port
+
+- set_fact:
+    solr_port: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'solr_https_port'].value | [0]"
+  when: "solr_ssl"
+
+- set_fact:
+    solr_port: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'solr_https_port'].default | [0]"
+  when: "solr_ssl and (solr_port is not defined or solr_port == '') "
+
+- set_fact:
+    solr_port: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'solr_http_port'].value | [0]"
+  when: " solr_port is not defined or solr_port == ''"
+
+- set_fact:
+    solr_port: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'solr_http_port'].default | [0]"
+  when: " solr_port is not defined or solr_port == '' "
+
+
+# Set SolR Servers
+
+- set_fact:
+    solr_hosts: "{{ solr_roles.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'SOLR_SERVER'].hostRef.hostname | [0]"
+
+- name: DEBUG - solr_hosts
+  debug:
+    msg: "{{ solr_hosts }}"
+  when: debug | default(false)
+
+- set_fact:
+    solr_url: "{{ solr_protocol }}://{{ solr_hosts }}"
+
+- name: DEBUG - solr_url
+  debug:
+    msg: "{{ solr_url }}"
+  when: debug | default(false)

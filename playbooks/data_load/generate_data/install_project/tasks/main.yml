@@ -1,0 +1,39 @@
+---
+- name: Create Directory for random datagen
+  file:
+    path: ~/projects/random-datagen/
+    state: directory
+    mode: '0755'
+
+- name: Get random datagen jar and files
+  get_url:
+    url: "{{ release_url }}"
+    dest: ~/projects/random-datagen.tar.gz
+
+- name: Untar project
+  unarchive:
+    src: ~/projects/random-datagen.tar.gz
+    dest: ~/projects/random-datagen/
+    remote_src: yes
+
+- name: Get Jar from Untar
+  copy:
+    src: ~/projects/random-datagen/Users/frisch/random-datagen/random-datagencp.jar
+    dest: ~/projects/random-datagen/random-datagen.jar
+    remote_src: yes
+
+- name: Clean untar Directory
+  file:
+    path: ~/projects/random-datagen/Users/
+    state: absent
+
+- name: Copy log4j2.properties
+  copy:
+    src: ~/projects/log4j2.properties
+    dest: ~/projects/random-datagen/
+    remote_src: yes
+- name: Copy config.properties
+  copy:
+    src: ~/projects/config.properties 
+    dest: ~/projects/random-datagen/
+    remote_src: yes

@@ -1,0 +1,4 @@
+{
+    "role": "crn:altus:iam:us-west-1:altus:role:{{ user_role }}",
+    "user": "{{ user_crn }}"
+}

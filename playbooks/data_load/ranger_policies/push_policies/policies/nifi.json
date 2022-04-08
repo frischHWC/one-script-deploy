@@ -1,0 +1,51 @@
+{
+    "policyType": "0",
+    "name": "All for dev, admin and nifi",
+    "isEnabled": true,
+    "policyPriority": 0,
+    "policyLabels": [
+      
+    ],
+    "description": "",
+    "isAuditEnabled": true,
+    "resources": {
+      "nifi-resource": {
+        "values": [
+          "/*"
+        ],
+        "isRecursive": false,
+        "isExcludes": false
+      }
+    },
+    "isDenyAllElse": false,
+    "policyItems": [
+      {
+        "users": [
+          "nifi",
+          "dev",
+          "admin"
+        ],
+        "delegateAdmin": true,
+        "accesses": [
+          {
+            "type": "READ",
+            "isAllowed": true
+          },
+          {
+            "type": "WRITE",
+            "isAllowed": true
+          }
+        ]
+      }
+    ],
+    "allowExceptions": [
+      
+    ],
+    "denyPolicyItems": [
+      
+    ],
+    "denyExceptions": [
+      
+    ],
+    "service": "{{ cluster_name | replace('-','_') }}_stream_NIFI_1"
+  }

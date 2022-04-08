@@ -1,0 +1,218 @@
+---
+- set_fact:
+    dex_endpoint_api: "{{ cdp_endpoint_url }}/dex/api/v1"
+
+# List environments
+- name: List Environments and get its crn
+  uri:
+    url: "{{ pvc_api_call }}/environments2/listEnvironments"
+    method: POST
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{\"pageSize\":500}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: env_details
+
+- name: DEBUG - env_details
+  debug:
+    msg: "{{ env_details }}"
+  when: debug | default(false)
+
+- set_fact:
+    env_crn: "{{ env_details.json | community.general.json_query(query) }}"
+  vars:
+    query: "environments[?environmentName == '{{ virtual_cluster.env_name }}' ].crn | [0]"
+
+- set_fact:
+    env_status: "{{ env_details.json | community.general.json_query(query) }}"
+  vars:
+    query: "environments[?environmentName == '{{ virtual_cluster.env_name }}' ].status | [0]"
+
+- name: DEBUG - env_crn
+  debug:
+    msg: "{{ env_crn }}"
+  when: debug | default(false)
+
+- set_fact:
+    is_env_existing: "{{ false if env_crn == '' else true }}"
+
+- name: Fail if cluster is not exist
+  fail:
+    msg: "Cluster with name: {{ virtual_cluster.env_name }} do not exist. Please see dpx-liftie logs and thunderhead-environments2-api logs"
+  when: not is_env_existing
+
+- name: Fail if cluster is not available
+  fail:
+    msg: "Cluster with name: and crn:{{ env_crn }} is not registered. Please see dpx-liftie logs and thunderhead-environments2-api logs"
+  when: env_status != 'AVAILABLE'
+
+
+- name: Get CDE Services
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_clusters
+
+- set_fact:
+    cde_service_id: "{{ cde_clusters.json | community.general.json_query(query) }}"
+  vars:
+    query: "[?name == '{{ virtual_cluster.cde_service_name }}' && status != 'ClusterDeletionCompleted' ].id | [0]"
+
+- set_fact:
+    dex_cde_is_existing: "{{ false if cde_service_id == '' else true }}"
+
+- name: DEBUG - dex_cde_is_existing
+  debug:
+    msg: "{{ dex_cde_is_existing }}"
+
+- name: Create CDE Service
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster"
+    method: POST
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: [200, 202]
+    body_format: json
+    body: "{{ lookup('template', 'activate_cde.json') }}"
+    return_content: yes
+    validate_certs: no
+  register: create_cde
+  changed_when: yes
+  when: not dex_cde_is_existing
+
+- set_fact:
+    cde_service_id: "{{ create_cde.json.id }}"
+  when: not dex_cde_is_existing
+
+- name: Check CDE Service Activation
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_service_activation
+  until: " cde_service_activation.json.status == 'ClusterCreationCompleted' "
+  retries: 20
+  delay: 30
+
+# Create VC for created cde service
+
+- name: Get CDE VCs
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_vcs
+
+- set_fact:
+    cde_vc_id: "{{ cde_vcs.json | community.general.json_query(query_id) }}"
+  vars:
+    query_id: "[?name == '{{ virtual_cluster.name }}'].id | [0]"
+
+- set_fact:
+    dex_vc_is_existing: "{{ false if cde_vc_id == '' else true }}"
+
+- name: Wait 15 seconds before creating vc
+  wait_for:
+    timeout: 15
+  when: not dex_vc_is_existing
+
+- name: Create CDE VC
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance"
+    method: POST
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: [200, 202]
+    body_format: json
+    body: "{{ lookup('template', 'create_vc.json') }}"
+    return_content: yes
+    validate_certs: no
+  register: create_cde
+  changed_when: yes
+  when: not dex_vc_is_existing
+
+- set_fact:
+    cde_vc_id: "{{ create_cde.json.id }}"
+  when: not dex_vc_is_existing
+
+- name: Check CDE VC Activation
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance/{{ cde_vc_id }}"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_vc_activation
+  until: " cde_vc_activation.json.status == 'AppInstalled' "
+  retries: 20
+  delay: 30
+  when: not dex_vc_is_existing
+
+
+# Setup VC endpoint working
+
+- name: Get CDE VC Details
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance/{{ cde_vc_id }}"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_vc_details
+
+- set_fact:
+    cde_vc_endpoint: "{{ cde_vc_details.json | community.general.json_query(query_id) }}"
+  vars:
+    query_id: "appInfo.dexApiUrl"
+
+- name: DEBUG - cde_vc_endpoint
+  debug:
+    msg: "{{ cde_vc_endpoint }}"
+
+- set_fact:
+    cde_vc_endpoint_hostname: "{{ cde_vc_endpoint.split('//')[1].split('/')[0] }}"
+
+- name: DEBUG - cde_vc_endpoint_hostname
+  debug:
+    msg: "{{ cde_vc_endpoint_hostname }}"
+
+# 2. Launch ./cdp-cde-utils.sh init-virtual-cluster -h <endpoint_host> -a on cm host
+
+- name: Launch init of VC
+  shell: "./cdp-cde-utils.sh init-virtual-cluster -h {{ cde_vc_endpoint_hostname }} -a"

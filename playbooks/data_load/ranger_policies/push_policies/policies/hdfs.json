@@ -1,0 +1,80 @@
+{
+    "id": "1",
+    "guid": "...",
+    "isEnabled": true,
+    "version": 1,
+    "service": "cm_hdfs",
+    "name": "random-datagen {{ user }}",
+    "policyType": 0,
+    "policyPriority": 0,
+    "description": "Policy for /user/{{ user }} directory",
+    "isAuditEnabled": true,
+    "resources": {
+      "path": {
+        "values": [
+          "/user/{{ user }}/",
+          "/tmp/"
+        ],
+        "isExcludes": false,
+        "isRecursive": true
+      }
+    },
+    "policyItems": [
+      {
+        "accesses": [
+          {
+            "type": "read",
+            "isAllowed": true
+          },
+          {
+            "type": "write",
+            "isAllowed": true
+          },
+          {
+            "type": "execute",
+            "isAllowed": true
+          }
+        ],
+        "users": [
+          "{{ user }}"
+        ],
+        "groups": [
+          
+        ],
+        "roles": [
+          
+        ],
+        "conditions": [
+          
+        ],
+        "delegateAdmin": true
+      }
+    ],
+    "denyPolicyItems": [
+      
+    ],
+    "allowExceptions": [
+      
+    ],
+    "denyExceptions": [
+      
+    ],
+    "dataMaskPolicyItems": [
+      
+    ],
+    "rowFilterPolicyItems": [
+      
+    ],
+    "serviceType": "hdfs",
+    "options": {
+      
+    },
+    "validitySchedules": [
+      
+    ],
+    "policyLabels": [
+      
+    ],
+    "zoneName": "",
+    "isDenyAllElse": false
+  }

@@ -1,0 +1,45 @@
+---
+####### PvC pre-requisites and fixes on Database to make before setting up PvC #######
+
+# Patch base Postgres Database to be SSLize (using Auto-TLS certs)
+- name: Get No Password key as needed by Postgres
+  shell: >
+    openssl rsa
+    -in /var/lib/cloudera-scm-agent/agent-cert/cm-auto-host_key.pem
+    -out /var/lib/cloudera-scm-agent/agent-cert/hostkey_nopw.pem
+    -passin file:/var/lib/cloudera-scm-agent/agent-cert/cm-auto-host_key.pw
+
+- name: Copy host chain
+  copy: 
+    src: /var/lib/cloudera-scm-agent/agent-cert/cm-auto-host_key_cert_chain.pem
+    dest: /var/lib/cloudera-scm-agent/agent-cert/hostkey_nopw_cert.pem
+    remote_src: yes   
+
+- name: Change rights and owner for hostkey with no password
+  file:
+    path: /var/lib/cloudera-scm-agent/agent-cert/hostkey_nopw.pem
+    owner: postgres
+    group: postgres
+    mode: 0400
+
+- name: Change rights and owner for cert chain 
+  file:
+    path: /var/lib/cloudera-scm-agent/agent-cert/hostkey_nopw_cert.pem
+    owner: postgres
+    group: postgres
+    mode: 0400
+
+- name: Insert into postgres.conf SSL settings
+  blockinfile:
+    path: /var/lib/pgsql/10/data/postgresql.conf
+    insertafter: '^#ssl = off'
+    block: |
+      ssl = on
+      ssl_cert_file = '/var/lib/cloudera-scm-agent/agent-cert/hostkey_nopw_cert.pem'
+      ssl_key_file = '/var/lib/cloudera-scm-agent/agent-cert/hostkey_nopw.pem'
+      ssl_ca_file = '/var/lib/cloudera-scm-agent/agent-cert/cm-auto-in_cluster_ca_cert.pem' 
+
+- name: Restart postgres
+  service:
+    name: "postgresql-{{ postgres_version }}"
+    state: restarted

@@ -1,0 +1,48 @@
+---
+- name: Get env CRN
+  uri:
+    url: "{{ env_endpoint_api }}/describeEnvironment"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Cookie: "{{ all_cookies }}"
+      Accept: application/json
+    body_format: json
+    body: "{\"environmentName\":\"{{ env.name }}\"}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: env_describe_response
+
+- name: DEBUG - env_describe_response
+  debug:
+    msg: "{{ env_describe_response }}"
+  when: debug | default(false)
+
+- set_fact:
+    env_crn: "{{ env_describe_response.json | community.general.json_query(query) }}"
+  vars:
+    query: "environment.crn"
+
+- name: DEBUG - env_crn
+  debug:
+    msg: "{{ env_crn }}"
+  when: debug | default(false)
+
+
+- name: Push user rights
+  uri:
+    url: "{{ iam_endpoint_api }}/assignUserResourceRole"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Cookie: "{{ all_cookies }}"
+      Accept: application/json
+    body_format: json
+    body: "{{ lookup('template', 'assign_env_role.json') }}"
+    status_code: [200, 409]
+    return_content: yes
+    validate_certs: no
+  with_items: "{{ env.roles }}"
+  loop_control:
+    loop_var: env_role

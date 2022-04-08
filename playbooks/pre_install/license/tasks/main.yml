@@ -1,0 +1,7 @@
+---
+- name: Copy license key file
+  ignore_errors: yes
+  copy:
+    src: "{{ license_file }}"
+    dest: ~/license.txt
+  when:  license_file != ""   

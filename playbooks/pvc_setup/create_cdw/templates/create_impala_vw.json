@@ -1,0 +1,21 @@
+{
+    "impalaName": "{{ warehouse.name }}",
+    "warehouseId": "{{ dwx_dbc_id }}",
+    "template": "{{ warehouse.size | default(xsmall) }}-impala",
+    "autoScaling": {
+      "autoSuspendTimeoutSeconds": {{ warehouse.auto_suspend_timeout | default('300') }},
+      "triggerScaleUpDelay": {{ warehouse.scale_up_delay | default('20') }},
+      "triggerScaleDownDelay": {{ warehouse.scale_down_delay | default('20') }},
+      "enableHA": {{ warehouse.enable_ha | default('true') }},
+      "autoScaleMode": 0,
+      "minClusters": {{ warehouse.min_nodes | default('1') }},
+      "maxClusters": {{ warehouse.max_nodes | default('5') }}
+    },
+    "fengEnabled": false,
+    "multithreading": {
+      "useLegacyMultithreading": {{ warehouse.legacy_multithreading | default('true') }},
+      "multithreadingVersion": 1
+    },
+    "config": {
+    }
+  }

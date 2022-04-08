@@ -1,0 +1,5 @@
+{
+    "resourceCrn":"{{ env_crn }}",
+    "resourceRoleCrn":"crn:altus:iam:us-west-1:altus:resourceRole:{{ env_role }}",
+    "user":"{{ user_crn }}"
+}

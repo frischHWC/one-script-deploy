@@ -1,0 +1,103 @@
+---
+# General
+cloudera_manager_host: ${NODE_0}
+cloudera_manager_user: admin
+cloudera_manager_password: admin
+database_host: ${NODE_0}
+postgres_version: 10
+pvc_version: ${PVC_VERSION}
+cluster_name_pvc: ${CLUSTER_NAME_PVC}
+ipa_server: ${NODE_IPA}
+free_ipa: ${FREE_IPA}
+debug: ${DEBUG}
+realm: ${REALM}
+ipa_bind_password: ${DEFAULT_PASSWORD}
+ipa_admin_password: ${DEFAULT_PASSWORD}
+kube_config_path: ${KUBECONFIG_PATH}
+docker_registry: container.repository.cloudera.com
+docker_registry_user: ${PAYWALL_USER}
+docker_registry_password: ${PAYWALL_PASSWORD}  
+cdw: ${CREATE_CDW}
+cde: ${CREATE_CDE}
+cml: ${CREATE_CML}
+pvc_type: ${PVC_TYPE}
+
+# Environments
+environments:
+  - name: "{{ cluster_name_pvc }}-env-1"
+    cm_address: "https://{{ cloudera_manager_host }}:{{ cloudera_manager_port }}/"
+    cm_user: "{{ cloudera_manager_user }}"
+    cm_password: "{{ cloudera_manager_password }}"
+    cluster_names: "{{ cluster_name }}"
+    to_delete: false
+
+# CDW
+local_block_storage_class: ocs-storagecluster-ceph-rbd
+delegation_username: admin
+delegation_password: "{{ ipa_bind_password }}"
+
+warehouses: 
+  - name: "{{ cluster_name_pvc }}-env-1-hive"
+    database_catalog_name: "{{ cluster_name_pvc }}-env-1-datalake-default"
+    env_name: "{{ cluster_name_pvc }}-env-1"
+    low_resource_mode: true
+    type: "hive" 
+    size: "xsmall" # default = xsmall
+    min_nodes: 1 # default = 1
+    max_nodes: 5 # default = 5
+    auto_suspend_timeout: 300 # default = 300
+    wait_time: 60 # default = 60
+    disable_auto_suspend: false # default = false
+
+  - name: "{{ cluster_name_pvc }}-env-1-hive"
+    database_catalog_name: "{{ cluster_name_pvc }}-env-1-datalake-default"
+    env_name: "{{ cluster_name_pvc }}-env-1"
+    low_resource_mode: true
+    type: "impala"
+    size: "xsmall" # default = xsmall
+    min_nodes: 1 # default = 1
+    max_nodes: 5 # default = 5
+    auto_suspend_timeout: 300 # default = 300
+    enable_ha: true # default = true
+    scale_up_delay: 20 # default = 20
+    scale_down_delay: 20 # default = 20
+    wait_time: 60 # default = 60
+    disable_auto_suspend: false # default = false
+    legacy_multithreading: false # default = false
+
+
+# CML
+workspaces:
+  - name: "{{ cluster_name_pvc }}-env-1-workspace"
+    env_name: "{{ cluster_name_pvc }}-env-1"
+    disable_tls: true # default = true
+    enable_monitoring: true # default = true
+    enable_governance: false # default = false
+    enable_model_metrics: false # default = false
+
+
+# CDE
+virtual_clusters:
+  - name: "{{ cluster_name_pvc }}-env-1-vc"
+    env_name: "{{ cluster_name_pvc }}-env-1"
+    cde_service_name: "{{ cluster_name_pvc }}-env-1-cde"
+
+
+# Rights
+user_rights:
+  - name: dev
+    keytab: /home/dev/dev.keytab # Used if defined to push keytab to CML and CDE
+    password: ${DEFAULT_PASSWORD}
+    roles: [ "EnvironmentAdmin", "EnvironmentUser", "IamUser", "IamViewer", "PowerUser" ] # Optionnal: Used to define "admin" roles on CP for this user
+    envs: 
+      - name: "{{ cluster_name_pvc }}-env-1"
+        roles: [ "DEAdmin", "DEUser", "DWAdmin", "DWUser", "MLAdmin", "MLUser" ]
+    workspaces: # Optionnal: If not defined no keytab pushed to workspace
+      - name: "{{ cluster_name_pvc }}-env-1-workspace" 
+        env_name: "{{ cluster_name_pvc }}-env-1"
+    virtual_clusters: # Optionnal: If not defined no keytab pushed to cde
+      - name: "{{ cluster_name_pvc }}-env-1-vc"
+        env_name: "{{ cluster_name_pvc }}-env-1"
+        cde_service_name: "{{ cluster_name_pvc }}-env-1-cde"
+    
+    

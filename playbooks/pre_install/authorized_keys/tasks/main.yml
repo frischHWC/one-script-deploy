@@ -1,0 +1,6 @@
+---
+- name: Create authorized_keys file
+  shell: "cat ~/authorized-key-* >> {{ authorized_keys }}"
+     
+- name: Destroy authorized_keys
+  shell: rm -rf ~/authorized-key-*

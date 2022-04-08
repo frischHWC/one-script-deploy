@@ -1,0 +1,10 @@
+---
+- name: Copy HDP hosts file
+  copy:
+    src: "{{ deploy_folder }}/hosts"
+    dest: ~/deployment/ansible-repo/inventory/
+
+- name: Copy HDP all file
+  copy:
+    src: "{{ deploy_folder }}/all"
+    dest: ~/deployment/ansible-repo/playbooks/group_vars/

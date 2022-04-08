@@ -1,0 +1,50 @@
+---
+- name: Change maxrenewlife for hue services
+  shell: |
+    kadmin -p admin -w "{{ ipaadmin_password }}" -q "modprinc -maxrenewlife 90day +allow_renewable hue/{{ item }}@{{ realm }}" ;
+    kadmin -p admin -w "{{ ipaadmin_password }}" -q "modprinc -maxrenewlife 90day krbtgt/{{ realm }}@{{ realm }}"  ;
+  with_items: "{{ groups['all'] }}"
+  ignore_errors: true
+
+- name: Get All services from CM
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/cloudera_manager_all_services.json
+  register: cloudera_manager_all_services
+
+- name: DEBUG - cloudera_manager_all_services
+  debug:
+    msg: "{{ cloudera_manager_all_services }}"
+  when: debug | default(false)
+
+- set_fact:
+    hue_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'HUE'].name | [0]"
+
+- name: DEBUG - hue_service_name
+  debug:
+    msg: "{{ hue_service_name }}"
+  when: debug | default(false)
+
+# Restart Hue
+
+- name: Restart Hue
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ hue_service_name }}/commands/restart"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json

@@ -1,0 +1,236 @@
+---
+# Get Environment details
+- set_fact:
+    dwx_endpoint_api: "{{ cdp_endpoint_url }}/dwx/api/v2"
+
+- name: Get Environment CRN
+  uri:
+    url: "{{ dwx_endpoint_api }}/environments"
+    method: GET
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: dwx_environments
+
+- name: DEBUG - dwx_environments
+  debug:
+    msg: "{{ dwx_environments }}"
+    
+- set_fact:
+    dwx_env_crn: "{{ dwx_environments.json | community.general.json_query(query) }}"
+  vars:
+    query: "clusters[?name == '{{ warehouse.env_name }}' ].environmentCRN | [0]"
+
+- name: DEBUG - dwx_env_crn
+  debug:
+    msg: "{{ dwx_env_crn }}"
+
+- set_fact:
+    dwx_env_id: "{{ dwx_environments.json | community.general.json_query(query) }}"
+  vars:
+    query: "clusters[?name == '{{ warehouse.env_name }}' ].id | [0]"
+
+- name: DEBUG - dwx_env_id
+  debug:
+    msg: "{{ dwx_env_id }}"
+
+- set_fact:
+    dwx_env_status: "{{ dwx_environments.json | community.general.json_query(query) }}"
+  vars:
+    query: "clusters[?name == '{{ warehouse.env_name }}' ].status | [0]"
+
+- name: DEBUG - dwx_env_status
+  debug:
+    msg: "{{ dwx_env_status }}"
+
+
+# Activate env (that will trigger default Database Catalog to be created)
+- name: Activate Environment and create Database Catalog
+  uri:
+    url: "{{ dwx_endpoint_api }}/environments?environmentCrn={{ dwx_env_crn }}"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', 'activate_env.json') }}"
+    status_code: [200, 202]
+    return_content: yes
+    validate_certs: no
+  register: answer_to_activate_env
+  when: dwx_env_status != 'Running'
+
+- name: DEBUG - answer_to_activate_env
+  debug:
+    msg: "{{ answer_to_activate_env }}"
+  when: dwx_env_status != 'Running'
+
+- name: Get new environment ID (once environment has been activated) 
+  set_fact:
+    dwx_env_id: "{{ answer_to_activate_env.json | community.general.json_query(query) }}"
+  vars:
+    query: "clusterId"
+  when: dwx_env_status != 'Running'
+
+- name: DEBUG - dwx_env_id
+  debug:
+    msg: "{{ dwx_env_id }}"
+  when: dwx_env_status != 'Running'
+
+- name: Wait 10 seconds before checking database catalog creation
+  wait_for:
+    timeout: 10
+
+# Check if Database Catalog is already set up
+- name: Get Environments to check Database Catalog Creation
+  uri:
+    url: "{{ dwx_endpoint_api }}/environments"
+    method: GET
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: dwx_environments
+
+- name: DEBUG - dwx_environments
+  debug:
+    msg: "{{ dwx_environments }}"
+    
+- set_fact:
+    dwx_dbc_id: "{{ dwx_environments.json | community.general.json_query(query) }}"
+  vars:
+    query: "clusters[?name == '{{ warehouse.env_name }}' ].clusterState.warehouses.[*] | [0] | [0] [?warehouse.displayName == '{{ warehouse.database_catalog_name }}' ] | [0].warehouse.id"
+
+- name: DEBUG - dwx_dbc_id
+  debug:
+    msg: "{{ dwx_dbc_id }}"
+
+- set_fact:
+    dwx_dbc_is_existing: "{{ false if dwx_dbc_id == '' else true }}"
+
+- name: DEBUG - dwx_dbc_is_existing
+  debug:
+    msg: "{{ dwx_dbc_is_existing }}"
+
+
+# Create DBC if not already present 
+- name: Create Database Catalog 
+  uri:
+    url: "{{ dwx_endpoint_api }}/environments/{{ dwx_env_id }}/warehouses?start="
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: [200, 202]
+    body_format: json
+    body: "{{ lookup('template', 'create_dbc.json') }}"
+    return_content: yes
+    validate_certs: no
+  register: create_dbc
+  when: not dwx_dbc_is_existing
+
+- name: DEBUG - create_dbc
+  debug:
+    msg: "{{ create_dbc }}"
+  when: not dwx_dbc_is_existing
+
+- name: Get Environments to get new Database Catalog ID
+  uri:
+    url: "{{ dwx_endpoint_api }}/environments"
+    method: GET
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: dwx_environments
+  when: not dwx_dbc_is_existing
+
+- name: DEBUG - dwx_environments
+  debug:
+    msg: "{{ dwx_environments }}"
+  when: not dwx_dbc_is_existing
+    
+- set_fact:
+    dwx_dbc_id: "{{ dwx_environments.json | community.general.json_query(query) }}"
+  vars:
+    query: "clusters[?name == '{{ warehouse.env_name }}' ].clusterState.warehouses.[*] | [0] | [0] [?warehouse.displayName == '{{ warehouse.database_catalog_name }}' ] | [0].warehouse.id"
+  when: not dwx_dbc_is_existing
+
+- name: DEBUG - dwx_dbc_id
+  debug:
+    msg: "{{ dwx_dbc_id }}"
+    
+
+# Wait for env to be activated 
+- name: Check Database Catalog Activation
+  uri:
+    url: "{{ dwx_endpoint_api }}/environments/{{ dwx_env_id }}/warehouses/{{ dwx_dbc_id }}?render=true"
+    method: GET
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: dbc_activation
+  until: " dbc_activation.json.Warehouse.warehouse.status == 'Running' "
+  retries: 60
+  delay: 5
+
+# Create Hive VW:
+- name: Create Hive Virtual Warehouse
+  uri:
+    url: "{{ dwx_endpoint_api }}/environments/{{ dwx_env_id }}/llaps?start="
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', 'create_hive_vw.json') }}"
+    status_code: [200, 202]
+    return_content: yes
+    validate_certs: no
+  register: answer_to_hive_activation
+  when: warehouse.type == 'hive' | default(false)
+
+- name: DEBUG - answer_to_hive_activation
+  debug:
+    msg: "{{ answer_to_hive_activation }}"
+  when: warehouse.type == 'hive' | default(false)
+
+# Create Impala VW
+- name: Create Impala Virtual Warehouse
+  uri:
+    url: "{{ dwx_endpoint_api }}/environments/{{ dwx_env_id }}/impalas?start="
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', 'create_impala_vw.json') }}"
+    status_code: [200, 202]
+    return_content: yes
+    validate_certs: no
+  register: answer_to_impala_activation
+  when: warehouse.type == 'impala' | default(false)
+
+- name: DEBUG - answer_to_impala_activation
+  debug:
+    msg: "{{ answer_to_impala_activation }}"
+  when: warehouse.type == 'impala' | default(false)
+

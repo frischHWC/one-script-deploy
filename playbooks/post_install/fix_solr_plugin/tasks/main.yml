@@ -1,0 +1,309 @@
+---
+- name: Get SolR full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ solr_service_name }}/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/solr_full_config.json
+  register: solr_full_config
+
+- name: DEBUG - solr_full_config
+  debug:
+    msg: "{{ solr_full_config }}"
+  when: debug | default(false)
+
+
+- name: Get SolR roles repartition
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ solr_service_name }}/roles"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/solr_roles.json
+  register: solr_roles
+
+- name: DEBUG - solr_roles
+  debug:
+    msg: "{{ solr_roles }}"
+  when: debug | default(false)
+
+
+### SET SolR CONFIGS ###
+
+# Set SoLR protocol
+
+- set_fact:
+    solr_ssl: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'solr_use_ssl'].value | [0]"
+
+- set_fact:
+    solr_ssl: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'solr_use_ssl'].default | [0]"
+  when: solr_ssl == ""
+
+- name: DEBUG - solr_ssl
+  debug:
+    msg: "{{ solr_ssl }}"
+  when: debug | default(false)
+
+- set_fact:
+    solr_protocol: "{{ 'https' if solr_ssl else 'http' }}"
+
+- name: DEBUG - solr_protocol
+  debug:
+    msg: "{{ solr_protocol }}"
+  when: debug | default(false)
+
+
+# Set SolR port
+
+- set_fact:
+    solr_port: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'solr_https_port'].value | [0]"
+  when: "solr_ssl"
+
+- set_fact:
+    solr_port: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'solr_https_port'].default | [0]"
+  when: "solr_ssl and (solr_port is not defined or solr_port == '') "
+
+- set_fact:
+    solr_port: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'solr_http_port'].value | [0]"
+  when: " solr_port is not defined or solr_port == ''"
+
+- set_fact:
+    solr_port: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'solr_http_port'].default | [0]"
+  when: " solr_port is not defined or solr_port == '' "
+
+
+# Set SolR Servers
+
+- set_fact:
+    solr_hosts: "{{ solr_roles.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'SOLR_SERVER'].hostRef.hostname | [0]"
+
+- name: DEBUG - solr_hosts
+  debug:
+    msg: "{{ solr_hosts }}"
+  when: debug | default(false)
+
+- set_fact:
+    solr_url: "{{ solr_protocol }}://{{ solr_hosts }}"
+
+- name: DEBUG - solr_url
+  debug:
+    msg: "{{ solr_url }}"
+  when: debug | default(false)
+
+
+# Push SolR plugin to Ranger
+- name: Get All services from CM
+  uri:
+    url: "{{ cloudera_manager_url }}/api/{{ cloudera_manager_api_version }}/clusters/{{ cluster_name }}/services/"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: all_services
+
+- name: DEBUG - all_services
+  debug:
+    msg: "{{ all_services }}"
+  when: debug | default(false)
+
+- set_fact:
+    ranger_service_name: "{{ all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'RANGER'].name | [0]"
+
+- name: DEBUG - ranger_service_name
+  debug:
+    msg: "{{ ranger_service_name }}"
+  when: debug | default(false)
+
+
+- name: Get CM deployment of services
+  uri:
+    url: "{{ cloudera_manager_url }}/api/v41/cm/deployment"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cm_deployment_services
+
+- name: DEBUG - cm_deployment_services
+  debug:
+    msg: "{{ cm_deployment_services }}"
+  when: debug | default(false)
+
+- set_fact:
+    ranger_server: "{{ cm_deployment_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "clusters[?name == '{{ cluster_name }}' ].services[].roles[?type == 'RANGER_ADMIN'][].hostRef.hostname | [0]"
+
+- name: DEBUG - Ranger Server 
+  debug:
+    msg: "{{ ranger_server }}"
+  when: debug | default(false)
+
+
+- name: Get Ranger full config
+  uri:
+    url: "{{ cloudera_manager_url }}/api/v41/clusters/{{ cluster_name }}/services/{{ ranger_service_name }}/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: ~/response.json
+  register: full_ranger_config
+
+- name: DEBUG - full_ranger_config
+  debug:
+    msg: "{{ full_ranger_config }}"
+  when: debug | default(false)
+
+
+- name: Get Ranger Admin full config
+  uri:
+    url: "{{ cloudera_manager_url }}/api/v31/clusters/{{ cluster_name }}/services/{{ ranger_service_name }}/roleConfigGroups/{{ ranger_service_name }}-RANGER_ADMIN-BASE/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: full_ranger_admin_config
+
+- name: DEBUG - full_ranger_admin_config
+  debug:
+    msg: "{{ full_ranger_admin_config }}"
+  when: debug | default(false)
+
+
+- set_fact:
+    ranger_ssl: "{{ full_ranger_admin_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ssl_enabled'].value | [0]"
+
+- set_fact:
+    ranger_ssl: "{{ full_ranger_admin_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ssl_enabled'].default | [0]"
+  when: ranger_ssl == ""
+
+- name: DEBUG - ranger_ssl
+  debug:
+    msg: "{{ ranger_ssl }}"
+  when: debug | default(false)
+
+
+- set_fact:
+    ranger_protocol: "{{ 'https' if ranger_ssl else 'http' }}"
+
+- name: DEBUG - ranger_protocol
+  debug:
+    msg: "{{ ranger_protocol }}"
+  when: debug | default(false)
+
+
+- set_fact:
+    ranger_port: "{{ full_ranger_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ranger_service_https_port'].value | [0]"
+  when: ranger_ssl
+
+- set_fact:
+    ranger_port: "{{ full_ranger_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ranger_service_https_port'].default | [0]"
+  when: ranger_ssl and ranger_port == ""
+
+- set_fact:
+    ranger_port: "{{ full_ranger_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ranger_service_http_port'].value | [0]"
+  when: not ranger_ssl
+
+- set_fact:
+    ranger_port: "{{ full_ranger_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ranger_service_http_port'].default | [0]"
+  when: not ranger_ssl and ranger_port == ""
+
+- name: DEBUG - ranger_port
+  debug:
+    msg: "{{ ranger_port }}"
+  when: debug | default(false)
+
+
+- set_fact:
+    ranger_url: "{{ ranger_protocol }}://{{ ranger_server }}:{{ ranger_port }}"
+
+- name: DEBUG - ranger_url
+  debug:
+    msg: "{{ ranger_url }}"
+  when: debug | default(false)
+
+
+- name: Create in Ranger the SolR service
+  uri: 
+    url: "{{ ranger_url }}/service/public/v2/api/service"
+    method: POST
+    user: "{{ ranger_user }}"
+    password: "{{ ranger_password }}"
+    return_content: yes
+    body: "{{ lookup('template', 'solr_plugin.json' ) }}"
+    body_format: json
+    status_code: 200
+    validate_certs: no
+    force_basic_auth: yes
+  ignore_errors: yes
+
+
+# Restart SolR
+
+- name: Restart SolR
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ solr_service_name }}/commands/restart"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json

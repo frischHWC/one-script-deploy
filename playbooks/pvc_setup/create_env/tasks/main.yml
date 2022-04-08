@@ -1,0 +1,165 @@
+---
+# Check: https://cloudera.github.io/cdp-dev-docs/cli-docs/environments/create-private-environment.html
+
+# List environments
+- name: List Environments and get its crn
+  uri:
+    url: "{{ pvc_api_call }}/environments2/listEnvironments"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{\"pageSize\":500}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: env_details
+
+- name: DEBUG - env_details
+  debug:
+    msg: "{{ env_details }}"
+  when: debug | default(false)
+
+- set_fact:
+    env_crn: "{{ env_details.json | community.general.json_query(query) }}"
+  vars:
+    query: "environments[?environmentName == '{{ env.name }}' ].crn | [0]"
+
+- name: DEBUG - env_crn
+  debug:
+    msg: "{{ env_crn }}"
+  when: debug | default(false)
+
+- set_fact:
+    is_env_existing: "{{ false if env_crn == '' else true }}"
+
+# TODO: Delete all previous CDW/CML/CDE
+# If env.to_delete:
+# List CML workspaces and delete them
+# List CDE services, then VCs attached to it and delete them one by one, then delete cde services
+# List DBC, list VW attached to DBC and delete them one by one, then delete DBCs
+- name: De-register environment
+  uri:
+    url: "{{ pvc_api_call }}/compute/deregisterClusters"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', 'deregister_cluster.json') }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: env_deregister
+  when: is_env_existing and env.to_delete
+
+- name: DEBUG - env_deregister
+  debug:
+    msg: "{{ env_deregister }}"
+  when: (is_env_existing and env.to_delete) and (debug | default(false))
+
+- name: Sleep for 5 seconds before deleting environment
+  wait_for:
+    timeout: 5
+  when: is_env_existing and env.to_delete
+
+- name: Delete environment
+  uri:
+    url: "{{ pvc_api_call }}/environments2/deleteEnvironment"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', 'delete_environment.json') }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: env_delete
+  when: is_env_existing and env.to_delete
+
+- name: DEBUG - env_delete
+  debug:
+    msg: "{{ env_delete }}"
+  when: (is_env_existing and env.to_delete) and (debug | default(false))
+
+- name: Sleep for 15 seconds before creating again environment
+  wait_for:
+    timeout: 15
+  when: is_env_existing and env.to_delete
+
+- name: Create environment
+  uri:
+    url: "{{ pvc_api_call }}/environments2/createPrivateEnvironment"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', 'create_environment.json') }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: env_creation
+  when: (is_env_existing and env.to_delete) or not is_env_existing
+
+- name: DEBUG - env_creation
+  debug:
+    msg: "{{ env_creation }}"
+  when: (is_env_existing and env.to_delete) or not is_env_existing and (debug | default(false))
+
+- name: List Environments and get its crn
+  uri:
+    url: "{{ pvc_api_call }}/environments2/listEnvironments"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{\"pageSize\":500}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: env_details
+
+- name: DEBUG - env_details
+  debug:
+    msg: "{{ env_details }}"
+  when: debug | default(false)
+
+- set_fact:
+    env_crn: "{{ env_details.json | community.general.json_query(query) }}"
+  vars:
+    query: "environments[?environmentName == '{{ env.name }}' ].crn | [0]"
+
+- name: DEBUG - env_crn
+  debug:
+    msg: "{{ env_crn }}"
+  when: debug | default(false)
+
+- name: Register Compute cluster to Environment
+  uri:
+    url: "{{ pvc_api_call }}/compute/registerCluster"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', 'register_cluster.json') }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: answer_to_register_cluster
+  when: (is_env_existing and env.to_delete) or not is_env_existing
+
+- name: DEBUG - answer_to_register_cluster
+  debug:
+    msg: "{{ answer_to_register_cluster }}"
+  when: (is_env_existing and env.to_delete) or not is_env_existing

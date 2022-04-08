@@ -1,0 +1,13 @@
+---                   
+- name: Copy authorized_keys file
+  copy:
+    src: "{{ authorized_keys }}"
+    dest: ~/authorized_keys  
+  
+- name: Setup authorized_keys 
+  shell: cat ~/authorized_keys >> ~/.ssh/authorized_keys
+  
+- name: Destroy authorized_keys
+  file:
+      path: ~/authorized_keys
+      state: absent

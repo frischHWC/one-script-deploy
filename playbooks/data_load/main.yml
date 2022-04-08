@@ -1,0 +1,4 @@
+---
+- import_playbook: auto-configure/main.yml
+- import_playbook: ranger_policies/main.yml
+- import_playbook: generate_data/main.yml

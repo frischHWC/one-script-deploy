@@ -1,0 +1,213 @@
+---
+# Set optionnal configs if not set
+- set_fact:
+    github_url: "https://github.com/frischHWC/random-datagen"
+  when: github_url is not defined
+
+- name: DEBUG - github_url
+  debug:
+    msg: "{{ github_url }}"
+  when: debug | default(false)
+
+- set_fact:
+    hadoop_user: "dev"
+  when: hadoop_user is not defined
+
+- name: DEBUG - hadoop_user
+  debug:
+    msg: "{{ hadoop_user }}"
+  when: debug | default(false)
+
+- set_fact:
+    hadoop_home: "/user/dev"
+  when: hadoop_home is not defined
+
+- name: DEBUG - hadoop_home
+  debug:
+    msg: "{{ hadoop_home }}"
+  when: debug | default(false)
+
+- set_fact:
+    user: "{{ kerb_user.split('@')[0] }}"
+  when: user is not defined and kerb_auth and kerb_user is defined
+
+- set_fact:
+    user: "dev"
+  when: user is not defined and not kerb_auth
+
+- name: DEBUG - user
+  debug:
+    msg: "{{ user }}"
+  when: debug | default(false)
+
+
+# Check which services are deployed and available to setup the gen_<Service> vars
+
+- set_fact:
+    gen_hdfs: "{{ true if (cloudera_manager_all_services.json | community.general.json_query(query)) == 'STARTED' else false }}"
+  vars:
+    query: "items[?type == 'HDFS'].serviceState | [0]"
+  when: gen_hdfs is not defined
+
+- name: DEBUG - gen_hdfs
+  debug:
+    msg: "{{ gen_hdfs }}"
+  when: debug | default(false)
+
+- set_fact:
+    gen_hbase: "{{ true if (cloudera_manager_all_services.json | community.general.json_query(query)) == 'STARTED' else false }}"
+  vars:
+    query: "items[?type == 'HBASE'].serviceState | [0]"
+  when: gen_hbase is not defined
+
+- name: DEBUG - gen_hbase
+  debug:
+    msg: "{{ gen_hbase }}"
+  when: debug | default(false)
+
+- set_fact:
+    gen_hive: "{{ true if (cloudera_manager_all_services.json | community.general.json_query(query)) == 'STARTED' else false }}"
+  vars:
+    query: "items[?type == 'HIVE'].serviceState | [0]"
+  when: gen_hive is not defined
+
+- name: DEBUG - gen_hive
+  debug:
+    msg: "{{ gen_hive }}"
+  when: debug | default(false)
+
+- set_fact:
+    gen_solr: "{{ true if ((cloudera_manager_all_services.json | community.general.json_query(query)) == 'STARTED') and ((cloudera_manager_all_services.json | community.general.json_query(query2)) > 1) else false }}"
+  vars:
+    query: "items[?type == 'SOLR'].serviceState | [0]"
+    query2: "items[?type == 'SOLR'].serviceState | length(@) "
+  when: gen_solr is not defined
+
+- name: DEBUG - gen_solr
+  debug:
+    msg: "{{ gen_solr }}"
+  when: debug | default(false)
+
+- set_fact:
+    gen_ozone: "{{ true if (cloudera_manager_all_services.json | community.general.json_query(query)) == 'STARTED' else false }}"
+  vars:
+    query: "items[?type == 'OZONE'].serviceState | [0]"
+  when: gen_ozone is not defined
+
+- name: DEBUG - gen_ozone
+  debug:
+    msg: "{{ gen_ozone }}"
+  when: debug | default(false)
+
+- set_fact:
+    gen_kafka: "{{ true if (cloudera_manager_all_services.json | community.general.json_query(query)) == 'STARTED' else false }}"
+  vars:
+    query: "items[?type == 'KAFKA'].serviceState | [0]"
+  when: gen_kafka is not defined
+
+- name: DEBUG - gen_kafka
+  debug:
+    msg: "{{ gen_kafka }}"
+  when: debug | default(false)
+
+- set_fact:
+    gen_kudu: "{{ true if (cloudera_manager_all_services.json | community.general.json_query(query)) == 'STARTED' else false }}"
+  vars:
+    query: "items[?type == 'KUDU'].serviceState | [0]"
+  when: gen_kudu is not defined
+
+- name: DEBUG - gen_kudu
+  debug:
+    msg: "{{ gen_kudu }}"
+  when: debug | default(false)
+
+- set_fact:
+    sr_service_exists: "{{ cloudera_manager_all_services.json | community.general.json_query(query) | length > 0 }}"
+  vars:
+    query: "items[?type == 'SCHEMAREGISTRY'].name"
+
+- name: DEBUG - Schema Registry exists
+  debug:
+    msg: "{{ sr_service_exists }}"
+  when: debug | default(false)
+
+# Check which services need to be configured
+- set_fact:
+    config_solr: "{{ true if gen_solr and solr_url is not defined else false }}"
+
+- name: DEBUG - config_solr
+  debug:
+    msg: "{{ config_solr }}"
+  when: debug | default(false)
+
+- set_fact:
+    config_ranger: "{{ true if ranger_url is not defined else false }}" 
+
+- name: DEBUG - config_ranger
+  debug:
+    msg: "{{ config_ranger }}"
+  when: debug | default(false)
+
+- set_fact:
+    config_zookeeper: "{{ true if gen_kafka or gen_hbase or gen_hive and zk_quorum_with_port is not defined else false }}"  
+
+- name: DEBUG - config_zookeeper
+  debug:
+    msg: "{{ config_zookeeper }}"
+  when: debug | default(false)
+
+- set_fact:
+    config_kudu: "{{ true if gen_kudu and kudu_url is not defined else false }}"  
+
+- name: DEBUG - config_kudu
+  debug:
+    msg: "{{ config_kudu }}"
+  when: debug | default(false)
+
+- set_fact:
+    config_kafka: "{{ true if gen_kafka and (kafka_url is not defined or kafka_protocol is not defined) else false }}"  
+
+- name: DEBUG - config_kafka
+  debug:
+    msg: "{{ config_kafka }}"
+  when: debug | default(false)
+
+- set_fact:
+    config_schema_registry: "{{ true if gen_kafka and sr_service_exists and sr_url is not defined else false }}"  
+
+- name: DEBUG - config_schema_registry
+  debug:
+    msg: "{{ config_schema_registry }}"
+  when: debug | default(false)
+
+- set_fact:
+    config_ozone: "{{ true if gen_ozone and ozone_service_id is not defined else false }}"  
+
+- name: DEBUG - config_ozone
+  debug:
+    msg: "{{ config_ozone }}"
+  when: debug | default(false)
+
+- set_fact:
+    config_hdfs: "{{ true if gen_hdfs and hdfs_nameservice is not defined else false }}"  
+
+- name: DEBUG - config_hdfs
+  debug:
+    msg: "{{ config_hdfs }}"
+  when: debug | default(false)
+
+- set_fact:
+    config_hbase: "{{ true if gen_hbase and hbase_znode is not defined else false }}"  
+
+- name: DEBUG - config_hbase
+  debug:
+    msg: "{{ config_hbase }}"
+  when: debug | default(false)
+
+- set_fact:
+    config_hive: "{{ true if gen_hive and ( tez_queue_name is not defined or hive_zk_namespace is not defined ) else false }}"  
+
+- name: DEBUG - config_hive
+  debug:
+    msg: "{{ config_hive }}"
+  when: debug | default(false)

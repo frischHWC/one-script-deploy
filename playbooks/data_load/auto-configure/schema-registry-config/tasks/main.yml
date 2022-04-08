@@ -1,0 +1,124 @@
+---
+### GET SCHEMA_REGISTRY CONFIGS ###
+
+- set_fact:
+    sr_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'SCHEMAREGISTRY'].name | [0]"
+
+- name: DEBUG - sr_service_name
+  debug:
+    msg: "{{ sr_service_name }}"
+  when: debug | default(false)
+
+- name: Get SR roles repartition
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ sr_service_name }}/roles"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/sr_roles.json
+  register: sr_roles
+
+- name: DEBUG - sr_roles
+  debug:
+    msg: "{{ sr_roles }}"
+  when: debug | default(false)
+
+
+- name: Get SR full config
+  uri:
+    url: "{{ cloudera_manager_url }}/api/v31/clusters/{{ cluster_name }}/services/{{ sr_service_name }}/roleConfigGroups/{{ sr_service_name }}-SCHEMA_REGISTRY_SERVER-BASE/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: sr_full_config
+
+- name: DEBUG - sr_full_config
+  debug:
+    msg: "{{ sr_full_config }}"
+  when: debug | default(false)
+ 
+
+### SET SCHEMA_REGISTRY CONFIGS ###
+
+- set_fact:
+    sr_ssl: "{{ sr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ssl_enabled'].value | [0]"
+
+- set_fact:
+    sr_ssl: "{{ sr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ssl_enabled'].default | [0]"
+  when: sr_ssl == ""
+
+- name: DEBUG - sr_ssl
+  debug:
+    msg: "{{ sr_ssl }}"
+  when: debug | default(false)
+
+
+- set_fact:
+    sr_port: "{{ sr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'schema.registry.ssl.port'].value | [0]"
+  when: sr_ssl
+
+- set_fact:
+    sr_port: "{{ sr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'schema.registry.ssl.port'].default | [0]"
+  when: sr_ssl and sr_port == ""
+
+- set_fact:
+    sr_port: "{{ sr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'schema.registry.port'].value | [0]"
+  when: not sr_ssl
+
+- set_fact:
+    sr_port: "{{ sr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'rschema.registry.port'].default | [0]"
+  when: not sr_ssl and sr_port == ""
+
+- name: DEBUG - sr_port
+  debug:
+    msg: "{{ sr_port }}"
+  when: debug | default(false)
+
+
+
+# Set SR url
+
+- set_fact:
+    sr_hosts: "{{ sr_roles.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'SCHEMA_REGISTRY_SERVER'].hostRef.hostname"
+
+- name: DEBUG - sr_hosts
+  debug:
+    msg: "{{ sr_hosts }}"
+  when: debug | default(false)
+
+- set_fact:
+    sr_url: "{% for host in sr_hosts %}{{ host }}:{{ sr_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+
+- name: DEBUG - sr_url
+  debug:
+    msg: "{{ sr_url }}"
+  when: debug | default(false)
+  
+
+  

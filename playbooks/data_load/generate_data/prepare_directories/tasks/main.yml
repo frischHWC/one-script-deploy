@@ -1,0 +1,31 @@
+---
+- name: Clean Directory for projects
+  file:
+    path: ~/projects/
+    state: absent
+- name: Create Directory for projects
+  file:
+    path: ~/projects/
+    state: directory
+    mode: '0755'
+- name: Create Model Directory
+  file:
+    path: ~/projects/models/
+    state: directory
+    mode: '0755'
+
+- name: Copy config.properties to machine
+  template:
+    src: config.properties
+    dest: ~/projects/
+
+- name: Copy log4j2.properties to machine
+  template:
+    src: log4j2.properties
+    dest: ~/projects/
+
+- name: Copy models to machine
+  template: 
+    src: "{{ item.src }}"
+    dest: ~/projects/models/
+  with_filetree: "{{ role_path }}/../models/"

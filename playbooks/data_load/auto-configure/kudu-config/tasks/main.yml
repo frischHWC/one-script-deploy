@@ -1,0 +1,57 @@
+---
+### GET ZOOKEEPER CONFIGS ###
+
+- set_fact:
+    kudu_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'KUDU'].name | [0]"
+
+- name: DEBUG - kudu_service_name
+  debug:
+    msg: "{{ kudu_service_name }}"
+  when: debug | default(false)
+
+- name: Get Kudu roles repartition
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ kudu_service_name }}/roles"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/kudu_roles.json
+  register: kudu_roles
+
+- name: DEBUG - kudu_roles
+  debug:
+    msg: "{{ kudu_roles }}"
+  when: debug | default(false)
+
+ 
+### SET Kudu CONFIGS ###
+
+# Set Kudu Master
+
+- set_fact:
+    kudu_hosts: "{{ kudu_roles.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'KUDU_MASTER'].hostRef.hostname"
+
+- name: DEBUG - kudu_hosts
+  debug:
+    msg: "{{ kudu_hosts }}"
+  when: debug | default(false)
+
+- set_fact:
+    kudu_url: "{% for host in kudu_hosts %}{{ host }}{% if not loop.last %},{% endif %}{% endfor %}"
+
+- name: DEBUG - kudu_url
+  debug:
+    msg: "{{ kudu_url }}"
+  when: debug | default(false)
+  
+
+  

@@ -1,0 +1,110 @@
+---
+# Set up kubectl with export KUBECONFIG & NO_PROXY
+- name: Copy kubeconfig file
+  copy: 
+    src: "{{ kube_config_path }}"
+    dest: ~/kubeconfig
+
+- name: Get kubectl latest release
+  uri:
+    url: https://dl.k8s.io/release/stable.txt
+    return_content: yes
+    follow_redirects: all
+  register: kubectl_version
+
+- name: DEBUG - kubectl_version
+  debug:
+    msg: "{{ kubectl_version }}"
+  when: debug | default(false)
+
+- name: Download kubectl binary
+  uri:
+    url: "https://dl.k8s.io/release/{{ kubectl_version.content }}/bin/linux/amd64/kubectl"
+    return_content: yes
+    follow_redirects: all
+    status_code: [200, 304]
+    dest: ~/kubectl
+
+- name: Copy kubectl file to binary place 
+  copy:
+    src: ~/kubectl
+    dest: /usr/local/bin/ 
+    mode: 0755
+    remote_src: yes
+
+- name: Insert KUBECONFIG & NO_PROXY vars to bashrc
+  blockinfile:
+    path: ~/.bashrc
+    block: |
+      export KUBECONFIG=/root/kubeconfig
+      export NO_PROXY=*.kcloud.cloudera.com
+
+# Install OC using manual copy
+
+- name: Patch Ingress Operator 
+  shell: |
+    export KUBECONFIG=/root/kubeconfig
+    kubectl -n openshift-ingress-operator patch ingresscontroller/default --patch '{"spec":{"routeAdmission":{"namespaceOwnership":"InterNamespaceAllowed"}}}' --type=merge
+
+- name: Copy OC tar file
+  copy: 
+    src: "{{ oc_tar_file_path }}"
+    dest: ~/oc.tar
+  when: oc_tar_file_path is defined
+
+- name: Untar OC file
+  unarchive:
+    src: ~/oc.tar
+    dest: ~/
+    remote_src: yes
+  when: oc_tar_file_path is defined
+
+- name: Copy OC file to binary place 
+  copy:
+    src: ~/oc
+    dest: /usr/local/bin/ 
+    mode: 0755
+    remote_src: yes
+  when: oc_tar_file_path is defined
+
+- name: Get existing credentials
+  shell: |
+    export KUBECONFIG=/root/kubeconfig
+    rm -rf /tmp/openshift_secret_v2.json
+    oc get secret/pull-secret -n openshift-config -o yaml > /tmp/openshift_secret_v2.json
+  when: oc_tar_file_path is defined
+
+- name: Register existing credentials as a variable
+  shell: cat /tmp/openshift_secret_v2.json
+  register: oc_secret_result 
+  when: oc_tar_file_path is defined   
+
+- name: Set a variable
+  set_fact:
+    oc_secret: "{{ oc_secret_result.stdout | from_yaml }}"
+  when: oc_tar_file_path is defined
+
+- name: Decode secret from open shift
+  set_fact:
+    oc_secret_decoded: "{{ oc_secret | community.general.json_query(query) | b64decode }}"
+  vars:
+    query: 'data.".dockerconfigjson"'   
+  when: oc_tar_file_path is defined
+
+- debug:
+    msg: "{{ oc_secret_decoded }}"
+  when: oc_tar_file_path is defined
+
+- name: Set decoded secret to file
+  copy: 
+    content: "{{ oc_secret_decoded }}" 
+    dest: /tmp/openshift_secret_v2_decoded.json
+  when: oc_tar_file_path is defined
+
+- name: Add docker registry credentials
+  shell: |
+    oc registry login --registry="{{ docker_registry }}" --auth-basic="{{ docker_registry_user }}:{{ docker_registry_password }}" --to="/tmp/openshift_secret_v2_decoded.json"
+    oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson="/tmp/openshift_secret_v2_decoded.json"
+  when: oc_tar_file_path is defined
+    
+

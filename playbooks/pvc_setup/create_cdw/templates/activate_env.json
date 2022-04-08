@@ -1,0 +1,7 @@
+{
+  "clusterName": "{{ warehouse.env_name }}",
+  "storageClassName": "{{ local_block_storage_class }}",
+  "enableLowResourceMode": {{ warehouse.low_resource_mode | default('true') }},
+  "delegationUserName": "{{ delegation_username }}",
+  "delegationUserPassword": "{{ delegation_password }}"
+}

@@ -1,0 +1,13 @@
+---  
+- name: Create .ssh directory
+  file:
+    path: "/home/{{ user.name }}/.ssh/"
+    state: directory
+    mode: '0755' 
+  ignore_errors: true    
+
+- name: Copy authorized_keys file to user's folder
+  copy:
+    src: ~/.ssh/authorized_keys
+    dest: "/home/{{ user.name }}/.ssh/authorized_keys"
+  ignore_errors: true  

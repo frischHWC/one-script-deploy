@@ -1,0 +1,50 @@
+---
+database_type: postgresql
+database_version: 9.6
+database_default_password: "{{ default_password }}"
+database_host: "{{ groups['db_server'][0] | default('localhost') }}"
+
+# Kerberos configs
+
+krb5_realm: "{{ realm_user }}"
+krb5_kdc_admin_user: "cloudera-scm/admin@{{ krb5_realm }}"
+krb5_kdc_admin_password: "{{ default_password }}"
+krb5_kdc_type: MIT KDC
+krb5_enc_types: "aes256-cts aes128-cts"
+
+# TLS security configs
+
+skip_tls_cert_distribution: "false"
+base_dir_security: /opt/cloudera/security
+base_dir_security_pki: "{{ base_dir_security }}/pki"
+
+tls_cert_path: "{{ base_dir_security_pki }}/{{ inventory_hostname }}.pem"
+tls_cert_path_generic: "{{ base_dir_security_pki }}/host.pem"
+tls_chain_path: "{{ base_dir_security_pki }}/chain.pem"
+tls_csr_path: "{{ base_dir_security_pki }}/{{ inventory_hostname }}.csr"
+tls_csr_config_path: "{{ base_dir_security_pki }}/csr.cnf"
+tls_key_password: changeme
+tls_key_password_file: "{{ base_dir_security_pki }}/host.key.pw"
+tls_key_path: "{{ base_dir_security_pki }}/{{ inventory_hostname }}.key"
+tls_key_path_generic: "{{ base_dir_security_pki }}/host.key"
+tls_key_path_plaintext: "{{ tls_key_path }}.unenc"
+tls_key_path_plaintext_generic: "{{ tls_key_path_generic }}.unenc"
+tls_keystore_password: changeme
+tls_keystore_path: "{{ base_dir_security_pki }}/{{ inventory_hostname }}.jks"
+tls_keystore_path_generic: "{{ base_dir_security_pki }}/host.jks"
+tls_truststore_password: changeme
+tls_truststore_path: "{{ base_dir_security_pki }}/truststore.jks"
+
+tls_acl_groups_keystore: ["cloudera-scm", "hbase", "hive", "httpfs", "kafka", "keytrustee", "oozie", "solr", "spark", "zookeeper"]
+tls_acl_groups_key: ["cloudera-scm", "hue", "impala", "keytrustee", "kudu"]
+tls_acl_groups_key_unencrypted: []
+tls_acl_groups_key_password: ["cloudera-scm", "hue", "impala", "keytrustee", "kudu"]
+
+ca_server_attrs_general:
+  OU: PS
+  O: Cloudera, Inc.
+  ST: CA
+  C: US
+
+local_temp_dir: /tmp
+skip_user_group_init: false

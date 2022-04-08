@@ -1,0 +1,71 @@
+{
+    "id": 1,
+    "guid": "...",
+    "isEnabled": true,
+    "version": 1,
+    "service": "cm_yarn",
+    "name": "random-datagen {{ user }}",
+    "policyType": 0,
+    "policyPriority": 0,
+    "description": "Policy for {{ user }} user",
+    "isAuditEnabled": true,
+    "resources": {
+      "queue": {
+        "values": [
+          "root.default"
+        ],
+        "isExcludes": false,
+        "isRecursive": true
+      }
+    },
+    "policyItems": [
+      {
+        "accesses": [
+          {
+            "type": "submit-app",
+            "isAllowed": true
+          }
+        ],
+        "users": [
+          "{{ user }}"
+        ],
+        "groups": [
+          
+        ],
+        "roles": [
+          
+        ],
+        "conditions": [
+          
+        ],
+        "delegateAdmin": true
+      }
+    ],
+    "denyPolicyItems": [
+      
+    ],
+    "allowExceptions": [
+      
+    ],
+    "denyExceptions": [
+      
+    ],
+    "dataMaskPolicyItems": [
+      
+    ],
+    "rowFilterPolicyItems": [
+      
+    ],
+    "serviceType": "yarn",
+    "options": {
+      
+    },
+    "validitySchedules": [
+      
+    ],
+    "policyLabels": [
+      
+    ],
+    "zoneName": "",
+    "isDenyAllElse": false
+  }

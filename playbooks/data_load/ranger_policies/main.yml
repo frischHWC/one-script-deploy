@@ -1,0 +1,7 @@
+---
+- name: Ranger Policies
+  hosts: main
+  gather_facts: false
+  roles: 
+    - push_policies
+    

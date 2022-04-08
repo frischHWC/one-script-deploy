@@ -1,0 +1,23 @@
+---
+cluster_definition: environment/
+cloudera_manager_version: ${CM_VERSION}
+cloudera_manager_license_type: enterprise
+cloudera_manager_license_file: ~/license.txt
+cloudera_manager_repo_username: ${PAYWALL_USER}
+cloudera_manager_repo_password: ${PAYWALL_PASSWORD}
+cloudera_manager_repo_url: ${CM_REPO}
+
+default_password: ${DEFAULT_PASSWORD}
+kerberos_activated: ${KERBEROS}
+tls_activated: ${TLS}
+cluster_name: ${CLUSTER_NAME}
+realm_user: ${REALM}
+
+kafka_protocol: ${KAFKA_PROTOCOL}
+hbase_auth: ${HBASE_AUTH}
+bootstrap_servers: ${NODE_3}:${BOOTSTRAP_SERVERS_PORT},${NODE_4}:${BOOTSTRAP_SERVERS_PORT},${NODE_5}:${BOOTSTRAP_SERVERS_PORT}
+
+cdh_repo: ${CDH_REPO}
+auto_tls: ${TLS}
+
+debug: ${DEBUG}

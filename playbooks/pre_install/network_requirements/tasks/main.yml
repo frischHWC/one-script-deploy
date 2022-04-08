@@ -1,0 +1,45 @@
+---
+- name: Copy local public key 
+  copy:
+    src: ~/.ssh/id_rsa.pub
+    dest: ~/local-key
+  
+- name: Add local key to hosts
+  shell: cat ~/local-key >> ~/.ssh/authorized_keys 
+- name: Destroy ~/local-key
+  file:
+      path: ~/local-key
+      state: absent     
+  
+- name: Copy /etc/hosts 
+  copy:
+    src: "{{ etc_hosts_file }}"
+    dest: ~/etc_hosts
+- name: Change /etc/hosts
+  shell: cat ~/etc_hosts >> /etc/hosts
+- name: Destroy etc_hosts
+  file:
+      path: ~/etc_hosts
+      state: absent  
+
+- name: Copy Known hosts file
+  copy:
+    src: "{{ known_hosts }}"
+    dest: ~/known_hosts        
+- name: Setup known_hosts 
+  shell: cat ~/known_hosts >> ~/.ssh/known_hosts
+- name: Destroy known_hosts
+  file:
+      path: ~/known_hosts
+      state: absent     
+
+- name: Generate key
+  openssh_keypair:
+    path: /root/.ssh/id_rsa
+    size: 2048
+    
+- name: Get key generated for all hosts into one local file (authorized_keys)
+  fetch:
+    src: /root/.ssh/id_rsa.pub
+    dest: "~/authorized-key-{{ inventory_hostname }}.pub"
+    flat: yes  

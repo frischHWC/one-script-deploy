@@ -1,0 +1,58 @@
+---
+### GET Hive CONFIGS ###
+
+- set_fact:
+    hive_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'HIVE_ON_TEZ'].name | [0]"
+
+- name: DEBUG - hive_service_name
+  debug:
+    msg: "{{ hive_service_name }}"
+  when: debug | default(false)
+
+
+- name: Get Hive full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ hive_service_name }}/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/hive_full_config.json
+  register: hive_full_config
+
+- name: DEBUG - hive_full_config
+  debug:
+    msg: "{{ hive_full_config }}"
+  when: debug | default(false)
+
+
+### SET Hive CONFIGS ###
+    
+- set_fact:
+    hive_zk_namespace: "{{ hive_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'hive_server2_zookeeper_namespace'].value | [0]"
+
+- set_fact:
+    hive_zk_namespace: "{{ hive_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'hive_server2_zookeeper_namespace'].default | [0]"
+  when: hive_zk_namespace == ''
+
+- name: DEBUG - hive_zk_namespace
+  debug:
+    msg: "{{ hive_zk_namespace }}"
+    
+- set_fact:
+    tez_queue_name: "root.default"
+  when: tez_queue_name is not defined
+
+- name: DEBUG - tez_queue_name
+  debug:
+    msg: "{{ tez_queue_name }}"

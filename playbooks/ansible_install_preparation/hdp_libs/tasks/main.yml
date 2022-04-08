@@ -1,0 +1,23 @@
+---
+- name: Install libs required by HDP
+  package:
+    name: 
+      - gcc
+      - gcc-c++
+      - python-virtualenv
+      - python-pip
+      - python-devel
+      - libffi-devel
+      - openssl-devel
+      - libyaml-devel
+      - sshpass
+      - vim-enhanced
+      - epel-release
+    state: present
+  ignore_errors: yes
+
+- name: Install the epel-release rpm from fedora remote repo required by HDP
+  yum:
+    name: http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    state: present
+  ignore_errors: yes  

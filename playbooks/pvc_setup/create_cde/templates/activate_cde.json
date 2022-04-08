@@ -1,0 +1,17 @@
+{
+  "name": "{{ virtual_cluster.cde_service_name }}",
+  "env": "{{ virtual_cluster.env_name }}",
+  "config": {
+    "properties": {
+      "loadbalancer.internal": "true",
+      "dbus-wxm-client.enabled": "true",
+      "kubernetes.api.allowList": "",
+      "mount.SSD": "false",
+      "loadbalancer.allowList": "",
+      "kubernetes.api.proxyCIDRList": "",
+      "subnets": ""
+    },
+    "tags": {}
+  },
+  "skipValidation": false
+}

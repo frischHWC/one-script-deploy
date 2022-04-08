@@ -1,0 +1,82 @@
+---
+### GET HDFS CONFIGS ###
+
+- set_fact:
+    hdfs_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'HDFS'].name | [0]"
+
+- name: DEBUG - hdfs_service_name
+  debug:
+    msg: "{{ hdfs_service_name }}"
+  when: debug | default(false)
+
+
+- name: Get HDFS full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ hdfs_service_name }}/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/hdfs_full_config.json
+  register: hdfs_full_config
+
+- name: DEBUG - hdfs_full_config
+  debug:
+    msg: "{{ hdfs_full_config }}"
+  when: debug | default(false)
+
+
+- name: Get HDFS Namenode full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ hdfs_service_name }}/roleConfigGroups/{{ hdfs_service_name }}-NAMENODE-BASE/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/hdfs_namenode_full_config.json
+  register: hdfs_namenode_full_config
+
+- name: DEBUG - hdfs_namenode_full_config
+  debug:
+    msg: "{{ hdfs_namenode_full_config }}"
+  when: debug | default(false)
+
+
+### SET HDFS CONFIGS ###
+
+- set_fact:
+    hdfs_nameservice: "{{ hdfs_namenode_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'dfs_federation_namenode_nameservice'].value | [0]"
+
+- name: DEBUG - hdfs_nameservice
+  debug:
+    msg: "{{ hdfs_nameservice }}"
+  when: debug | default(false)
+    
+- set_fact:
+    hdfs_port: "{{ hdfs_namenode_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'namenode_port'].value | [0]"
+
+- set_fact:
+    hdfs_port: "{{ hdfs_namenode_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'namenode_port'].default | [0]"
+  when: hdfs_port == ''
+
+- name: DEBUG - hdfs_port
+  debug:
+    msg: "{{ hdfs_port }}"
+  when: debug | default(false)
+    

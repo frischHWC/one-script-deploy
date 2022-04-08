@@ -1,0 +1,295 @@
+# One Script Deploy
+
+One script to Easily and Fully deploy a Test/Demo cluster on provided machines, with Configuration, Security and Data.
+
+## Requirements
+
+Launch the script ```requirements.sh``` to enable all requirements before launching the full script.
+
+## Installation
+
+### Command line tool
+
+To install a cluster, default one is a CDP 7 - 10 nodes with Kerberos and TLS set: 
+
+        export PAYWALL_USER=  # Your Paywall User from Cloudera to access archive.cloduera.com
+        export PAYWALL_PASSWORD=  # Your Paywall password from Cloudera to access archive.cloduera.com
+        export LICENSE_FILE=   # Your Licence file from Cloudera
+        export CLUSTER_NAME=   # A name of your choice (ex: cloudera-test )
+        export NODES=   # *Space* separated list of nodes (ex: "node1 node2 node3 ") (You must provide as much as nodes are needed for the type of installation you are launching, default being 10.)
+
+        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+                --license-file=${LICENSE_FILE} \
+                --paywall-username=${PAYWALL_USER} \
+                --paywall-password=${PAYWALL_PASSWORD} \
+                --nodes=${NODES}
+
+__N.B. : This assumes that a passwordless connection is present from here to all your cluster nodes, however provide a password with ``--node-password`` or a private key file with ``--node-key`` __
+
+### Configuration 
+
+Many more configurations are available, see them all with:
+
+        ./setup_machines.sh --help
+
+
+### Examples
+
+#### CDP 7 - Full 10 nodes with almost all services (Kerberos / TLS)
+
+        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+            --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --nodes=${NODES}  
+
+#### CDP 7 - Basic 6 nodes (Kerberos / TLS)
+
+        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+            --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --cluster-type=basic \
+            --nodes=${NODES}  
+
+#### CDP 7 - Basic 6 nodes with Free IPA on a dedicated node (All CDP clusters can have free-ipa just by adding --free-ipa=true) (Kerberos / TLS)
+ 
+        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+            --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --cluster-type=basic \
+            --free-ipa=true \
+            --node-ipa=<One node dedicated to IPA> \
+            --nodes=${NODES}  
+
+#### CDP 7 - 9 nodes with 3 dedicated for PvC with ECS (Kerberos / TLS / FreeIPA)
+
+        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+            --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --cluster-type=pvc \
+            --nodes-ecs=<Space separated list of 3 nodes> \
+            --node-ipa=<One node dedicated to IPA> \
+            --nodes=${NODES}  
+
+#### CDP 7 - 6 nodes basic for PVC with Openshift (Experiences installed on an internal OCP cluster) (Kerberos / TLS / FreeIPA)
+
+        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+            --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --cluster-type=pvc-oc \
+            --kubeconfig-path=<Path to your kubeconfig file> \
+            --oc-tar-file-path=<Path to your oc.tar file downloaded from RedHat> \
+            --node-ipa=<One node dedicated to IPA> \
+            --nodes=${NODES}  
+
+#### CDP 7 - Streaming cluster (6 nodes basic with Spark 3 and Flink + a VPC of 3 nodes of Kafka/Nifi) (Kerberos / TLS)
+
+        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+           --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --cluster-type=streaming \
+            --nodes=${NODES} 
+
+#### CDP 7 - Unsecure
+
+        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+            --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --kerberos=false \
+            --tls=false \
+            --nodes=${NODES}
+
+#### CDH 6 (Kerberos)
+
+        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+            --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --cluster-type=cdh6 \
+            --nodes=${NODES}
+
+
+#### CDH 5 (Kerberos)
+
+        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+            --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --cluster-type=cdh5 \
+            --nodes=${NODES}  
+
+
+
+#### HDP 3 (Kerberos)
+
+        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+            --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --cluster-type=hdp3 \
+            --nodes=${NODES}
+
+
+#### HDP 2 (Kerberos)
+
+        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+            --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --cluster-type=hdp2 \
+            --nodes=${NODES}
+        
+
+
+## Output
+
+### CM & Ambari
+
+At the end, CM or Ambari depending on your installation should be available at the first node URL with appropriate http or https and port 
+(depending on tls parameters for HDP which is false by default and tls for CDP which is true by default). 
+
+During the installation, you can also follow the installation from CM or Ambari by connecting to it.
+
+__N.B.: It is recommended to not interfer with the cluster during ansible installation until it is done__
+
+### Users and Data
+
+At the end of the installation, if it completed successfully, users are created on machines, their keytabs too and are retrieved in your local computer under ```/tmp/```, ```/etc/krb5.conf``` is also retrieved.
+
+Moreover, it is also possible to launch some random data generation into various systems.
+
+*All default passwords are Cloudera1234*
+
+
+
+
+
+## Details on Installation
+
+This describe in details the steps made during the installation in the right order, each one could be skipped and hence be launched separately.
+
+### Architecture
+
+Once you gathered all previous requirements, a launch could be made, it will mainly consist of 5 steps:
+
+- Prepare your machines
+- Launch the installation from the first node of your cluster using appropriate ansible playbook and files
+- Do post-install configuration (mainly for CDP)
+- Create users on your cluster
+- Load some data into your cluster
+
+Each step could be skipped (see command line help).
+
+### Scripts 
+
+This group of scripts, coordinated by main script: ```setup-cluster.sh``` has the goal to configure machines provided and launch a CDP (or HDP, CDH) installation with ansible.
+Finally, some extra configurations steps and random data could be generated into different services.
+
+All this, is only made from your machine.
+
+This script relies on ansible scripts that must be accessible from your machine (if they are not, please setup an internal webserver and provide its url through command line).
+
+link:https://github.com/frischHWC/cldr-playbook[Ansible CDP/CDH repository] 
+
+link:https://github.com/frischHWC/ansible-hortonworks[Ansible HDP repository] 
+
+
+Ansible script relies also on Cloudera repository to access CDP, CM, HDP, Ambari etc... (if they are not accessible, please setup an internal webserver and provide its url through command line).
+
+link:https://archive.cloudera.com/p/[Cloudera repository] 
+
+
+This script relies also on github repository to load data. (if they are not accessible, please setup an internal webserver and provide its url through command line).
+
+link:https://github.com/frischHWC/random-datagen[Data Load repository] 
+
+
+### Setup Machines
+
+This step uses link:playbooks/hosts_setup[Playbook hosts_setup].
+
+If you did not set parameter *--setup* to false, it will prepare all machines by setting ssh-passwordless, pushing required files to them.
+
+__N.B.: This step can be done only one time and then bypass if you reuse same machines__
+
+
+### Ansible Installation
+
+This step uses link:playbooks/ansible_install_preparation[Playbook ansible_install_preparation] and then launch commands directly on the host to launch ansible installation there.
+
+The first playbook used can be skipped setting parameter *--install* to false, which is true by default.
+
+It cleans up the first node, creates a directory ```~/deployment/ansible-repo/```, get ansible repository as a zip in it and add files for your installation in it.
+
+Then, the proper ansible command corresponding to the installation is lauched directly on the first node. 
+
+
+### Post Installation
+
+This step uses link:playbooks/post_install[Playbook post_install].
+
+If you install a CDP cluster and let parameter *--post-install* to true, it will do some extra-steps, such as setting no unlogin on CM, fix various potential bugs.
+
+
+### User Creation
+
+This step uses link:playbooks/user_creation[Playbook user_creation].
+
+If you did not set explicitly parameter ``--user-creation`` to false, and installation completed succesfully, some users are created defined in link:playbooks/user_creation/extra_vars.yml[extra_vars of user_creation]. 
+
+They are present on all nodes with their ```/home``` directory containing their keytabs.
+
+Their keytabs are also fetch in your ```/tmp``` directory along with the ```krb5.conf```  allowing you to kinit directly from your computer.
+
+
+### Data Loading
+
+This step uses link:playbooks/data_load[Playbook data_load].
+
+If you let parameter ``--data-load`` to true, a data loading step will start (only on CDP, HDP 2 and CDH 5 currently) to generate data into existing services of the paltform: HDFS, HBase, Hive etc...
+
+It is based on link:https://github.com/frischHWC/random-datagen[random-datagen project]
+
+__Note that this step is completely extensible as you can add new files to specify how data should be generated in folder link:playbooks/data_load/generate_data/models[playbooks/data_load/generate_data/models]__
+
+__N.B.: This step will also create Ranger required policies, and these are also extensible by adding policies in link:playbooks/data_load/ranger_policies/push_policies/policies[playbooks/data_load/ranger_policies/push_policies/policies]__
+
+
+## Extension
+
+Once you are familiar with these scripts, you can easily tune them using command-line parameters to provide your own cluster files and repositories.
+
+### Cluster Definition
+
+To provide a quick new definition of a cluster:
+
+1. Copy-Paste directory ansible-cdp and name it for example: ansible-cdp-configured
+2. Make all your modifications in files of your copied directory
+3. Launch script with argument: ``--cluster-type=ansible-cdp-configured`` (It will automatically take files under ansible-cdp-configured/ directory)
+
+### User Creation & Data Loading
+
+Those steps can be launched indepently and you can configure it to create more users or load different and more data.
+
+Look inside playbooks folder to link:playbooks/user_creation/extra_vars.yml[extra_vars.yml] to get more about possibilities.
+
+### Private Cloud
+
+Private Cloud setup (on ECS or OC) can also be launched independently on a running cluster.
+
+Configuration of private cloud cluster can also be launched independently. (Use ``--install-pvc=false`` but ``--pvc=true`` to configure but not re-install your pvc).
+
+In link:playbooks/pvc_setup/extra_vars.yml[extra_vars.yml] you can provide CDWs, CDEs, CMLs that will be provisionned for you and also rights that you expect on your users.
+
+
+## Limitations & Known Bugs
+
+- TLS is not set for HDP & CDH clusters
+- Data loading is not made for HDP 3 & CDH 6 clusters
+- Free IPA is only available for CDP clusters

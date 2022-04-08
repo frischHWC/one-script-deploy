@@ -1,0 +1,103 @@
+---
+
+- name: List Environments and get its crn
+  uri:
+    url: "{{ env_endpoint_api }}/listEnvironments"
+    method: POST
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{\"pageSize\":500}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: env_details
+
+- name: DEBUG - env_details
+  debug:
+    msg: "{{ env_details }}"
+  when: debug | default(false)
+
+- set_fact:
+    env_crn: "{{ env_details.json | community.general.json_query(query) }}"
+  vars:
+    query: "environments[?environmentName == '{{ vc.env_name }}' ].crn | [0]"
+
+- name: DEBUG - env_crn
+  debug:
+    msg: "{{ env_crn }}"
+  when: debug | default(false)
+
+- name: Get CDE Services
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_clusters
+
+- set_fact:
+    cde_service_id: "{{ cde_clusters.json | community.general.json_query(query) }}"
+  vars:
+    query: "[?name == '{{ vc.cde_service_name }}' && status != 'ClusterDeletionCompleted' ].id | [0]"
+
+- name: Get CDE VCs
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_vcs
+
+- set_fact:
+    cde_vc_id: "{{ cde_vcs.json | community.general.json_query(query_id) }}"
+  vars:
+    query_id: "[?name == '{{ vc.name }}'].id | [0]"
+
+- name: Get CDE VC Details
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance/{{ cde_vc_id }}"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_vc_details
+
+- set_fact:
+    cde_vc_endpoint: "{{ cde_vc_details.json | community.general.json_query(query_id) }}"
+  vars:
+    query_id: "appInfo.dexApiUrl"
+
+- name: DEBUG - cde_vc_endpoint
+  debug:
+    msg: "{{ cde_vc_endpoint }}"
+
+- set_fact:
+    cde_vc_endpoint_hostname: "{{ cde_vc_endpoint.split('//')[1].split('/')[0] }}"
+
+- name: DEBUG - cde_vc_endpoint_hostname
+  debug:
+    msg: "{{ cde_vc_endpoint_hostname }}"
+
+
+- name: Write user principal to file
+  shell: "echo \"{{ user.name }}@{{ realm }}\" > /tmp/{{ user.name }}.principal"
+
+- name: Send keytab to cde cluster
+  shell: "./cdp-cde-utils.sh init-user-in-virtual-cluster -h {{ cde_vc_endpoint_hostname }} -u {{ user.name }} -p /tmp/{{ user.name }}.principal -k {{ user.keytab }}"

@@ -1,0 +1,8 @@
+{
+  "name": "{{ virtual_cluster.name }}",
+  "config": {
+    "properties": {
+      "livy.ingress.enabled": "true"
+    }
+  }
+}

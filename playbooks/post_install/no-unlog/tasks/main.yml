@@ -1,0 +1,45 @@
+---
+- set_fact:
+    cloudera_manager_protocol: http
+    cloudera_manager_port: 7180
+  when: not auto_tls
+
+- set_fact:
+    cloudera_manager_protocol: https
+    cloudera_manager_port: 7183
+  when: auto_tls
+
+- set_fact:
+    cloudera_manager_url: "{{ cloudera_manager_protocol }}://{{ cloudera_manager_host }}:{{ cloudera_manager_port }}"
+
+- name: Get CM API Version
+  uri:
+    url: "{{ cloudera_manager_url }}/api/version"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_api_version_response
+
+- set_fact:
+    cloudera_manager_api_version: "{{ cloudera_manager_api_version_response.content }}"
+
+- set_fact:
+    cloudera_manager_api_url: "{{ cloudera_manager_url }}/api/{{ cloudera_manager_api_version }}"
+
+- name: Set session timeout to 30 days
+  uri:
+    url: "{{ cloudera_manager_api_url }}/cm/config"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: PUT
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+    body: "{{ lookup('template', 'unlog.json') }}"
+  ignore_errors: true

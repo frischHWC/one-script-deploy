@@ -1,0 +1,16 @@
+{
+    "environmentName": "{{ env.name }}",
+    "address": "{{ env.cm_address }}",
+    "user": "{{ env.cm_user }}",
+    "authenticationToken": "{{ env.cm_password }}",
+    "clusterNames": [
+      "{{ env.cluster_names }}"
+    ],
+    "kubeConfig": "{{ pvc_kube_config }}",
+    "storageClass": "",
+    "authenticationTokenType": "CLEARTEXT_PASSWORD",
+    "namespacePrefix": "cdp",
+    "domain": "{{ env_domain }}",
+    "dockerConfigJson": "",
+    "description": ""
+  }

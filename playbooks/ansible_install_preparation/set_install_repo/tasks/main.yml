@@ -1,0 +1,24 @@
+---
+- name: Create ansible deployment directory
+  file:
+    path: ~/deployment/
+    state: directory
+    mode: '0755'
+
+- name: Remove old ansible-repo
+  file:
+    name: ~/deployment/ansible-repo/
+    state: absent
+  ignore_errors: yes
+
+- name: Get repository as a zip and unzip it 
+  unarchive:
+    src: "{{ install_repo_url }}"
+    dest: ~/deployment/
+    remote_src: yes
+
+- name: Copy content of repository to ansible-repo
+  copy:
+    src: "~/deployment/{{ ansible_repo }}/"
+    dest: ~/deployment/ansible-repo/
+    remote_src: yes

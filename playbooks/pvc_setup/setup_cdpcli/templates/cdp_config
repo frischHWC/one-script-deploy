@@ -1,0 +1,3 @@
+[default]
+cdp_endpoint_url = {{ cdp_endpoint_url }}
+endpoint_url = {{ cdp_endpoint_url }}

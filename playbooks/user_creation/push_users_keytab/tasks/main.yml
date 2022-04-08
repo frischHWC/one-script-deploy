@@ -1,0 +1,8 @@
+---                    
+- name: Copy dev keytab
+  copy:
+    src: "/tmp/{{ user.name }}-{{ cluster_name }}.keytab"
+    dest: "/home/{{ user.name }}/{{ user.name }}.keytab"
+    owner: "{{ user.name }}"
+    group: "{{ user.name }}"
+    mode: 0400

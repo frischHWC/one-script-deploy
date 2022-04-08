@@ -1,0 +1,11 @@
+{
+  "environmentName": "{{ workspace.env_name }}",
+  "workspaceName": "{{ workspace.name }}" ,
+  "disableTLS": "{{ workspace.disable_tls | default(true) }}",
+  "enableMonitoring": "{{ workspace.enable_monitoring | default(true) }}",
+  "enableGovernance": "{{ workspace.enable_governance | default(false) }}",
+  "enableModelMetrics": "{{ workspace.enable_model_metrics | default(false) }}",
+  "existingDatabaseConfig": {},
+  "namespace": "{{ workspace.name }}",
+  "performCdswMigration": false
+}

@@ -1,0 +1,172 @@
+---
+- name: Get All services from CM
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_all_services
+
+- set_fact:
+    ranger_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'RANGER'].name | [0]"
+
+- name: DEBUG - ranger_service_name
+  debug:
+    msg: "{{ ranger_service_name }}"
+  when: debug | default(false)
+
+
+- name: Get CM deployment of services
+  uri:
+    url: "{{ cloudera_manager_url }}/api/v41/cm/deployment"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cm_deployment_services
+
+- name: DEBUG - cm_deployment_services
+  debug:
+    msg: "{{ cm_deployment_services }}"
+  when: debug | default(false)
+
+- set_fact:
+    ranger_server: "{{ cm_deployment_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "clusters[?name == '{{ cluster_name }}' ].services[].roles[?type == 'RANGER_ADMIN'][].hostRef.hostname | [0]"
+
+- name: DEBUG - Ranger Server 
+  debug:
+    msg: "{{ ranger_server }}"
+  when: debug | default(false)
+
+
+- name: Get Ranger full config
+  uri:
+    url: "{{ cloudera_manager_url }}/api/v41/clusters/{{ cluster_name }}/services/{{ ranger_service_name }}/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: ~/response.json
+  register: full_ranger_config
+
+- name: DEBUG - full_ranger_config
+  debug:
+    msg: "{{ full_ranger_config }}"
+  when: debug | default(false)
+
+
+- name: Get Ranger Admin full config
+  uri:
+    url: "{{ cloudera_manager_url }}/api/v31/clusters/{{ cluster_name }}/services/{{ ranger_service_name }}/roleConfigGroups/{{ ranger_service_name }}-RANGER_ADMIN-BASE/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: full_ranger_admin_config
+
+- name: DEBUG - full_ranger_admin_config
+  debug:
+    msg: "{{ full_ranger_admin_config }}"
+  when: debug | default(false)
+
+
+- set_fact:
+    ranger_ssl: "{{ full_ranger_admin_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ssl_enabled'].value | [0]"
+
+- set_fact:
+    ranger_ssl: "{{ full_ranger_admin_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ssl_enabled'].default | [0]"
+  when: ranger_ssl == ""
+
+- name: DEBUG - ranger_ssl
+  debug:
+    msg: "{{ ranger_ssl }}"
+  when: debug | default(false)
+
+
+- set_fact:
+    ranger_protocol: "{{ 'https' if ranger_ssl else 'http' }}"
+
+- name: DEBUG - ranger_protocol
+  debug:
+    msg: "{{ ranger_protocol }}"
+  when: debug | default(false)
+
+
+- set_fact:
+    ranger_port: "{{ full_ranger_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ranger_service_https_port'].value | [0]"
+  when: ranger_ssl
+
+- set_fact:
+    ranger_port: "{{ full_ranger_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ranger_service_https_port'].default | [0]"
+  when: ranger_ssl and ranger_port == ""
+
+- set_fact:
+    ranger_port: "{{ full_ranger_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ranger_service_http_port'].value | [0]"
+  when: not ranger_ssl
+
+- set_fact:
+    ranger_port: "{{ full_ranger_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ranger_service_http_port'].default | [0]"
+  when: not ranger_ssl and ranger_port == ""
+
+- name: DEBUG - ranger_port
+  debug:
+    msg: "{{ ranger_port }}"
+  when: debug | default(false)
+
+
+- set_fact:
+    ranger_url: "{{ ranger_protocol }}://{{ ranger_server }}:{{ ranger_port }}"
+
+- name: DEBUG - ranger_url
+  debug:
+    msg: "{{ ranger_url }}"
+  when: debug | default(false)
+
+  
+- name: Post Ranger policies declared in policies directory
+  uri: 
+    url: "{{ ranger_url }}/service/public/v2/api/policy"
+    method: POST
+    user: "{{ ranger_user }}"
+    password: "{{ ranger_password }}"
+    return_content: yes
+    body: "{{ lookup('template', '{{ item.src }}' ) }}"
+    body_format: json
+    status_code: 200
+    validate_certs: no
+    force_basic_auth: yes
+  with_filetree: "{{ role_path }}/policies"
+  ignore_errors: yes

@@ -1,0 +1,13 @@
+---
+- name: Create user's group
+  group:
+    name: "{{ user.group }}"
+    state: present
+
+- name: Create User
+  user:
+    name: "{{ user.name }}"
+    shell: /bin/bash
+    home: "/home/{{ user.name }}"
+    groups: "{{ user.group }}"
+    password: "{{ user.password | password_hash('sha512') }}" 

@@ -1,0 +1,13 @@
+---
+- name: Restart CM 
+  service:
+      name: cloudera-scm-server
+      state: restarted
+
+- name: wait cloudera-scm-server
+  wait_for:
+    host: "{{ cloudera_manager_host }}"
+    port: "{{ cloudera_manager_port }}"
+    delay: 20
+    state: started
+    timeout: 300

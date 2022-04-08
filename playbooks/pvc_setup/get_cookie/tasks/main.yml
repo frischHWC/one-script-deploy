@@ -1,0 +1,154 @@
+---
+# Get cdp_endpoint_url
+# Get URL with: "console-" + namespace + ".apps." + dnsSuffix
+
+- name: Get All Control Planes
+  uri:
+    url: "{{ cloudera_manager_api_url }}/controlPlanes/"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/controlplanes.json
+  register: controlplanes
+
+- name: DEBUG - controlplanes
+  debug:
+    msg: "{{ controlplanes }}"
+  when: debug | default(false)
+
+- set_fact:
+    cp_dns_suffix: "{{ controlplanes.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?namespace == '{{ cluster_name_pvc }}' ].dnsSuffix | [0]"
+
+- name: DEBUG - cp_dns_suffix
+  debug:
+    msg: "{{ cp_dns_suffix }}"
+  when: debug | default(false)
+
+- set_fact:
+    cdp_endpoint_url: "https://console-{{ cluster_name_pvc }}.apps.{{ cp_dns_suffix }}"
+
+- name: DEBUG - cdp_endpoint_url
+  debug:
+    msg: "{{ cdp_endpoint_url }}"
+  when: debug | default(false)
+
+- set_fact:
+    pvc_api_call: "{{ cdp_endpoint_url }}/api/v1"
+
+- name: DEBUG - pvc_api_call
+  debug:
+    msg: "{{ pvc_api_call }}"
+  when: debug | default(false)
+
+
+- name: Get First Cookie
+  uri:
+    url: "{{ cdp_endpoint_url }}/"
+    method: GET
+    status_code: [200, 302]
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    follow_redirects: no
+  register: pvc_first_call
+
+- name: DEBUG - pvc_first_call
+  debug:
+    msg: "{{ pvc_first_call }}"
+  when: debug | default(false)
+
+- set_fact:
+    first_cookie: "{{ pvc_first_call.set_cookie.split(';')[0] }};"
+
+- name: DEBUG - first_cookie
+  debug:
+    msg: "{{ first_cookie }}"
+  when: debug | default(false)
+
+- name: Get Local Account ID
+  uri:
+    url: "{{ cdp_endpoint_url }}/authenticate/login/local?loginRedirect={{ cdp_endpoint_url }}/commonconsole"
+    method: GET
+    headers: 
+      Cookie: "{{ first_cookie }}"
+    status_code: [200, 302, 303]
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    follow_redirects: no
+  register: pvc_call_for_accountid
+
+- name: DEBUG - pvc_call_for_accountid
+  debug:
+    msg: "{{ pvc_call_for_accountid }}"
+  when: debug | default(false)
+
+- set_fact:
+    local_account_id: "{{ pvc_call_for_accountid.location.split('accountId=')[1].split('&')[0] }}" 
+
+- name: DEBUG - local_account_id
+  debug:
+    msg: "{{ local_account_id }}"
+  when: debug | default(false)
+
+
+- name: Get Authentication Cookie
+  uri:
+    url: "{{ cdp_endpoint_url }}/authenticate/callback/local?accountId={{ local_account_id }}&loginRedirect={{ cdp_endpoint_url }}/commonconsole"
+    method: POST
+    headers: 
+      Cookie: "{{ first_cookie }}"
+    body: "username=admin&password=admin"
+    status_code: [200, 302, 303]
+    return_content: yes
+    validate_certs: no
+    follow_redirects: no
+  register: pvc_call_for_authcookie
+
+- name: DEBUG - pvc_call_for_authcookie
+  debug:
+    msg: "{{ pvc_call_for_authcookie }}"
+  when: debug | default(false)
+
+- set_fact:
+    auth_cookie: "{{ pvc_call_for_authcookie.set_cookie.split('cdp-pvt-session-token=')[1].split(';')[0] }};"
+
+- name: DEBUG - auth_cookie
+  debug:
+    msg: "{{ auth_cookie }}"
+  when: debug | default(false)
+
+- set_fact:
+    all_cookies: "{{ first_cookie }}cdp-pvt-session-token={{ auth_cookie }}"
+
+- name: DEBUG - all_cookies
+  debug:
+    msg: "{{ all_cookies }}"
+  when: debug | default(false)
+
+
+# - name: Pvc Example API call
+#   uri:
+#     url: "{{ pvc_api_call }}/"
+#     method: POST
+#     headers: 
+#       Content-TYpe: application/json
+#       Cookie: "{{ all_cookies }}"
+#     body: ""
+#     status_code: 200
+#     return_content: yes
+#     validate_certs: no
+#   register: pvc_example_call
+
+# - name: DEBUG - pvc_example_call
+#   debug:
+#     msg: "{{ pvc_example_call }}"
+#   when: debug | default(false)
+

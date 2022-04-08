@@ -1,0 +1,135 @@
+---
+# Set Kubeconfig var into one line
+- name: Set kubeconfig into one line
+  set_fact:
+    pvc_kube_config: "{{ lookup('file', kube_config_path ) | replace('\n', '\\n') | replace('\"', '\\\"' ) }}"
+
+- name: DEBUG - pvc_kube_config
+  debug:
+    msg: "{{ pvc_kube_config }}"
+  when: debug | default(false)
+
+# Get domain from kubeconfig file
+- set_fact: 
+    env_domain: "{{ (lookup('template', kube_config_path ) | from_yaml).clusters[0].cluster.server.split('//')[1].split(':')[0].replace('api','apps') }}"
+
+- name: DEBUG - env_domain
+  debug:
+    msg: "{{ env_domain }}"
+  when: debug | default(false)
+
+
+- name: Get admin user CRN
+  uri:
+    url: "{{ pvc_api_call }}/iam/listUsers"
+    method: POST
+    headers: 
+      Content-TYpe: application/json
+      Cookie: "{{ all_cookies }}"
+    body: "{\"pageSize\":500}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: list_all_users
+
+- name: DEBUG - list_all_users
+  debug:
+    msg: "{{ list_all_users }}"
+  when: debug | default(false)
+
+- set_fact:
+    admin_crn: "{{ list_all_users.json | community.general.json_query(query) }}"
+  vars:
+    query: "users[?workloadUsername == 'admin' ].crn | [0]"
+
+- name: DEBUG - admin_crn
+  debug:
+    msg: "{{ admin_crn }}"
+  when: debug | default(false)
+
+- name: Fetch IPA CA file
+  slurp:
+    src: "/etc/ipa/ca.crt"
+  register: slurped_ca_crt
+
+- name: Decode ca 
+  set_fact:
+    ipa_crt: "{{ slurped_ca_crt.content | b64decode }}"
+
+- name: DEBUG - ipa_crt
+  debug:
+    msg: "{{ ipa_crt }}"
+  when: debug | default(false)
+
+- name: DEBUG - call to update ldap
+  debug:
+    msg: "{{ lookup('template', 'ldap.json') }}"
+  when: debug | default(false)
+
+- name: Set LDAP provider
+  uri:
+    url: "{{ pvc_api_call }}/iam/updateLdapProvider"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body: "{{ lookup('template', 'ldap.json') }}"
+    body_format: json
+    status_code: [200, 400]
+    return_content: yes
+    validate_certs: no
+  register: ldap_provider_answer
+
+- name: DEBUG - ldap_provider_answer
+  debug:
+    msg: "{{ ldap_provider_answer }}"
+  when: debug | default(false)
+
+
+
+- name: DEBUG - call to gen acces key
+  debug:
+    msg: "{{ lookup('template', 'gen_access_key.json') }}"
+  when: debug | default(false)
+
+
+- name: Generate Access Key for admin using API
+  uri:
+    url: "{{ pvc_api_call }}/iam/createUserAccessKey"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', 'gen_access_key.json') }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: gen_access_key_answer
+
+- name: DEBUG - gen_access_key_answer
+  debug:
+    msg: "{{ gen_access_key_answer }}"
+  when: debug | default(false)
+
+- set_fact:
+    admin_access_key_id: "{{ gen_access_key_answer.json | community.general.json_query(query) }}"
+  vars:
+    query: "accessKey.accessKeyId"
+
+- name: DEBUG - admin_access_key_id
+  debug:
+    msg: "{{ admin_access_key_id }}"
+  when: debug | default(false)
+
+- set_fact:
+    admin_private_key: "{{ gen_access_key_answer.json | community.general.json_query(query) }}"
+  vars:
+    query: "privateKey"
+
+- name: DEBUG - admin_private_key
+  debug:
+    msg: "{{ admin_private_key }}"
+  when: debug | default(false)

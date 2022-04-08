@@ -1,0 +1,13 @@
+---
+- name: Kinit as francois who is admin_user
+  shell: kinit -kt /home/francois/francois.keytab francois
+
+- name: Create HDFS paths
+  shell: | 
+    hdfs dfs -mkdir -p /user/{{ user.name }}/
+    hdfs dfs -chmod 755 /user/{{ user.name }}/
+    hdfs dfs -chown {{ user.name }}:{{ user.group }} /user/{{ user.name }}/
+  ignore_errors: true
+
+- name: Kdestroy when finished
+  shell: kdestroy

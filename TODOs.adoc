@@ -1,0 +1,26 @@
+# One Script Deploy - TODOs
+
+List of TODOs for this project
+
+## Cloudera-Deploy
+
+- Change to use Cloudera-Deploy
+- Incorporate fixes into Cloudera-Deploy
+- Add also PvC part to Cloudera-Deploy
+
+## Requirements
+
+- Requirements for Debian
+- requirements for Suse
+- Requirements for MacOS
+
+## Data Loading
+
+- Add CDP 7.1.7-SP1 
+- Test and ensure all services are adressed (do not requires more privileges in Ranger)
+- Add more models
+- Work on RD to make more possibilities
+
+## PvC
+
+- Test & Make it work for ECS

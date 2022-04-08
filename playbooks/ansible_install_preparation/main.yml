@@ -1,0 +1,10 @@
+---
+- name: Install required packages for ansible installation
+  hosts: main
+  gather_facts: false
+  roles: 
+    - ansible_install
+    - { role: hdp_libs, when: distribution == "HDP" }
+    - set_install_repo
+    - { role: cdp_ansible_files, when: distribution != "HDP" }
+    - { role: hdp_ansible_files, when: distribution == "HDP" }

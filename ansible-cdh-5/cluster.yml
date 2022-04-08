@@ -1,0 +1,116 @@
+---
+clusters:
+  - name: "{{ cluster_name }}"
+    # Remove undesired services below
+    services: [HDFS, HBASE, HIVE, HUE, IMPALA, KUDU, OOZIE, SOLR, SPARK_ON_YARN, YARN, ZOOKEEPER]
+    security:
+      kerberos: "{{ kerberos_activated }}"
+      tls: "{{ auto_tls }}"
+      hdfs_encryption: false
+    repositories:
+      - "{{ cdh_repo }}"
+    configs:
+      HBASE:
+        SERVICEWIDE:
+          hbase_restserver_security_authentication: "{{ hbase_auth }}"
+      HDFS:
+        SERVICEWIDE:
+          dfs_ha_fencing_methods: 'shell(true)'
+          dfs_namenode_acls_enabled: true
+          dfs_permissions_supergroup: hadoop
+        DATANODE:
+          dfs_data_dir_list: /dfs/dn
+          dfs_datanode_max_locked_memory: 0
+          dfs_datanode_failed_volumes_tolerated: 0
+        NAMENODE:
+          dfs_name_dir_list: /dfs/nn
+          dfs_federation_namenode_nameservice: "{{ cluster_name }}"
+          autofailover_enabled: true
+          dfs_namenode_quorum_journal_name: "{{ cluster_name }}"
+        JOURNALNODE:
+          dfs_journalnode_edits_dir: /dfs/jn  
+        SECONDARYNAMENODE:
+          fs_checkpoint_dir_list: /dfs/snn
+      IMPALA:
+        IMPALAD:
+          scratch_dirs: /tmp/impala
+      KUDU:
+        KUDU_MASTER:
+          fs_wal_dir: /kudu/wal
+          fs_data_dirs: /kudu/data
+        KUDU_TSERVER:  
+          fs_wal_dir: /kudu/wal
+          fs_data_dirs: /kudu/data    
+      YARN:
+        RESOURCEMANAGER:
+          yarn_scheduler_maximum_allocation_mb: 4096
+          yarn_scheduler_maximum_allocation_vcores: 4
+        NODEMANAGER:
+          yarn_nodemanager_resource_memory_mb: 4096
+          yarn_nodemanager_resource_cpu_vcores: 4
+          yarn_nodemanager_local_dirs:  /tmp/nm
+          yarn_nodemanager_log_dirs: /var/log/nm
+        GATEWAY:
+          mapred_submit_replication: 3
+          mapred_reduce_tasks: 6
+      ZOOKEEPER:
+        SERVICEWIDE:
+          zookeeper_datadir_autocreate: true
+    host_templates:
+      Edge:
+        HBASE: [GATEWAY]
+        HDFS: [JOURNALNODE, GATEWAY]
+        HIVE: [GATEWAY]
+        HUE: [HUE_SERVER, HUE_LOAD_BALANCER]
+        KUDU: [KUDU_MASTER]
+        OOZIE: [OOZIE_SERVER]
+        SOLR: [GATEWAY]
+        SPARK_ON_YARN: [GATEWAY]
+        YARN: [GATEWAY]
+        ZOOKEEPER: [SERVER]
+      Master1:
+        HBASE: [MASTER, HBASERESTSERVER, HBASETHRIFTSERVER, GATEWAY]
+        HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
+        HIVE: [HIVEMETASTORE, HIVESERVER2, GATEWAY]
+        IMPALA: [STATESTORE, CATALOGSERVER]
+        KUDU: [KUDU_MASTER]
+        SPARK_ON_YARN: [SPARK_YARN_HISTORY_SERVER, GATEWAY]
+        SOLR: [GATEWAY]
+        YARN: [RESOURCEMANAGER, JOBHISTORY, GATEWAY]
+        ZOOKEEPER: [SERVER]
+      Master2:
+        HBASE: [MASTER, GATEWAY]
+        HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
+        HIVE: [HIVEMETASTORE, HIVESERVER2, GATEWAY]
+        KUDU: [KUDU_MASTER]
+        SOLR: [GATEWAY]
+        SPARK_ON_YARN: [GATEWAY]
+        YARN: [RESOURCEMANAGER, GATEWAY]
+        ZOOKEEPER: [SERVER]
+      Workers:
+        HBASE: [REGIONSERVER, GATEWAY]
+        HDFS: [DATANODE, GATEWAY]
+        HIVE: [GATEWAY]
+        IMPALA: [IMPALAD]
+        KUDU: [KUDU_TSERVER]
+        SOLR: [SOLR_SERVER, GATEWAY]
+        SPARK_ON_YARN: [GATEWAY]
+        YARN: [NODEMANAGER, GATEWAY]    
+
+mgmt:
+  name: Cloudera Management Service
+  services: [ALERTPUBLISHER, EVENTSERVER, HOSTMONITOR, SERVICEMONITOR]
+  security:
+    tls: "{{ auto_tls }}"
+  configs:
+    SERVICEMONITOR:
+      firehose_heapsize: 2147483648
+
+hosts:
+  configs:
+    host_memswap_thresholds:
+      warning: never
+      critical: never
+    host_clock_offset_thresholds:
+      warning: never
+      critical: never

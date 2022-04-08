@@ -1,0 +1,33 @@
+---
+- name: Create environment folder for CLDR
+  file:
+    name: ~/deployment/ansible-repo/environment/
+    state: directory
+    mode: '0775'
+
+- name: Copy CLDR hosts file
+  copy:
+    src: "{{ deploy_folder }}/hosts"
+    dest: ~/deployment/ansible-repo/
+
+- name: Copy CLDR all file
+  copy:
+    src: "{{ deploy_folder }}/all"
+    dest: ~/deployment/ansible-repo/group_vars/
+
+- name: Copy CLDR cluster.yml file
+  copy:
+    src: "{{ deploy_folder }}/cluster.yml"
+    dest: ~/deployment/ansible-repo/environment/
+
+- name: Copy CLDR extra_vars.yml file
+  copy:
+    src: "{{ deploy_folder }}/extra_vars.yml"
+    dest: ~/deployment/ansible-repo/environment/
+  ignore_errors: true
+
+- name: Copy kubeconfig file if needed
+  copy:
+    src: "{{ deploy_folder }}/kubeconfig"
+    dest: "/tmp/kubeconfig"
+  when: pvc and pvc_type == 'OC'

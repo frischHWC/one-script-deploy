@@ -1,0 +1,81 @@
+---
+debug: ${DEBUG}
+
+# CM info required
+cloudera_manager_host: ${NODE_0}
+cloudera_manager_user: admin 
+cloudera_manager_password: admin
+
+# Ranger info required
+ranger_user: admin
+ranger_password: ${DEFAULT_PASSWORD}
+
+# Credentials required
+kerb_auth: ${KERBEROS}
+kerb_user: francois@${REALM}
+kerb_keytab: /home/francois/francois.keytab
+
+# Release to get and launch
+release_url: ${DATA_LOAD_REPO_URL}
+
+###### OPTIONAL ######
+## All below variables could be filled in manually or let the playbook filled them automatically ##
+## ##
+
+# keystore: /var/lib/cloudera-scm-agent/agent-cert/cm-auto-host_keystore.jks
+# keystore_pass: changeme
+# keystore_key_pass: changeme
+
+# user: dev
+# hadoop_user: dev
+# hadoop_home: /user/dev
+# truststore_location: /tmp/truststore.jks
+
+# gen_hdfs: true
+# gen_solr: false
+# gen_kudu: false
+# gen_hbase: false
+# gen_ozone: false
+# gen_hive: true
+# gen_kafka: false
+
+# CM related
+# cloudera_manager_api_version:
+# cloudera_manager_protocol:
+# cloudera_manager_port:
+# cloudera_manager_truststore_password_api: 
+# cluster_name:
+# cdp_version: 
+
+# HDFS related
+# hdfs_nameservice:
+# hdfs_port:
+
+# HBase related
+# hbase_znode:
+
+# Hive related
+# tez_queue_name: 
+# hive_zk_namespace:
+
+# Kafka Related
+# kafka_protocol:
+# kafka_url: 
+
+# Kudu Related
+# kudu_url: 
+
+# Ozone Related
+# ozone_service_id: 
+
+# Ranger Related
+# ranger_url:
+
+# Schema Registry Related
+# sr_url:
+
+# SolR Related
+# solr_url: 
+
+# Zookeeper Related: 
+# zk_quorum_with_port: 

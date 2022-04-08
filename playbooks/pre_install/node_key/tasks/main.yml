@@ -1,0 +1,7 @@
+---
+- name: Copy node key file 
+  ignore_errors: yes
+  copy:
+    src: "{{ node_key }}"
+    dest: ~/node_key
+  when: node_key != ""   

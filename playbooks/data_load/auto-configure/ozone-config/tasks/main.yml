@@ -1,0 +1,45 @@
+---
+### GET OZONE CONFIGS ###
+
+- set_fact:
+    ozone_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'OZONE'].name | [0]"
+
+- name: DEBUG - ozone_service_name
+  debug:
+    msg: "{{ ozone_service_name }}"
+  when: debug | default(false)
+
+
+- name: Get Ozone full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ ozone_service_name }}/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/ozone_full_config.json
+  register: ozone_full_config
+
+- name: DEBUG - ozone_full_config
+  debug:
+    msg: "{{ ozone_full_config }}"
+  when: debug | default(false)
+
+
+### SET OZONE CONFIGS ###
+
+- set_fact:
+    ozone_service_id: "{{ ozone_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ozone.service.id'].value | [0]"
+
+- name: DEBUG - ozone_service_id
+  debug:
+    msg: "{{ ozone_service_id }}"
+    

@@ -1,0 +1,106 @@
+---
+####### PvC pre-requisites and fixes to make before setting up PvC #######
+
+# Required Packages
+- name: Install python 3
+  package:
+    name: python3
+    state: present
+
+- name: Install pip3
+  package:
+    name: python3-pip
+    state: present
+
+- name: Install cdpcli
+  pip:
+    name: cdpcli>=0.9.54
+    executable: pip3
+
+- name: Install unzip
+  package:
+    name: unzip
+    state: present
+
+- name: Install gunzip
+  package:
+    name: unzip
+    state: present
+
+# Apply Patch to generate_crendentials for FreeIPA
+- set_fact: 
+    cp_domain: "{{ (lookup('template', kube_config_path ) | from_yaml).clusters[0].cluster.server.split('//')[1].split(':')[0].replace('api.', '') }}"
+
+- name: DEBUG - cp_domain
+  debug:
+    msg: "{{ cp_domain }}"
+  when: debug | default(false)
+
+- name: Template Patch to CM host
+  template:
+    src: gen_credentials_ipa.p
+    dest: /tmp/gen_credentials_ipa.p
+
+- name: Apply patch remotely
+  patch:
+    src: /tmp/gen_credentials_ipa.p
+    dest: /opt/cloudera/cm/bin/gen_credentials_ipa.sh
+    remote_src: yes
+    backup: yes
+
+# Correct krb5.conf 
+
+- name: Comment include dir lines of /etc/krb5.conf
+  replace:
+    path: /etc/krb5.conf
+    regexp: '^(includedir)'
+    replace: '#\1'
+
+- name: Resolve ipa_server's IP
+  shell: "cat /etc/hosts | grep {{ ipa_server }} | cut -d' ' -f1 | xargs"
+  register: ipa_server_ip_resolve
+
+- name: DEBUG - ipa_server's IP
+  debug:
+    msg: "{{ ipa_server_ip_resolve }}"
+  when: debug | default(false)
+
+- name: Resolve ipa_server's IP
+  set_fact: 
+    ipa_server_ip: "{{ ipa_server_ip_resolve.stdout }}"
+
+- name: DEBUG - ipa_server's IP
+  debug:
+    msg: "{{ ipa_server_ip }}"
+  when: debug | default(false)
+
+- name: Replace IPA's server hostname with IP
+  replace:
+    path: /etc/krb5.conf
+    regexp: "{{ ipa_server }}"
+    replace: "{{ ipa_server_ip }}"
+
+
+# Download and set up cdp-cde-utils.tgz
+
+- name: Download cdp-cde-utils.sh.gz
+  get_url:
+    url: "https://docs.cloudera.com/data-engineering/{{ pvc_version }}/cdp-cde-utils.sh.gz"
+    dest: ~/cdp-cde-utils.sh.gz
+    mode: '0775'
+  ignore_errors: true
+
+- name: Untar cdp-cde-utils file
+  shell: gunzip -f ~/cdp-cde-utils.sh.gz
+  ignore_errors: true
+    
+- name: Set cdp-cde script executable
+  file:
+    path: ~/cdp-cde-utils.sh
+    mode: '0775'
+  ignore_errors: true
+
+
+# TODO: Configure CDE CLI https://docs.cloudera.com/data-engineering/1.3.3/cli-access/topics/cde-configure-cli.html
+
+

@@ -1,0 +1,20 @@
+---
+- name: Install Ansible
+  package:
+    name: ansible
+    state: latest
+
+- name: Install git
+  package:
+    name: git
+    state: latest
+
+- name: Install unzip
+  package:
+    name: unzip
+    state: latest
+    
+- name: Copy ansible.cfg file
+  copy:
+    src: "{{ deploy_folder }}/ansible.cfg"
+    dest: ~/.ansible.cfg

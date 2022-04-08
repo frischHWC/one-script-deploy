@@ -1,0 +1,203 @@
+---
+### GET KAFKA CONFIGS ###
+
+- set_fact:
+    kafka_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'KAFKA'].name | [0]"
+
+- name: DEBUG - Kafka Service Name
+  debug:
+    msg: "{{ kafka_service_name }}"
+  when: debug | default(false)
+
+
+- name: Get Kafka full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ kafka_service_name }}/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/kafka_full_config.json
+  register: kafka_full_config
+
+- name: DEBUG - kafka_full_config
+  debug:
+    msg: "{{ kafka_full_config }}"
+  when: debug | default(false)
+
+
+- name: Get Kafka roles repartition
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ kafka_service_name }}/roles"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/kafka_roles.json
+  register: kafka_roles
+
+- name: DEBUG - kafka_roles
+  debug:
+    msg: "{{ kafka_roles }}"
+  when: debug | default(false)
+
+
+- name: Get Kafka Broker full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ kafka_service_name }}/roleConfigGroups/{{ kafka_service_name }}-KAFKA_BROKER-BASE/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/kafka_broker_full_config.json
+  register: kafka_broker_full_config
+
+- name: DEBUG - kafka_broker_full_config
+  debug:
+    msg: "{{ kafka_broker_full_config }}"
+  when: debug | default(false)
+
+
+### SET KAFKA CONFIGS ###
+
+# Set Kafka protocol
+
+- set_fact:
+    kafka_ssl: "{{ kafka_broker_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ssl_enabled'].value | [0]"
+
+- set_fact:
+    kafka_ssl: "{{ kafka_broker_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ssl_enabled'].default | [0]"
+  when: kafka_ssl == ""
+
+- name: DEBUG - kafka_ssl
+  debug:
+    msg: "{{ kafka_ssl }}"
+  when: debug | default(false)
+
+- set_fact:
+    kafka_sasl: "{{ kafka_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'kerberos.auth.enable'].value | [0]"
+
+- set_fact:
+    kafka_sasl: "{{ kafka_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'kerberos.auth.enable'].default | [0]"
+  when: kafka_sasl == ""
+
+- name: DEBUG - kafka_sasl
+  debug:
+    msg: "{{ kafka_sasl }}"
+  when: debug | default(false)
+
+- set_fact:
+    kafka_protocol: "{{ 'SASL_SSL' if kafka_ssl and kafka_sasl else ( 'SASL_PLAINTEXT' if kafka_sasl and not kafka_ssl else ('SSL' if kafka_ssl else ('PLAINTEXT'))) }}"
+
+- name: DEBUG - kafka_protocol
+  debug:
+    msg: "{{ kafka_protocol }}"
+  when: debug | default(false)
+
+
+# Set Kafka port
+- set_fact:
+    kafka_port: "{{ kafka_broker_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ssl_port'].value | [0]"
+  when: "kafka_ssl"
+
+- set_fact:
+    kafka_port: "{{ kafka_broker_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ssl_port'].default | [0]"
+  when: "kafka_ssl and kafka_port == ''"
+
+- set_fact:
+    kafka_port: "{{ kafka_broker_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'port'].value | [0]"
+  when: "kafka_port == '' "
+
+- set_fact:
+    kafka_port: "{{ kafka_broker_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'port'].default | [0]"
+  when: " kafka_port == '' "
+
+
+# Set Kafka Brokers
+
+- set_fact:
+    kafka_hosts: "{{ kafka_roles.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'KAFKA_BROKER'].hostRef.hostname"
+
+- name: DEBUG - kafka_hosts
+  debug:
+    msg: "{{ kafka_hosts }}"
+  when: debug | default(false)
+
+- set_fact:
+    kafka_url: "{% for host in kafka_hosts %}{{ host }}:{{ kafka_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+
+- name: DEBUG - kafka_url
+  debug:
+    msg: "{{ kafka_url }}"
+  when: debug | default(false)
+
+
+# Set Keystore
+
+- set_fact:
+    keystore: "/var/lib/cloudera-scm-agent/agent-cert/cm-auto-host_keystore.jks"
+  when: keystore is not defined
+
+- name: DEBUG - keystore
+  debug:
+    msg: "{{ keystore }}"
+  when: debug | default(false)
+
+- name: Get keystore password if not defined
+  slurp:
+    src: /var/lib/cloudera-scm-agent/agent-cert/cm-auto-host_key.pw
+  register: keystore_password
+
+- name: Print returned information
+  debug:
+    msg: "{{ keystore_password['content'] | b64decode }}"
+
+- set_fact:
+    keystore_pass: "{{ keystore_password['content'] | b64decode }}"
+  when: keystore_pass is not defined
+
+- name: DEBUG - keystore_pass
+  debug:
+    msg: "{{ keystore_pass }}"
+  when: debug | default(false)
+
+- set_fact:
+    keystore_key_pass: "{{ keystore_password['content'] | b64decode }}"
+  when: keystore_key_pass is not defined
+
+- name: DEBUG - keystore_key_pass
+  debug:
+    msg: "{{ keystore_key_pass }}"
+  when: debug | default(false)

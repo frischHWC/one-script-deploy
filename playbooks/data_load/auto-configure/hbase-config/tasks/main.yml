@@ -1,0 +1,52 @@
+---
+### GET HBASE CONFIGS ###
+
+- set_fact:
+    hbase_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'HBASE'].name | [0]"
+
+- name: DEBUG - hbase_service_name
+  debug:
+    msg: "{{ hbase_service_name }}"
+  when: debug | default(false)
+
+
+- name: Get HBase full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ hbase_service_name }}/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/hbase_full_config.json
+  register: hbase_full_config
+
+- name: DEBUG - hbase_full_config
+  debug:
+    msg: "{{ hbase_full_config }}"
+  when: debug | default(false)
+
+
+### SET HBASE CONFIGS ###
+
+- set_fact:
+    hbase_znode: "{{ hbase_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'zookeeper_znode_parent'].value | [0]"
+
+- set_fact:
+    hbase_znode: "{{ hbase_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'zookeeper_znode_parent'].default | [0]"
+  when: hbase_znode == ''
+
+- name: DEBUG - hbase_znode
+  debug:
+    msg: "{{ hbase_znode }}"
+    
+    

@@ -1,0 +1,43 @@
+---
+# Get Environment details
+- set_fact:
+    cml_endpoint_api: "{{ cdp_endpoint_url }}/api/v1/ml"
+
+# Create Workspace
+- name: Create CML Workspace
+  uri:
+    url: "{{ cml_endpoint_api }}/createWorkspace"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', 'create_cml.json') }}"
+    status_code: [200, 202]
+    return_content: yes
+    validate_certs: no
+  register: answer_to_create_cml
+
+- name: DEBUG - answer_to_create_cml
+  debug:
+    msg: "{{ answer_to_create_cml }}"
+
+- name: Check CML creation
+  uri:
+    url: "{{ cml_endpoint_api }}/describeWorkspace"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', 'check_cml_activation.json') }}"
+    status_code: [200, 202]
+    return_content: yes
+    validate_certs: no
+  register: cml_activation
+  until: " cml_activation.json.workspace.instanceStatus == 'installation:finished' "
+  retries: 30
+  delay: 60
+

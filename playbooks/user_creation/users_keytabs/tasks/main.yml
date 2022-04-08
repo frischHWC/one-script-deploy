@@ -1,0 +1,33 @@
+---  
+- name: Delete keytab if it exists
+  file:
+    path: "/home/{{ user.name }}/{{ user.name }}.keytab"
+    state: absent
+  ignore_errors: true
+  
+- name: Create user on kerberos
+  shell:
+    cmd: |
+      echo "addprinc -randkey {{ user.name }}" | kadmin.local
+      echo "ktadd -k /home/{{ user.name }}/{{ user.name }}.keytab {{ user.name }}" | kadmin.local
+  when: not free_ipa 
+
+- name: Retrieve Free IPA keytabs
+  shell:
+    cmd: |
+      echo "{{ default_password }}" | kinit admin
+      ipa-getkeytab -s "{{ ipa_server }}" -p {{ user.name }} -k /home/{{ user.name }}/{{ user.name }}.keytab
+      kdestroy
+  when: free_ipa
+
+- name: Get keytab locally
+  fetch:
+    src: /home/{{ user.name }}/{{ user.name }}.keytab
+    dest: "/tmp/{{ user.name }}-{{ cluster_name }}.keytab"
+    flat: yes
+    
+- name: Get krb5.conf locally
+  fetch:
+    src: /etc/krb5.conf
+    dest: "/tmp/krb5-{{ cluster_name }}.conf"
+    flat: yes

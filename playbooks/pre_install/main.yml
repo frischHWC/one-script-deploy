@@ -1,0 +1,22 @@
+---
+- name: Setup machines with key, known_hosts, local key, license, and node key if required
+  hosts: all
+  gather_facts: false
+  strategy: free
+  roles: 
+    - network_requirements
+    - license
+    - node_key
+
+- name: Create authorized_keys file from all hosts keys file locally 
+  hosts: localhost
+  gather_facts: false
+  roles: 
+    - authorized_keys
+
+- name: Copy and set authorized_keys to all nodes
+  hosts: all
+  gather_facts: false
+  strategy: free
+  roles: 
+    - auth_key_for_all

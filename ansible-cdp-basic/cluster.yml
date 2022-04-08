@@ -1,0 +1,136 @@
+---
+clusters:
+  - name: "{{ cluster_name }}"
+    # Remove undesired services below
+    services: [HBASE, HDFS, HIVE, HIVE_ON_TEZ, INFRA_SOLR, QUEUEMANAGER, RANGER, SPARK_ON_YARN, TEZ, YARN, ZOOKEEPER]
+    security:
+      kerberos: "{{ kerberos_activated }}"
+    repositories:
+      - "{{ cdh_repo }}"  
+    configs: 
+      HBASE:
+        SERVICEWIDE:
+          hbase_restserver_security_authentication: "{{ hbase_auth }}"
+          hadoop_secure_web_ui: "{{ kerberos_activated }}"
+          hbase_superuser: "dev"
+        REGIONSERVER:  
+          hbase_regionserver_wal_codec: org.apache.hadoop.hbase.regionserver.wal.IndexedWALEditCodec
+      HDFS:
+        SERVICEWIDE:
+          dfs_ha_fencing_methods: 'shell(true)'
+          dfs_namenode_acls_enabled: true
+          hdfs_verify_ec_with_topology_enabled: false
+          dfs_permissions_supergroup: administrator
+        DATANODE:
+          dfs_data_dir_list: /dfs/dn
+        NAMENODE:
+          dfs_name_dir_list: /dfs/nn
+          dfs_federation_namenode_nameservice: "{{ cluster_name }}"
+          autofailover_enabled: true
+          dfs_namenode_quorum_journal_name: "{{ cluster_name }}"
+        JOURNALNODE:
+          dfs_journalnode_edits_dir: /dfs/jn  
+        SECONDARYNAMENODE:
+          fs_checkpoint_dir_list: /dfs/snn
+      HIVE_ON_TEZ:
+        HIVESERVER2:
+          hive_server2_transport_mode: "all"
+      RANGER:
+        SERVICEWIDE:
+          keyadmin_user_password: "{{ default_password }}"
+          rangeradmin_user_password: "{{ default_password }}"
+          rangertagsync_user_password: "{{ default_password }}"
+          rangerusersync_user_password: "{{ default_password }}" 
+        RANGER_USERSYNC:
+          ranger.usersync.source.impl.class: "{% if free_ipa == true %}org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder{% else %}org.apache.ranger.unixusersync.process.UnixUserGroupBuilder{% endif %}"
+          ranger.usersync.ldap.url: "{{ ipa_ldap_url }}"
+          ranger.usersync.ldap.binddn: "{{ ipa_ldap_user_bind_dn }}"
+          ranger_usersync_ldap_ldapbindpassword: "{{ ipa_ldap_user_bind_password }}"
+          ranger.usersync.ldap.user.searchbase: "{{ ipa_ldap_user_search_base }}"
+          ranger.usersync.ldap.user.objectclass: "person"
+          ranger.usersync.ldap.user.searchfilter: "uid=*"
+          ranger.usersync.ldap.user.nameattribute: "uid"
+          ranger.usersync.ldap.referral: "follow"
+          ranger.usersync.group.searchbase: "{{ ipa_ldap_group_search_base }}"
+          ranger.usersync.group.objectclass: "groupofnames"
+          ranger.usersync.group.nameattribute: "cn"
+          ranger.usersync.group.memberattributename: "member"
+          ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:u:administrator&ROLE_SYS_ADMIN:u:dev"
+      YARN:
+        SERVICEWIDE:
+          yarn_admin_acl: "${yarn_user},dev"
+        RESOURCEMANAGER:
+          yarn_scheduler_maximum_allocation_mb: 24576
+          yarn_scheduler_maximum_allocation_vcores: 12
+        NODEMANAGER:
+          yarn_nodemanager_resource_memory_mb: 24576
+          yarn_nodemanager_resource_cpu_vcores: 12
+          yarn_nodemanager_local_dirs:  /tmp/nm
+          yarn_nodemanager_log_dirs: /var/log/nm
+        GATEWAY:
+          mapred_submit_replication: 3
+          mapred_reduce_tasks: 6    
+      ZOOKEEPER:
+        SERVICEWIDE:
+          zookeeper_datadir_autocreate: true
+    host_templates:
+      Edge:
+        HBASE: [GATEWAY]
+        HDFS: [JOURNALNODE, GATEWAY]
+        HIVE: [GATEWAY]
+        HIVE_ON_TEZ: [GATEWAY]
+        TEZ: [GATEWAY]
+        SPARK_ON_YARN: [GATEWAY]
+        YARN: [GATEWAY]
+        ZOOKEEPER: [SERVER]
+      Master1:
+        INFRA_SOLR: [SOLR_SERVER]
+        HBASE: [MASTER, GATEWAY]
+        HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
+        HIVE: [HIVEMETASTORE, GATEWAY]
+        HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
+        RANGER: [RANGER_TAGSYNC, RANGER_USERSYNC]
+        SPARK_ON_YARN: [GATEWAY]
+        TEZ: [GATEWAY]
+        YARN: [RESOURCEMANAGER, GATEWAY]
+        QUEUEMANAGER: [QUEUEMANAGER_STORE, QUEUEMANAGER_WEBAPP]
+        ZOOKEEPER: [SERVER]         
+      Master2:
+        INFRA_SOLR: [SOLR_SERVER]
+        HBASE: [MASTER, HBASERESTSERVER, HBASETHRIFTSERVER, GATEWAY]
+        HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
+        HIVE: [HIVEMETASTORE, GATEWAY]
+        HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
+        RANGER: [RANGER_ADMIN]
+        SPARK_ON_YARN: [SPARK_YARN_HISTORY_SERVER, GATEWAY]
+        TEZ: [GATEWAY]
+        YARN: [RESOURCEMANAGER, JOBHISTORY, GATEWAY]
+        ZOOKEEPER: [SERVER]  
+      Workers:
+        HBASE: [REGIONSERVER, GATEWAY]
+        HDFS: [DATANODE, GATEWAY]
+        HIVE: [GATEWAY]
+        HIVE_ON_TEZ: [GATEWAY]
+        TEZ: [GATEWAY]
+        SPARK_ON_YARN: [GATEWAY]
+        YARN: [NODEMANAGER, GATEWAY]  
+
+mgmt:
+  name: Cloudera Management Service
+  services: [ALERTPUBLISHER, EVENTSERVER, HOSTMONITOR, REPORTSMANAGER, SERVICEMONITOR]
+  configs:
+    SERVICEMONITOR:
+      firehose_heapsize: 2147483648
+
+hosts:
+  configs:
+    host_default_proc_memswap_thresholds:
+      warning: never
+      critical: never
+    host_memswap_thresholds:
+      warning: never
+      critical: never
+    host_config_suppression_agent_system_user_group_validator: true
+    host_clock_offset_thresholds:
+      warning: never
+      critical: never

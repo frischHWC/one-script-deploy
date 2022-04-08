@@ -1,0 +1,8 @@
+---
+distribution: ${DISTRIBUTION_TO_DEPLOY}
+install_repo_url: ${INSTALL_REPO_URL} 
+pvc_type: ${PVC_TYPE} 
+pvc: ${PVC}
+debug: ${DEBUG}
+deploy_folder: ${TO_DEPLOY_FOLDER}
+ansible_repo: "${ANSIBLE_REPO_DIR}"

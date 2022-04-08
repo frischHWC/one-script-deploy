@@ -1,0 +1,8 @@
+---
+- name: Data Generation
+  hosts: main
+  gather_facts: false
+  roles: 
+    - prepare_directories
+    - install_project
+    - generate_data

@@ -1,0 +1,48 @@
+---
+cluster_definition: environment/
+cloudera_manager_version: ${CM_VERSION}
+cloudera_manager_license_type: enterprise
+cloudera_manager_license_file: ~/license.txt
+cloudera_manager_repo_username: ${PAYWALL_USER}
+cloudera_manager_repo_password: ${PAYWALL_PASSWORD}
+cloudera_manager_repo_url: ${CM_REPO}
+cloudera_manager_options:
+# set values to null to delete (and revert to default)
+  custom_banner_html: ""
+  custom_ia_policy: ""
+# valid values for colour are (case sensitive): BROWN, RED, BLACK, GREEN, TEAL, PINK, YELLOW, GRAY, PURPLE, BLUE, DARKBLUE
+  custom_header_color: "YELLOW"
+message: ""
+
+jdk_version: 11
+node_password: "${NODE_PASSWORD}"
+node_key: ${NODE_KEY}
+
+default_password: ${DEFAULT_PASSWORD}
+kerberos_activated: ${KERBEROS}
+encryption_activated: ${ENCRYPTION_ACTIVATED}
+cluster_name: ${CLUSTER_NAME}
+cluster_name_pvc: ${CLUSTER_NAME_PVC}
+realm_user: ${REALM}
+
+kafka_protocol: ${KAFKA_PROTOCOL}
+das_auth: ${DAS_AUTH}
+hbase_auth: ${HBASE_AUTH}
+
+cdh_repo: ${CDH_REPO}
+
+auto_tls: ${TLS}
+
+free_ipa: ${FREE_IPA}
+krb5_server_type: ${KRB_SERVER_TYPE}
+
+pvc_type: ${PVC_TYPE}
+pvc_version: ${PVC_VERSION}
+pvc_repo_url: ${PVC_REPO}
+pvc_app_domain_name: ${NODE_0}
+pvc_htpasswdCredentials: "YWRtaW46JDJ5JDA1JDJwOTJFNVRRa1VnelkvbFNsVklYMGUyVnEzd0JtRExuc3RTRUZUanJEUGVSRHUzS0J5UUoyCg=="
+kube_config_path: "/tmp/kubeconfig"
+install_python3: ${INSTALL_PYTHON3}
+oc_tar_file_path: ${OC_TAR_FILE_PATH}
+
+debug: ${DEBUG}

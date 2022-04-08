@@ -1,0 +1,17 @@
+---
+- name: Auto-Configure
+  hosts: main
+  gather_facts: false
+  roles: 
+    - cm-config
+    - all-config
+    - { role: ranger-config, when: config_ranger }
+    - { role: hive-config, when: config_hive }
+    - { role: hbase-config, when: config_hbase }
+    - { role: zookeeper-config, when: config_zookeeper }
+    - { role: solr-config, when: config_solr }
+    - { role: kudu-config, when: config_kudu }
+    - { role: ozone-config, when: config_ozone }
+    - { role: hdfs-config, when: config_hdfs }
+    - { role: schema-registry-config, when: config_schema_registry }
+    - { role: kafka-config, when: config_kafka }

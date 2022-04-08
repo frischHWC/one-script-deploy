@@ -1,0 +1,21 @@
+######################################################
+##
+## The static inventory pua the hosa in different groups as described here: https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html#hosa-and-groups
+## Variables would be defined directly for each host, including the ansible_user, the login user with sudoers permissions.
+## For authentication, either the password or the SSH Private Key can be used.
+##
+######################################################
+
+[hdp-edge]
+master01 ansible_host=${NODE_0} ansible_user=${NODE_USER} ansible_ssh_private_key_file="~/.ssh/id_rsa" rack=/default-rack
+
+[hdp-master-1]
+master03 ansible_host=${NODE_1} ansible_user=${NODE_USER} ansible_ssh_private_key_file="~/.ssh/id_rsa" rack=/default-rack
+
+[hdp-master-2]
+master02 ansible_host=${NODE_2} ansible_user=${NODE_USER} ansible_ssh_private_key_file="~/.ssh/id_rsa" rack=/default-rack
+
+[hdp-worker]
+worker01 ansible_host=${NODE_3} ansible_user=${NODE_USER} ansible_ssh_private_key_file="~/.ssh/id_rsa" rack=/default-rack
+worker02 ansible_host=${NODE_4} ansible_user=${NODE_USER} ansible_ssh_private_key_file="~/.ssh/id_rsa" rack=/default-rack
+worker03 ansible_host=${NODE_5} ansible_user=${NODE_USER} ansible_ssh_private_key_file="~/.ssh/id_rsa" rack=/default-rack

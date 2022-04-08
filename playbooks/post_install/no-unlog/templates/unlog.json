@@ -1,0 +1,8 @@
+{
+    "items": [
+      {
+        "name": "session_timeout",
+        "value": 2592000
+      }
+    ]
+  }

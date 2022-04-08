@@ -1,0 +1,30 @@
+---
+- name: Remove .cdp directory
+  ansible.builtin.file:
+    path: ~/.cdp/
+    state: absent
+    mode: '0750'
+
+- name: Create .cdp directory
+  ansible.builtin.file:
+    path: ~/.cdp/
+    state: directory
+    mode: '0750'
+
+- name: Copy CDP config file  
+  template:
+    src: "cdp_config"
+    dest: "~/.cdp/config"
+
+- name: Copy CDP credentials file 
+  template:
+    src: "cdp_credentials"
+    dest: "~/.cdp/credentials"
+
+- set_fact:
+    cdp_cli_cmd: "cdp --no-verify-tls "
+
+- set_fact:
+    cdp_cli_cmd: "cdp --debug --no-verify-tls "
+  when: debug | default(false)
+

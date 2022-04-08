@@ -1,0 +1,14 @@
+{
+    "computeName": "{{ warehouse.name }}",
+    "warehouseId": "{{ dwx_dbc_id }}",
+    "template": "{{ warehouse.size | default(xsmall) }}",
+    "autoScaling": {
+      "minClusters": {{ warehouse.min_nodes | default('1') }},
+      "maxClusters": {{ warehouse.max_nodes | default('5') }},
+      "autoSuspendTimeoutSeconds": {{ warehouse.auto_suspend_timeout | default('300') }},
+      "waitTimeSeconds": {{ warehouse.wait_time | default('60') }},
+      "disableAutoSuspend": {{ warehouse.disable_auto_suspend | default('false') }}
+    },
+    "config": {
+    }
+  }

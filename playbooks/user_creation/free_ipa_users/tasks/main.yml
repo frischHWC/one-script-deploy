@@ -1,0 +1,34 @@
+---
+- name: Set Free IPA password policies
+  shell: |
+    "echo {{ default_password }} | kinit admin"
+    ipa pwpolicy-mod  global_policy --minlife=0
+    kdestroy
+  ignore_errors: true
+
+- name: Create User
+  ipa_user:
+    name: "{{ user.name }}"
+    givenname: "{{ user.name }}"
+    displayname: "{{ user.name }}"
+    sn: "{{ user.name }}"
+    state: present
+    homedirectory: "/home/{{ user.name }}"
+    password: "{{ user.password }}"
+    ipa_host: "{{ ipa_server }}"
+    ipa_user: admin
+    ipa_pass: "{{ default_password }}"
+
+- name: Reset User's password
+  shell: echo -e "{{ user.password }}\n{{ user.password }}\n{{ user.password }}" | kinit "{{ user.name }}"
+
+- name: Create User's group and assign user to it
+  community.general.ipa_group:
+    name: "{{ user.group }}"
+    user:
+    - "{{ user.name }}"
+    append: yes
+    state: present
+    ipa_host: "{{ ipa_server }}"
+    ipa_user: admin
+    ipa_pass: "{{ default_password }}"

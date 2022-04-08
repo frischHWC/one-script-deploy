@@ -1,0 +1,119 @@
+---
+### GET KUDU CONFIGS ###
+
+- set_fact:
+    zk_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'ZOOKEEPER'].name | [0]"
+
+- name: DEBUG - zk_service_name
+  debug:
+    msg: "{{ zk_service_name }}"
+  when: debug | default(false)
+
+
+- name: Get ZK full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ zk_service_name }}/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/zk_full_config.json
+  register: zk_full_config
+
+- name: DEBUG - zk_full_config
+  debug:
+    msg: "{{ zk_full_config }}"
+  when: debug | default(false)
+
+
+- name: Get ZK Server full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ zk_service_name }}/roleConfigGroups/{{ zk_service_name }}-SERVER-BASE/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/zk_server_full_config.json
+  register: zk_server_full_config
+
+- name: DEBUG - zk_server_full_config
+  debug:
+    msg: "{{ zk_server_full_config }}"
+  when: debug | default(false)
+
+- name: Get ZK roles repartition
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ zk_service_name }}/roles"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/zk_roles.json
+  register: zk_roles
+
+- name: DEBUG - zk_roles
+  debug:
+    msg: "{{ zk_roles }}"
+  when: debug | default(false)
+
+ 
+### SET ZK CONFIGS ###
+
+# Set ZK port
+
+- set_fact:
+    zk_port: "{{ zk_server_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'clientPort'].value | [0]"
+
+- set_fact:
+    zk_port: "{{ zk_server_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'clientPort'].default | [0]"
+  when: zk_port == ""
+
+- name: DEBUG - zk_port
+  debug:
+    msg: "{{ zk_port }}"
+  when: debug | default(false)
+
+
+# Set ZK Quorum
+
+- set_fact:
+    zk_hosts: "{{ zk_roles.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'SERVER'].hostRef.hostname"
+
+- name: DEBUG - zk_hosts
+  debug:
+    msg: "{{ zk_hosts }}"
+  when: debug | default(false)
+
+- set_fact:
+    zk_quorum: "{% for host in zk_hosts %}{{ host }}{% if not loop.last %},{% endif %}{% endfor %}"
+
+- set_fact:
+    zk_quorum_with_port: "{% for host in zk_hosts %}{{ host }}:{{ zk_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+
+- name: DEBUG - zk_quorum_with_port
+  debug:
+    msg: "{{ zk_quorum_with_port }}"
+  when: debug | default(false)
+  
+
+  

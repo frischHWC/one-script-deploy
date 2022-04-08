@@ -1,0 +1,61 @@
+---
+- name: Get models files to process
+  find:
+    paths: ~/projects/models/
+  register: models_found
+
+- name: Generates data into HDFS
+  command:
+    cmd: "java -jar random-datagen.jar {{ item.path }} 10 100 hdfs-parquet hdfs-orc hdfs-avro hdfs-csv"
+    chdir: ~/projects/random-datagen/
+  ignore_errors: yes
+  with_items: "{{ models_found.files }}"
+  when: gen_hdfs
+
+- name: Generates data into HBase
+  command:
+    cmd: "java -jar random-datagen.jar {{ item.path }} 10 100 hbase"
+    chdir: ~/projects/random-datagen/
+  ignore_errors: yes
+  with_items: "{{ models_found.files }}"
+  when: gen_hbase
+
+- name: Generates data into Ozone
+  command:
+    cmd: "java -jar random-datagen.jar {{ item.path }} 10 100 ozone"
+    chdir: ~/projects/random-datagen/
+  ignore_errors: yes
+  with_items: "{{ models_found.files }}"  
+  when: gen_ozone
+    
+- name: Generates data into Hive
+  command:
+    cmd: "java -jar random-datagen.jar {{ item.path }} 10 100 hive"
+    chdir: ~/projects/random-datagen/ 
+  ignore_errors: yes
+  with_items: "{{ models_found.files }}"
+  when: gen_hive
+  
+- name: Generates data into SolR
+  command:
+    cmd: "java -jar random-datagen.jar {{ item.path }} 10 100 solr"
+    chdir: ~/projects/random-datagen/     
+  ignore_errors: yes
+  with_items: "{{ models_found.files }}"
+  when: gen_solr
+    
+- name: Generates data into Kudu
+  command:
+    cmd: "java -jar random-datagen.jar {{ item.path }} 10 100 kudu"
+    chdir: ~/projects/random-datagen/
+  ignore_errors: yes
+  with_items: "{{ models_found.files }}"
+  when: gen_kudu
+   
+- name: Generates data into Kafka
+  command:
+    cmd: "java -jar random-datagen.jar {{ item.path }} 10 100 kafka"
+    chdir: ~/projects/random-datagen/
+  ignore_errors: yes
+  with_items: "{{ models_found.files }}"
+  when: gen_kafka           

@@ -1,0 +1,17 @@
+{
+    "ldapProviderName": "cm-ldap",
+    "skipGroupSyncOnLogin": false,
+    "url": "ldaps://{{ ipa_server }}:636",
+    "bindDn": "uid=admin,cn=users,cn=accounts,{% for i in realm.split('.') %}dc={{ i | lower }}{% if not loop.last %},{% endif %}{% endfor %}",
+    "bindPassword": "",
+    "userSearchBase": "cn=users,cn=accounts,{% for i in realm.split('.') %}dc={{ i | lower }}{% if not loop.last %},{% endif %}{% endfor %}",
+    "userSearchFilter": "(&(uid={0})(objectClass=person))",
+    "groupSearchBase": "cn=groups,cn=accounts,{% for i in realm.split('.') %}dc={{ i | lower }}{% if not loop.last %},{% endif %}{% endfor %}",
+    "groupSearchFilter": "(&(member={1})(objectClass=posixgroup))",
+    "syncGroupsOnLogin": true,
+    "emailMappingAttribute": "mailto",
+    "showAdvanced": false,
+    "tlsCaCertificates": [
+      "{{ ipa_crt | replace('\n', '\\n') }}"
+    ]
+}

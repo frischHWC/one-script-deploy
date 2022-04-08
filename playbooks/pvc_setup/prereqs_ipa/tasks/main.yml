@@ -1,0 +1,51 @@
+---
+- name: Add necessary roles for 'cmadminrole' 
+  freeipa.ansible_freeipa.iparole:
+    ipaadmin_password: "{{ ipa_admin_password }}"
+    name: cmadminrole
+    privilege:
+      - Group Administrators
+      - User Administrators
+      - Host Enrollment
+      - Host Administrators
+      - Host Group Administrators
+      - Modify Group membership
+      - Modify Users and Reset passwords
+      - Service Administrators
+      - Sudo Administrator
+      - Stage User Administrators
+      - Delegation Administrator
+    action: member
+
+# Set cmadmin-XXXX user in FreeIPA as an admin
+
+- name: Get cmadmin exact name from ipa cli
+  shell: | 
+      echo "{{ ipa_admin_password }}" | kinit admin 
+      ipa user_find cmadmin | grep "User login" | cut -d : -f 2 | xargs
+  register: ipa_cmadmin_answer
+
+- name: Get exact cmadmin_name from iap cli answer
+  set_fact:
+    cmadmin_name: "{{ ipa_cmadmin_answer.stdout.split('\n')[1] }}"
+
+- name: DEBUG - cmadmin_name
+  debug:
+    msg: "{{ cmadmin_name }}"
+  when: debug | default(false)
+
+- name: Add cmadmin to admins group
+  freeipa.ansible_freeipa.ipagroup:
+    ipaadmin_password: "{{ ipa_admin_password }}"
+    name: admins 
+    user:
+      - "{{ cmadmin_name }}"
+    action: member
+
+- name: Add cmadmin to trust admins group
+  freeipa.ansible_freeipa.ipagroup:
+    ipaadmin_password: "{{ ipa_admin_password }}"
+    name: trust admins 
+    user:
+      - "{{ cmadmin_name }}"
+    action: member

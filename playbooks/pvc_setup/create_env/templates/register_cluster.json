@@ -1,0 +1,6 @@
+{
+    "envNameOrCrn": "{{ env_crn }}",
+    "clusterName": "{{ env.name }}-compute-cluster",
+    "description": "",
+    "kubeConfig": "{{ pvc_kube_config }}"
+}

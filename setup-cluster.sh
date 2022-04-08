@@ -254,7 +254,7 @@ while [ "$1" != "" ]; do
         --node-ipa)
             NODE_IPA=$VALUE
             ;;
-        --nodes-kts)
+        --node-kts)
             NODE_KTS=$VALUE
             ;;
          --cluster-type)

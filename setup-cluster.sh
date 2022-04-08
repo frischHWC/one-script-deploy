@@ -492,6 +492,13 @@ then
         export ANSIBLE_ALL_FILE="ansible-cdp-basic/all"
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-basic/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-basic/extra_vars.yml"
+    elif [ "${CLUSTER_TYPE}" = "basic-enc" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdp-basic-enc/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-basic-enc/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-basic-enc/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-basic-enc/extra_vars.yml"
+        export ENCRYPTION_ACTIVATED="true"
     elif [ "${CLUSTER_TYPE}" = "full" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp/hosts"
@@ -524,15 +531,12 @@ then
         export USE_SPARK3="true"
         export USE_CSA="true"
         export USE_CFM="true"
-    elif [ "${CLUSTER_TYPE}" = "full-pvc" ]
+    elif [ "${CLUSTER_TYPE}" = "streaming-enc" ]
     then
-        export ANSIBLE_HOST_FILE="ansible-cdp-full-pvc/hosts"
-        export ANSIBLE_ALL_FILE="ansible-cdp-full-pvc/all"
-        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-full-pvc/cluster.yml"
-        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-full-pvc/extra_vars.yml"
-        export PVC="true"
-        export PVC_TYPE="OC"
-        export FREE_IPA="true"
+        export ANSIBLE_HOST_FILE="ansible-cdp-streaming-enc/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-streaming-enc/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-streaming-enc/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-streaming-enc/extra_vars.yml"
         export ENCRYPTION_ACTIVATED="true"
     elif [ "${CLUSTER_TYPE}" = "cdh6" ]
     then
@@ -680,13 +684,13 @@ if [ "${USE_CFM}" = "true" ]
 then
     if [ -z "${CFM_BASE_REPO}" ] 
     then
-        export CFM_REPO="https://archive.cloudera.com/p/CFM/2.x/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}/tars/parcels"
+        export CFM_REPO="https://archive.cloudera.com/p/CFM/2.x/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}/tars/parcel/"
         export CFM_CSD_JAR=$(curl -s -X GET -u ${PAYWALL_USER}:${PAYWALL_PASSWORD} https://archive.cloudera.com/p/CFM/2.x/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}/tars/parcel/ | grep .jar | grep NIFI- | cut -d '>' -f 3 | cut -d '<' -f 1)
         export CFM_REGISTRY_CSD_JAR=$(curl -s -X GET -u ${PAYWALL_USER}:${PAYWALL_PASSWORD} https://archive.cloudera.com/p/CFM/2.x/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}/tars/parcel/ | grep .jar | grep NIFIREGISTRY | cut -d '>' -f 3 | cut -d '<' -f 1)
         export CFM_CSD="https://archive.cloudera.com/p/CFM/2.x/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}/tars/parcel/${CFM_CSD_JAR}"
         export CFM_REGISTRY_CSD="https://archive.cloudera.com/p/CFM/2.x/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}/tars/parcel/${CFM_REGISTRY_CSD_JAR}"
     else
-        export CFM_REPO="${CFM_BASE_REPO}tars/parcels"
+        export CFM_REPO="${CFM_BASE_REPO}tars/parcel/"
         export CFM_CSD_JAR=$(curl -s -X GET ${CFM_BASE_REPO}/tars/parcel/ | grep .jar | grep NIFI- | cut -d '>' -f 3 | cut -d '<' -f 1)
         export CFM_REGISTRY_CSD_JAR=$(curl -s -X GET ${CFM_BASE_REPO}/tars/parcel/ | grep .jar | grep NIFIREGISTRY | cut -d '>' -f 3 | cut -d '<' -f 1)
         export CFM_CSD="${CFM_BASE_REPO}tars/parcel/${CFM_CSD_JAR}"
@@ -1161,60 +1165,6 @@ then
     fi
 fi
 
-if [ "${USER_CREATION}" = "true" ]
-then
-    echo "############ Create users on the cluster ############"
-    if [ "${DEBUG}" = "true" ]
-    then
-        echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/user_creation/main.yml --extra-vars \"@/tmp/user_creation_extra_vars.yml\" "
-        echo " Follow advancement at: ${LOG_DIR}/user_creation.log "
-    fi
-    cp playbooks/user_creation/extra_vars.yml /tmp/user_creation_extra_vars.yml
-    envsubst < /tmp/user_creation_extra_vars.yml > /tmp/user_creation_extra_vars.yml.tmp && mv /tmp/user_creation_extra_vars.yml.tmp /tmp/user_creation_extra_vars.yml
-    ansible-playbook -i ${HOSTS_FILE} playbooks/user_creation/main.yml --extra-vars "@/tmp/user_creation_extra_vars.yml" > ${LOG_DIR}/user_creation.log
-    OUTPUT=$(tail -20 ${LOG_DIR}/user_creation.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
-    if [ "${OUTPUT}" == "2" ]
-    then
-      echo " SUCCESS: Users Creation "
-    else
-      echo " FAILURE: Could not create users " 
-      echo " See details in file: ${LOG_DIR}/user_creation.log "
-      exit 1
-    fi
-fi
-
-if [ "${DATA_LOAD}" = "true" ]
-then
-    echo "############ Ranger Rigths setup & Data Loading ############" 
-    if [ "${DISTRIBUTION_TO_DEPLOY}" = "HDP" ]
-    then
-        export RD_VERSION='2.6.5'
-    else
-        export RD_VERSION="${CDH_VERSION:0:5}"
-    fi
-    if [ -z ${DATA_LOAD_REPO_URL} ]
-    then
-        export DATA_LOAD_REPO_URL="https://github.com/frischHWC/random-datagen/releases/download/${DISTRIBUTION_TO_DEPLOY}-${RD_VERSION}/random-datagen-${DISTRIBUTION_TO_DEPLOY}-${RD_VERSION}.tar.gz"
-    fi
-    if [ "${DEBUG}" = "true" ]
-    then
-        echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/data_load/main.yml --extra-vars \"@/tmp/data_load_extra_vars.yml\" "
-        echo " Follow advancement at: ${LOG_DIR}/data_load.log "
-    fi
-    cp playbooks/data_load/extra_vars.yml /tmp/data_load_extra_vars.yml
-    envsubst < /tmp/data_load_extra_vars.yml > /tmp/data_load_extra_vars.yml.tmp && mv /tmp/data_load_extra_vars.yml.tmp /tmp/data_load_extra_vars.yml
-    ansible-playbook -i ${HOSTS_FILE} playbooks/data_load/main.yml --extra-vars "@/tmp/data_load_extra_vars.yml" > ${LOG_DIR}/data_load.log
-    OUTPUT=$(tail -20 ${LOG_DIR}/data_load.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
-    if [ "${OUTPUT}" == "2" ]
-    then
-      echo " SUCCESS: Data loaded "
-    else
-      echo " FAILURE: Could not load data " 
-      echo " See details in file: ${LOG_DIR}/data_load.log "
-      exit 1
-    fi
-fi
-
 if [ "${PVC}" = "true" ] && [ "${INSTALL_PVC}" = "true" ]
 then
     echo "############ Creating PvC cluster ############" 
@@ -1249,6 +1199,60 @@ then
     else
       echo " FAILURE: Could not configure PVC " 
       echo " See details in file: ${LOG_DIR}/pvc_configuration.log "
+      exit 1
+    fi
+fi
+
+if [ "${USER_CREATION}" = "true" ]
+then
+    echo "############ User Creation ############"
+    if [ "${DEBUG}" = "true" ]
+    then
+        echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/user_creation/main.yml --extra-vars \"@/tmp/user_creation_extra_vars.yml\" "
+        echo " Follow advancement at: ${LOG_DIR}/user_creation.log "
+    fi
+    cp playbooks/user_creation/extra_vars.yml /tmp/user_creation_extra_vars.yml
+    envsubst < /tmp/user_creation_extra_vars.yml > /tmp/user_creation_extra_vars.yml.tmp && mv /tmp/user_creation_extra_vars.yml.tmp /tmp/user_creation_extra_vars.yml
+    ansible-playbook -i ${HOSTS_FILE} playbooks/user_creation/main.yml --extra-vars "@/tmp/user_creation_extra_vars.yml" > ${LOG_DIR}/user_creation.log
+    OUTPUT=$(tail -20 ${LOG_DIR}/user_creation.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
+    if [ "${OUTPUT}" == "2" ]
+    then
+      echo " SUCCESS: Users Creation "
+    else
+      echo " FAILURE: Could not create users " 
+      echo " See details in file: ${LOG_DIR}/user_creation.log "
+      exit 1
+    fi
+fi
+
+if [ "${DATA_LOAD}" = "true" ]
+then
+    echo "############ Data Loading ############" 
+    if [ "${DISTRIBUTION_TO_DEPLOY}" = "HDP" ]
+    then
+        export RD_VERSION='2.6.5'
+    else
+        export RD_VERSION="${CDH_VERSION:0:5}"
+    fi
+    if [ -z ${DATA_LOAD_REPO_URL} ]
+    then
+        export DATA_LOAD_REPO_URL="https://github.com/frischHWC/random-datagen/releases/download/${DISTRIBUTION_TO_DEPLOY}-${RD_VERSION}/random-datagen-${DISTRIBUTION_TO_DEPLOY}-${RD_VERSION}.tar.gz"
+    fi
+    if [ "${DEBUG}" = "true" ]
+    then
+        echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/data_load/main.yml --extra-vars \"@/tmp/data_load_extra_vars.yml\" "
+        echo " Follow advancement at: ${LOG_DIR}/data_load.log "
+    fi
+    cp playbooks/data_load/extra_vars.yml /tmp/data_load_extra_vars.yml
+    envsubst < /tmp/data_load_extra_vars.yml > /tmp/data_load_extra_vars.yml.tmp && mv /tmp/data_load_extra_vars.yml.tmp /tmp/data_load_extra_vars.yml
+    ansible-playbook -i ${HOSTS_FILE} playbooks/data_load/main.yml --extra-vars "@/tmp/data_load_extra_vars.yml" > ${LOG_DIR}/data_load.log
+    OUTPUT=$(tail -20 ${LOG_DIR}/data_load.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
+    if [ "${OUTPUT}" == "2" ]
+    then
+      echo " SUCCESS: Data loaded "
+    else
+      echo " FAILURE: Could not load data " 
+      echo " See details in file: ${LOG_DIR}/data_load.log "
       exit 1
     fi
 fi

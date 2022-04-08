@@ -52,6 +52,16 @@ Many more configurations are available, see them all with:
             --cluster-type=basic \
             --nodes=${NODES}  
 
+#### CDP 7 - Basic encrypted 6 nodes (Kerberos / TLS)
+
+        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+            --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --cluster-type=basic \
+            --node-kts=<Dedicated Node for KTS> \
+            --nodes=${NODES}  
+
 #### CDP 7 - Basic 6 nodes with Free IPA on a dedicated node (All CDP clusters can have free-ipa just by adding --free-ipa=true) (Kerberos / TLS)
  
         ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
@@ -93,6 +103,16 @@ Many more configurations are available, see them all with:
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
             --cluster-type=streaming \
+            --nodes=${NODES} 
+
+#### CDP 7 - Streaming cluster encrypted (6 nodes basic with Spark 3 and Flink + a VPC of 3 nodes of Kafka/Nifi) (Kerberos / TLS)
+
+        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+           --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --cluster-type=streaming-enc \
+            --node-kts=<Dedicated Node for KTS> \
             --nodes=${NODES} 
 
 #### CDP 7 - Unsecure
@@ -160,7 +180,7 @@ __N.B.: It is recommended to not interfer with the cluster during ansible instal
 
 ### Users and Data
 
-At the end of the installation, if it completed successfully, users are created on machines, their keytabs too and are retrieved in your local computer under ```/tmp/```, ```/etc/krb5.conf``` is also retrieved.
+At the end of the installation, if it completed successfully, users are created on machines, their keytabs too and are retrieved in your local computer under ```/tmp/```, ```krb5.conf``` is also retrieved.
 
 Moreover, it is also possible to launch some random data generation into various systems.
 
@@ -214,7 +234,7 @@ link:https://github.com/frischHWC/random-datagen[Data Load repository]
 
 This step uses link:playbooks/hosts_setup[Playbook hosts_setup].
 
-If you did not set parameter *--setup* to false, it will prepare all machines by setting ssh-passwordless, pushing required files to them.
+If you did not set parameter ``--setup`` to false, it will prepare all machines by setting ssh-passwordless, pushing required files to them.
 
 __N.B.: This step can be done only one time and then bypass if you reuse same machines__
 
@@ -223,7 +243,7 @@ __N.B.: This step can be done only one time and then bypass if you reuse same ma
 
 This step uses link:playbooks/ansible_install_preparation[Playbook ansible_install_preparation] and then launch commands directly on the host to launch ansible installation there.
 
-The first playbook used can be skipped setting parameter *--install* to false, which is true by default.
+The first playbook used can be skipped setting parameter ``--install`` to false, which is true by default.
 
 It cleans up the first node, creates a directory ```~/deployment/ansible-repo/```, get ansible repository as a zip in it and add files for your installation in it.
 
@@ -234,7 +254,7 @@ Then, the proper ansible command corresponding to the installation is lauched di
 
 This step uses link:playbooks/post_install[Playbook post_install].
 
-If you install a CDP cluster and let parameter *--post-install* to true, it will do some extra-steps, such as setting no unlogin on CM, fix various potential bugs.
+If you install a CDP cluster and let parameter ``--post-install`` to true, it will do some extra-steps, such as setting no unlogin on CM, fix various potential bugs.
 
 
 ### User Creation
@@ -293,3 +313,5 @@ In link:playbooks/pvc_setup/extra_vars.yml[extra_vars.yml] you can provide CDWs,
 - TLS is not set for HDP & CDH clusters
 - Data loading is not made for HDP 3 & CDH 6 clusters
 - Free IPA is only available for CDP clusters
+
+Please feel free to contribute and help solve and implement TODOs listed in link:TODOs.adoc[TODOs.adoc]

@@ -1,17 +1,19 @@
 ---
 clusters:
+
+  - name: "{{ cluster_name }}-kts"
+    type: kts
+    repositories:
+      - "{{ cdh_repo }}"
+
   - name: "{{ cluster_name }}"
     # Remove undesired services below
-    services: [ATLAS, HBASE, HDFS, HIVE, HIVE_ON_TEZ, INFRA_SOLR, KAFKA, KNOX, OZONE, QUEUEMANAGER, RANGER, SPARK_ON_YARN, TEZ, YARN, ZOOKEEPER]
+    services: [HBASE, HDFS, HIVE, HIVE_ON_TEZ, INFRA_SOLR, QUEUEMANAGER, RANGER, SPARK_ON_YARN, TEZ, YARN, ZOOKEEPER]
     security:
       kerberos: "{{ kerberos_activated }}"
     repositories:
       - "{{ cdh_repo }}"  
     configs: 
-      ATLAS:
-        ATLAS_SERVER:
-          atlas_admin_password: "{{ default_password }}"
-          atlas_authentication_method_file: true
       HBASE:
         SERVICEWIDE:
           hbase_restserver_security_authentication: "{{ hbase_auth }}"
@@ -39,23 +41,6 @@ clusters:
       HIVE_ON_TEZ:
         HIVESERVER2:
           hive_server2_transport_mode: "all"
-      KNOX:
-        SERVICEWIDE:
-          knox_encryptquerystring_secret: "{{ default_password }}"
-          knox_hadoop_auth_config_signature_secret: "{{ default_password }}"
-        KNOX_GATEWAY:
-          gateway_knox_admin_groups: admin_user
-          gateway_master_secret: "{{ default_password }}"
-          gateway_sso_authentication_provider: "{% if free_ipa == true %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.urls./**=authcBasic#authentication.param.main.ldapRealm=org.apache.knox.gateway.shirorealm.KnoxLdapRealm#authentication.param.main.ldapContextFactory=org.apache.knox.gateway.shirorealm.KnoxLdapContextFactory#authentication.param.main.ldapRealm.contextFactory=$ldapContextFactory#authentication.param.main.ldapRealm.contextFactory.authenticationMechanism=simple#authentication.param.main.ldapRealm.contextFactory.url={{ ipa_ldap_url }}#authentication.param.main.ldapRealm.contextFactory.systemUsername={{ ipa_ldap_user_bind_dn }}#authentication.param.main.ldapRealm.contextFactory.systemPassword={{ ipa_ldap_user_bind_password }}#authentication.param.main.ldapRealm.userDnTemplate=uid={0},{{ ipa_ldap_user_search_base }}#authentication.param.remove=main.pamRealm#authentication.param.remove=main.pamRealm.service{% else %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.main.pamRealm=org.apache.knox.gateway.shirorealm.KnoxPamRealm#authentication.param.main.pamRealm.service=login#authentication.param.urls./**=authcBasic{% endif %}"
-      OZONE:
-        SERVICEWIDE:
-          ozone.service.id: "{{ cluster_name }}"
-          ozone.scm.primordial.node.id: "{{  groups.cluster_master_nodes | first | default(omit) }}"
-        S3_GATEWAY:
-          ssl_enabled: false
-      SPARK_ON_YARN:
-        SERVICEWIDE:
-          atlas_service: "atlas"
       RANGER:
         SERVICEWIDE:
           keyadmin_user_password: "{{ default_password }}"
@@ -76,7 +61,7 @@ clusters:
           ranger.usersync.group.objectclass: "groupofnames"
           ranger.usersync.group.nameattribute: "cn"
           ranger.usersync.group.memberattributename: "member"
-          ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:u:admin_user&ROLE_SYS_ADMIN:u:francois"
+          ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:g:admin_user&ROLE_SYS_ADMIN:u:francois"
       YARN:
         SERVICEWIDE:
           yarn_admin_acl: "${yarn_user},francois"
@@ -100,37 +85,28 @@ clusters:
         HDFS: [JOURNALNODE, GATEWAY]
         HIVE: [GATEWAY]
         HIVE_ON_TEZ: [GATEWAY]
-        KAFKA: [KAFKA_BROKER, GATEWAY]
-        KNOX: [KNOX_GATEWAY]
-        OZONE: [OZONE_RECON, OZONE_MANAGER, STORAGE_CONTAINER_MANAGER, GATEWAY, S3_GATEWAY]
         TEZ: [GATEWAY]
         SPARK_ON_YARN: [GATEWAY]
         YARN: [GATEWAY]
         ZOOKEEPER: [SERVER]
       Master1:
-        ATLAS: [ATLAS_SERVER]
         INFRA_SOLR: [SOLR_SERVER]
         HBASE: [MASTER, GATEWAY]
         HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
         HIVE: [HIVEMETASTORE, GATEWAY]
         HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
-        KAFKA: [KAFKA_BROKER, GATEWAY]
         RANGER: [RANGER_TAGSYNC, RANGER_USERSYNC]
-        OZONE: [OZONE_MANAGER, STORAGE_CONTAINER_MANAGER, GATEWAY]
         SPARK_ON_YARN: [GATEWAY]
         TEZ: [GATEWAY]
         YARN: [RESOURCEMANAGER, GATEWAY]
         QUEUEMANAGER: [QUEUEMANAGER_STORE, QUEUEMANAGER_WEBAPP]
         ZOOKEEPER: [SERVER]         
       Master2:
-        ATLAS: [ATLAS_SERVER]
         INFRA_SOLR: [SOLR_SERVER]
         HBASE: [MASTER, HBASERESTSERVER, HBASETHRIFTSERVER, GATEWAY]
         HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
         HIVE: [HIVEMETASTORE, GATEWAY]
         HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
-        KAFKA: [KAFKA_BROKER, GATEWAY]
-        OZONE: [OZONE_MANAGER, STORAGE_CONTAINER_MANAGER, GATEWAY]
         RANGER: [RANGER_ADMIN]
         SPARK_ON_YARN: [SPARK_YARN_HISTORY_SERVER, GATEWAY]
         TEZ: [GATEWAY]
@@ -141,7 +117,6 @@ clusters:
         HDFS: [DATANODE, GATEWAY]
         HIVE: [GATEWAY]
         HIVE_ON_TEZ: [GATEWAY]
-        OZONE: [OZONE_DATANODE, GATEWAY]
         TEZ: [GATEWAY]
         SPARK_ON_YARN: [GATEWAY]
         YARN: [NODEMANAGER, GATEWAY]  

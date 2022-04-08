@@ -49,4 +49,12 @@ auto_tls: ${TLS}
 
 free_ipa: ${FREE_IPA}
 krb5_server_type: ${KRB_SERVER_TYPE}
+
+pvc_type: ${PVC_TYPE}
+pvc_version: ${PVC_VERSION}
+pvc_repo_url: ${PVC_REPO}
+pvc_app_domain_name: ${NODE_0}
+pvc_htpasswdCredentials: "YWRtaW46JDJ5JDA1JDJwOTJFNVRRa1VnelkvbFNsVklYMGUyVnEzd0JtRExuc3RTRUZUanJEUGVSRHUzS0J5UUoyCg=="
+kube_config_path: "/tmp/kubeconfig"
 install_python3: ${INSTALL_PYTHON3}
+oc_tar_file_path: ${OC_TAR_FILE_PATH}

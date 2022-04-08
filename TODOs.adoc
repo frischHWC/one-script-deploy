@@ -14,6 +14,14 @@ List of TODOs for this project
 - requirements for Suse
 - Requirements for MacOS
 
+## Checks
+
+- Add more checks on command line
+
+## User Creation
+
+- Add Ranger rights for users
+
 ## Data Loading
 
 - Add CDP 7.1.7-SP1 

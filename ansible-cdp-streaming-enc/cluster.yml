@@ -250,7 +250,6 @@ clusters:
     services: [CORE_SETTINGS, CRUISE_CONTROL, KAFKA, KNOX, NIFI, NIFIREGISTRY, SCHEMAREGISTRY, STREAMS_MESSAGING_MANAGER, ZOOKEEPER]
     security:
       kerberos: "{{ kerberos_activated }}"
-      tls: "{{ tls_activated }}"
       hdfs_encryption: "{{ encryption_activated }}"
     repositories:
       - "{{ cdh_repo }}"

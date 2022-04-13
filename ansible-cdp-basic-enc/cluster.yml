@@ -1,6 +1,5 @@
 ---
 clusters:
-
   - name: "{{ cluster_name }}-kts"
     type: kts
     repositories:
@@ -11,8 +10,12 @@ clusters:
     services: [HBASE, HDFS, HIVE, HIVE_ON_TEZ, INFRA_SOLR, QUEUEMANAGER, RANGER, SPARK_ON_YARN, TEZ, YARN, ZOOKEEPER]
     security:
       kerberos: "{{ kerberos_activated }}"
+      hdfs_encryption: "{{ encryption_activated }}"
     repositories:
       - "{{ cdh_repo }}"  
+    data_contexts:
+      - name: SDX
+        services: [HDFS, HIVE, RANGER]
     configs: 
       HBASE:
         SERVICEWIDE:

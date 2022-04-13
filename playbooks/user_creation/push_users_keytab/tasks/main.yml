@@ -1,5 +1,5 @@
 ---                    
-- name: Copy dev keytab
+- name: Copy user's keytab
   copy:
     src: "/tmp/{{ user.name }}-{{ cluster_name }}.keytab"
     dest: "/home/{{ user.name }}/{{ user.name }}.keytab"

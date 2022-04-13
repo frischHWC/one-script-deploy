@@ -11,7 +11,7 @@ cloudera_manager_options:
   custom_banner_html: ""
   custom_ia_policy: ""
 # valid values for colour are (case sensitive): BROWN, RED, BLACK, GREEN, TEAL, PINK, YELLOW, GRAY, PURPLE, BLUE, DARKBLUE
-  custom_header_color: "YELLOW"
+  custom_header_color: "GRAY"
 message: ""
 
 jdk_version: 11

@@ -38,10 +38,10 @@ export LOG_DIR="/tmp/deploy_to_cloudcat_logs/"$(date +%m-%d-%Y-%H-%M-%S)
 # Ansible Deployment files 
 export DISTRIBUTION_TO_DEPLOY="CDP"
 export CLUSTER_TYPE="full-pvc"
-export ANSIBLE_HOST_FILE="ansible-cdp-full-pvc/hosts"
-export ANSIBLE_ALL_FILE="ansible-cdp-full-pvc/all"
-export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-full-pvc/cluster.yml"
-export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-full-pvc/extra_vars.yml"
+export ANSIBLE_HOST_FILE="ansible-cdp/hosts"
+export ANSIBLE_ALL_FILE="ansible-cdp/all"
+export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp/cluster.yml"
+export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp/extra_vars.yml"
 
 # Security
 export KERBEROS="true"
@@ -616,7 +616,7 @@ then
     export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/heads/master.zip"
 fi
 
-if [ "${DISTRIBUTION_TO_DEPLOY}" == "CDP" ] && [ -z "${CDH_REPO}" ]
+if [ -z "${CDH_REPO}" ]
 then
     if [ "${CDH_VERSION:0:1}" = "5" ]
     then
@@ -626,7 +626,7 @@ then
     fi
 fi
 
-if [ "${DISTRIBUTION_TO_DEPLOY}" == "CDP" ] && [ -z "${CM_REPO}" ]
+if [ -z "${CM_REPO}" ]
 then
     if [ "${CDH_VERSION:0:1}" = "5" ]
     then
@@ -856,8 +856,11 @@ then
 fi
 
 echo "############ Configure Ansible files to deploy ${DISTRIBUTION_TO_DEPLOY} ############"
-cp ${ANSIBLE_CLUSTER_YML_FILE} ${TO_DEPLOY_FOLDER}/cluster.yml
-cp ${ANSIBLE_EXTRA_VARS_YML_FILE} ${TO_DEPLOY_FOLDER}/extra_vars.yml
+if [ "${DISTRIBUTION_TO_DEPLOY}" != "HDP" ]
+then
+    cp ${ANSIBLE_CLUSTER_YML_FILE} ${TO_DEPLOY_FOLDER}/cluster.yml
+    cp ${ANSIBLE_EXTRA_VARS_YML_FILE} ${TO_DEPLOY_FOLDER}/extra_vars.yml
+fi
 cp ${ANSIBLE_HOST_FILE} ${TO_DEPLOY_FOLDER}/hosts
 cp ${ANSIBLE_ALL_FILE} ${TO_DEPLOY_FOLDER}/all
 cp ansible.cfg ${TO_DEPLOY_FOLDER}/ansible.cfg
@@ -903,9 +906,11 @@ else
     export KRB_SERVER_TYPE="MIT KDC"
 fi
 
-
+if [ "${DISTRIBUTION_TO_DEPLOY}" != "HDP" ]
+then
+    envsubst < ${TO_DEPLOY_FOLDER}/extra_vars.yml > ${TO_DEPLOY_FOLDER}/extra_vars.yml.tmp && mv ${TO_DEPLOY_FOLDER}/extra_vars.yml.tmp ${TO_DEPLOY_FOLDER}/extra_vars.yml
+fi
 envsubst < ${TO_DEPLOY_FOLDER}/hosts > ${TO_DEPLOY_FOLDER}/hosts.tmp && mv ${TO_DEPLOY_FOLDER}/hosts.tmp ${TO_DEPLOY_FOLDER}/hosts
-envsubst < ${TO_DEPLOY_FOLDER}/extra_vars.yml > ${TO_DEPLOY_FOLDER}/extra_vars.yml.tmp && mv ${TO_DEPLOY_FOLDER}/extra_vars.yml.tmp ${TO_DEPLOY_FOLDER}/extra_vars.yml
 envsubst < ${TO_DEPLOY_FOLDER}/all > ${TO_DEPLOY_FOLDER}/all.tmp && mv ${TO_DEPLOY_FOLDER}/all.tmp ${TO_DEPLOY_FOLDER}/all
 
 ###############################

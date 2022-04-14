@@ -31,4 +31,5 @@ cloudera_manager
 ${KTS_SERVERS_GROUP}
 
 [all:vars]
-tls=${TLS_UPPERED}
+tls=False
+host_pattern_mismatch=ignore

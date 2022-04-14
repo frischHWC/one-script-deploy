@@ -512,6 +512,7 @@ then
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-pvc/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-pvc/extra_vars.yml"
         export CM_VERSION="7.5.5"
+        export CDH_VERSION="7.1.7.0"
         export PVC="true"
     elif [ "${CLUSTER_TYPE}" = "pvc-oc" ]
     then
@@ -520,6 +521,7 @@ then
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-pvc-oc/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-pvc-oc/extra_vars.yml"
         export CM_VERSION="7.5.5"
+        export CDH_VERSION="7.1.7.0"
         export PVC="true"
         export PVC_TYPE="OC"
     elif [ "${CLUSTER_TYPE}" = "streaming" ]
@@ -537,6 +539,9 @@ then
         export ANSIBLE_ALL_FILE="ansible-cdp-streaming-enc/all"
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-streaming-enc/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-streaming-enc/extra_vars.yml"
+        export USE_SPARK3="true"
+        export USE_CSA="true"
+        export USE_CFM="true"
         export ENCRYPTION_ACTIVATED="true"
     elif [ "${CLUSTER_TYPE}" = "cdh6" ]
     then
@@ -761,7 +766,7 @@ then
         SSHKey=`ssh-keyscan ${NODE_IPA} 2> /dev/null`
         echo $SSHKey >> ~/.ssh/known_hosts
         echo $SSHKey >> ${KNOWN_HOSTS}
-        IP_ADRESS_SOLVED=$( dig +short ${NODES[$i]} )
+        IP_ADRESS_SOLVED=$( dig +short ${NODE_IPA} )
         echo "${IP_ADRESS_SOLVED} ${NODE_IPA}" >> ${HOSTS_ETC}
         echo "**** Connection setup to ${NODE_IPA} ****"
     fi
@@ -775,7 +780,7 @@ then
         SSHKey=`ssh-keyscan ${NODE_KTS} 2> /dev/null`
         echo $SSHKey >> ~/.ssh/known_hosts
         echo $SSHKey >> ${KNOWN_HOSTS}
-        IP_ADRESS_SOLVED=$( dig +short ${NODES[$i]} )
+        IP_ADRESS_SOLVED=$( dig +short ${NODE_KTS} )
         echo "${IP_ADRESS_SOLVED} ${NODE_KTS}" >> ${HOSTS_ETC}
         echo "**** Connection setup to ${NODE_KTS} ****"
     fi
@@ -792,8 +797,8 @@ export NODES_PVC_ECS_SORTED=$( echo ${NODES_PVC_ECS} | sort | uniq )
             SSHKey=`ssh-keyscan ${NODES_PVC_ECS_SORTED[$i]} 2> /dev/null`
             echo $SSHKey >> ~/.ssh/known_hosts
             echo $SSHKey >> ${KNOWN_HOSTS}
-            IP_ADRESS_SOLVED=$( dig +short ${NODES[$i]} )
-            echo "${IP_ADRESS_SOLVED} ${NODES[$i]}" >> ${HOSTS_ETC}
+            IP_ADRESS_SOLVED=$( dig +short ${NODES_PVC_ECS_SORTED[$i]} )
+            echo "${IP_ADRESS_SOLVED} ${NODES_PVC_ECS_SORTED[$i]}" >> ${HOSTS_ETC}
             echo "**** Connection setup to ${NODES_PVC_ECS_SORTED[$i]} ****"
         fi
     done
@@ -912,6 +917,11 @@ then
 fi
 envsubst < ${TO_DEPLOY_FOLDER}/hosts > ${TO_DEPLOY_FOLDER}/hosts.tmp && mv ${TO_DEPLOY_FOLDER}/hosts.tmp ${TO_DEPLOY_FOLDER}/hosts
 envsubst < ${TO_DEPLOY_FOLDER}/all > ${TO_DEPLOY_FOLDER}/all.tmp && mv ${TO_DEPLOY_FOLDER}/all.tmp ${TO_DEPLOY_FOLDER}/all
+
+if [ "${DEBUG}" = "true" ]
+then
+    env | sort
+fi
 
 ###############################
 # Launch of scripts to deploy

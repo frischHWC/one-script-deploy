@@ -149,8 +149,6 @@ clusters:
 mgmt:
   name: Cloudera Management Service
   services: [ALERTPUBLISHER, EVENTSERVER, HOSTMONITOR, REPORTSMANAGER, SERVICEMONITOR]
-  security:
-    tls: "{{ tls_activated }}"
   configs:
     SERVICEMONITOR:
       firehose_heapsize: 2147483648

@@ -35,3 +35,4 @@ ${NODES_ECS_PRINTABLE}
 
 [all:vars]
 tls=False
+host_pattern_mismatch=ignore

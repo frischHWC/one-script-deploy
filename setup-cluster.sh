@@ -920,7 +920,7 @@ envsubst < ${TO_DEPLOY_FOLDER}/all > ${TO_DEPLOY_FOLDER}/all.tmp && mv ${TO_DEPL
 
 if [ "${DEBUG}" = "true" ]
 then
-    env | sort
+    env | tr '\n' '\t' | sort 
 fi
 
 ###############################

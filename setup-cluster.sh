@@ -95,8 +95,8 @@ export USE_CFM="false"
 export USE_SPARK3="false"
 
 # Installation
-export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/heads/master.zip"
-export ANSIBLE_REPO_DIR="cldr-playbook-master"
+export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/heads/main.zip"
+export ANSIBLE_REPO_DIR="cldr-playbook-main"
 
 # Data Load
 export DATA_LOAD_REPO_URL=""
@@ -533,14 +533,17 @@ then
         export USE_SPARK3="true"
         export USE_CSA="true"
         export USE_CFM="true"
-    elif [ "${CLUSTER_TYPE}" = "streaming-enc" ]
+    elif [ "${CLUSTER_TYPE}" = "full-enc-pvc" ]
     then
-        export ANSIBLE_HOST_FILE="ansible-cdp-streaming-enc/hosts"
-        export ANSIBLE_ALL_FILE="ansible-cdp-streaming-enc/all"
-        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-streaming-enc/cluster.yml"
-        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-streaming-enc/extra_vars.yml"
+        export ANSIBLE_HOST_FILE="ansible-cdp-full-enc-pvc/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-full-enc-pvc/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-full-enc-pvc/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-full-enc-pvc/extra_vars.yml"
         export USE_CSA="true"
         export USE_CFM="true"
+        export CM_VERSION="7.5.5"
+        export CDH_VERSION="7.1.7.0"
+        export PVC="true"
         export ENCRYPTION_ACTIVATED="true"
     elif [ "${CLUSTER_TYPE}" = "cdh6" ]
     then
@@ -936,7 +939,7 @@ then
     fi
     cp playbooks/pre_install/extra_vars.yml /tmp/pre_install_extra_vars.yml
     envsubst < /tmp/pre_install_extra_vars.yml > /tmp/pre_install_extra_vars.yml.tmp && mv /tmp/pre_install_extra_vars.yml.tmp /tmp/pre_install_extra_vars.yml
-    ansible-playbook -i ${HOSTS_FILE} playbooks/pre_install/main.yml --extra-vars "@/tmp/pre_install_extra_vars.yml" > ${LOG_DIR}/pre_install.log
+    ansible-playbook -i ${HOSTS_FILE} playbooks/pre_install/main.yml --extra-vars "@/tmp/pre_install_extra_vars.yml" 2>&1 > ${LOG_DIR}/pre_install.log
     OUTPUT=$(tail -20 ${LOG_DIR}/pre_install.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
@@ -958,7 +961,7 @@ then
     fi
     cp playbooks/ansible_install_preparation/extra_vars.yml /tmp/ansible_install_preparation_extra_vars.yml
     envsubst < /tmp/ansible_install_preparation_extra_vars.yml > /tmp/ansible_install_preparation_extra_vars.yml.tmp && mv /tmp/ansible_install_preparation_extra_vars.yml.tmp /tmp/ansible_install_preparation_extra_vars.yml
-    ansible-playbook -i ${HOSTS_FILE} playbooks/ansible_install_preparation/main.yml --extra-vars "@/tmp/ansible_install_preparation_extra_vars.yml" > ${LOG_DIR}/prepare_ansible_deployment.log
+    ansible-playbook -i ${HOSTS_FILE} playbooks/ansible_install_preparation/main.yml --extra-vars "@/tmp/ansible_install_preparation_extra_vars.yml" 2>&1 > ${LOG_DIR}/prepare_ansible_deployment.log
     OUTPUT=$(tail -20 ${LOG_DIR}/prepare_ansible_deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
@@ -979,7 +982,7 @@ then
         ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; export CLOUD_TO_USE=static ; export INVENTORY_TO_USE=hosts ; bash install_cluster.sh' > ${LOG_DIR}/deployment.log
     else
         echo "******* Installing required packages *******"
-        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-galaxy install -r requirements.yml ; ansible-galaxy collection install -r requirements.yml ' > ${LOG_DIR}/deployment.log
+        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-galaxy install -r requirements.yml ; ansible-galaxy collection install -r requirements.yml ' 2>&1 > ${LOG_DIR}/deployment.log
         
         ################################################
         ######## Installation of CDP step by step in order to be able to track installation #######
@@ -989,7 +992,7 @@ then
         then
             echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_inventory_and_definition.yml "
         fi
-        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_inventory_and_definition.yml' >> ${LOG_DIR}/deployment.log
+        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_inventory_and_definition.yml' 2>&1 >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
@@ -1005,7 +1008,7 @@ then
         then
             echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_infrastructure.yml "
         fi
-        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_infrastructure.yml' >> ${LOG_DIR}/deployment.log
+        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_infrastructure.yml' 2>&1 >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
@@ -1021,7 +1024,7 @@ then
         then
             echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_parcels.yml "
         fi
-        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_parcels.yml' >> ${LOG_DIR}/deployment.log
+        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_parcels.yml' 2>&1 >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
@@ -1039,7 +1042,7 @@ then
             then
                 echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml "
             fi
-            ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml' >> ${LOG_DIR}/deployment.log
+            ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml' 2>&1 >> ${LOG_DIR}/deployment.log
             OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]
             then
@@ -1056,7 +1059,7 @@ then
         then
             echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_nodes.yml "
         fi
-        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_nodes.yml' >> ${LOG_DIR}/deployment.log
+        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_nodes.yml' 2>&1 >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
@@ -1072,7 +1075,7 @@ then
         then
             echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cloudera_manager.yml "
         fi
-        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cloudera_manager.yml' >> ${LOG_DIR}/deployment.log
+        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cloudera_manager.yml' 2>&1 >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
@@ -1090,7 +1093,7 @@ then
             then
                 echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_for_cdh5_paywall.yml "
             fi
-            ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_for_cdh5_paywall.yml' >> ${LOG_DIR}/deployment.log
+            ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_for_cdh5_paywall.yml' 2>&1 >> ${LOG_DIR}/deployment.log
             OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]
             then
@@ -1107,7 +1110,7 @@ then
         then
             echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_security.yml "
         fi
-        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_security.yml' >> ${LOG_DIR}/deployment.log
+        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_security.yml' 2>&1 >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
@@ -1125,7 +1128,7 @@ then
             then
                 echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml extra_auto_tls.yml "
             fi
-            ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml extra_auto_tls.yml' >> ${LOG_DIR}/deployment.log
+            ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml extra_auto_tls.yml' 2>&1 >> ${LOG_DIR}/deployment.log
             OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]
             then
@@ -1142,7 +1145,7 @@ then
         then
             echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cluster.yml "
         fi
-        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cluster.yml' >> ${LOG_DIR}/deployment.log
+        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cluster.yml' 2>&1 >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
@@ -1160,7 +1163,7 @@ then
             then
                 echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_auto_tls.yml "
             fi
-            ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_auto_tls.yml' >> ${LOG_DIR}/deployment.log
+            ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_auto_tls.yml' 2>&1 >> ${LOG_DIR}/deployment.log
             OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]
             then
@@ -1179,7 +1182,7 @@ then
             then
                 echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml setup_hdfs_encryption.yml "
             fi
-            ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml setup_hdfs_encryption.yml' >> ${LOG_DIR}/deployment.log
+            ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml setup_hdfs_encryption.yml' 2>&1 >> ${LOG_DIR}/deployment.log
             OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]
             then
@@ -1215,7 +1218,7 @@ then
     fi
     cp playbooks/post_install/extra_vars.yml /tmp/post_install_extra_vars.yml
     envsubst < /tmp/post_install_extra_vars.yml > /tmp/post_install_extra_vars.yml.tmp && mv /tmp/post_install_extra_vars.yml.tmp /tmp/post_install_extra_vars.yml
-    ansible-playbook -i ${HOSTS_FILE} playbooks/post_install/main.yml --extra-vars "@/tmp/post_install_extra_vars.yml" > ${LOG_DIR}/post_install.log
+    ansible-playbook -i ${HOSTS_FILE} playbooks/post_install/main.yml --extra-vars "@/tmp/post_install_extra_vars.yml" 2>&1 > ${LOG_DIR}/post_install.log
     OUTPUT=$(tail -20 ${LOG_DIR}/post_install.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
@@ -1231,7 +1234,7 @@ if [ "${PVC}" = "true" ] && [ "${INSTALL_PVC}" = "true" ]
 then
     echo "############ Creating PvC cluster ############" 
     echo " Follow advancement at: ${LOG_DIR}/pvc_deployment.log "
-    ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml pvc.yml' > ${LOG_DIR}/pvc_deployment.log
+    ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml pvc.yml' 2>&1 > ${LOG_DIR}/pvc_deployment.log
     OUTPUT=$(tail -20 ${LOG_DIR}/pvc_deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
@@ -1253,7 +1256,7 @@ then
     fi
     cp playbooks/pvc_setup/extra_vars.yml /tmp/pvc_setup_extra_vars.yml
     envsubst < /tmp/pvc_setup_extra_vars.yml > /tmp/pvc_setup_extra_vars.yml.tmp && mv /tmp/pvc_setup_extra_vars.yml.tmp /tmp/pvc_setup_extra_vars.yml
-    ansible-playbook -i ${HOSTS_FILE} playbooks/pvc_setup/main.yml --extra-vars "@/tmp/pvc_setup_extra_vars.yml" > ${LOG_DIR}/pvc_configuration.log
+    ansible-playbook -i ${HOSTS_FILE} playbooks/pvc_setup/main.yml --extra-vars "@/tmp/pvc_setup_extra_vars.yml" 2>&1 > ${LOG_DIR}/pvc_configuration.log
     OUTPUT=$(tail -20 ${LOG_DIR}/pvc_configuration.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
@@ -1275,7 +1278,7 @@ then
     fi
     cp playbooks/user_creation/extra_vars.yml /tmp/user_creation_extra_vars.yml
     envsubst < /tmp/user_creation_extra_vars.yml > /tmp/user_creation_extra_vars.yml.tmp && mv /tmp/user_creation_extra_vars.yml.tmp /tmp/user_creation_extra_vars.yml
-    ansible-playbook -i ${HOSTS_FILE} playbooks/user_creation/main.yml --extra-vars "@/tmp/user_creation_extra_vars.yml" > ${LOG_DIR}/user_creation.log
+    ansible-playbook -i ${HOSTS_FILE} playbooks/user_creation/main.yml --extra-vars "@/tmp/user_creation_extra_vars.yml" 2>&1 > ${LOG_DIR}/user_creation.log
     OUTPUT=$(tail -20 ${LOG_DIR}/user_creation.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
@@ -1294,7 +1297,13 @@ then
     then
         export RD_VERSION='2.6.5'
     else
-        export RD_VERSION="${CDH_VERSION:0:5}"
+        CDH_VERSION_LENGTH=$(echo ${#CDH_VERSION})
+        if [ ${CDH_VERSION_LENGTH} = 10 ]
+        then
+            export RD_VERSION="${CDH_VERSION}"
+        else
+            export RD_VERSION="${CDH_VERSION:0:5}"
+        fi
     fi
     if [ -z ${DATA_LOAD_REPO_URL} ]
     then
@@ -1307,7 +1316,7 @@ then
     fi
     cp playbooks/data_load/extra_vars.yml /tmp/data_load_extra_vars.yml
     envsubst < /tmp/data_load_extra_vars.yml > /tmp/data_load_extra_vars.yml.tmp && mv /tmp/data_load_extra_vars.yml.tmp /tmp/data_load_extra_vars.yml
-    ansible-playbook -i ${HOSTS_FILE} playbooks/data_load/main.yml --extra-vars "@/tmp/data_load_extra_vars.yml" > ${LOG_DIR}/data_load.log
+    ansible-playbook -i ${HOSTS_FILE} playbooks/data_load/main.yml --extra-vars "@/tmp/data_load_extra_vars.yml" 2>&1 > ${LOG_DIR}/data_load.log
     OUTPUT=$(tail -20 ${LOG_DIR}/data_load.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then

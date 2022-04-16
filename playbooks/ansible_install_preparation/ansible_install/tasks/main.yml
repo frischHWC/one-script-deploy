@@ -14,7 +14,12 @@
     name: unzip
     state: latest
     
-- name: Copy ansible.cfg file
+- name: Copy ansible.cfg file to home dir
   copy:
     src: "{{ deploy_folder }}/ansible.cfg"
     dest: ~/.ansible.cfg
+
+- name: Copy ansible.cfg file to /etc/ansible/
+  copy:
+    src: "{{ deploy_folder }}/ansible.cfg"
+    dest: /etc/ansible/ansible.cfg

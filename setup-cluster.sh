@@ -620,7 +620,7 @@ fi
 
 if [ -z "${INSTALL_REPO_URL}" ]
 then
-    export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/heads/master.zip"
+    export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/heads/main.zip"
 fi
 
 if [ -z "${CDH_REPO}" ]

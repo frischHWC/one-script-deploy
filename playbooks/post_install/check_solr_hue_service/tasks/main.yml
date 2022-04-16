@@ -1,0 +1,55 @@
+---
+- name: Get All services from CM
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_all_services
+
+- name: DEBUG - cloudera_manager_all_services
+  debug:
+    msg: "{{ cloudera_manager_all_services }}"
+  when: debug | default(false)
+
+- set_fact:
+    solr_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'SOLR'].name | [1]"
+
+- name: DEBUG - solr_service_name
+  debug:
+    msg: "{{ solr_service_name }}"
+  when: debug | default(false)
+
+- set_fact: 
+    solr_service_exists: "{{ true if solr_service_name != '' else false }}"
+
+- name: DEBUG - solr_service_exists
+  debug:
+    msg: "{{ solr_service_exists }}"
+  when: debug | default(false)
+
+
+- set_fact:
+    hue_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'HUE'].name | [1]"
+
+- name: DEBUG - hue_service_name
+  debug:
+    msg: "{{ hue_service_name }}"
+  when: debug | default(false)
+
+- set_fact: 
+    hue_service_exists: "{{ true if hue_service_name != '' else false }}"
+
+- name: DEBUG - hue_service_exists
+  debug:
+    msg: "{{ hue_service_exists }}"
+  when: debug | default(false)

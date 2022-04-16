@@ -59,6 +59,10 @@ clusters:
         HIVESERVER2:
           hive_server2_transport_mode: "all"
 
+      HUE:
+        SERVICEWIDE:
+          auth_backend: desktop.auth.backend.KnoxSpnegoDjangoBackend
+
       KNOX:
         SERVICEWIDE:
           knox_encryptquerystring_secret: "{{ default_password }}"
@@ -67,6 +71,7 @@ clusters:
           gateway_knox_admin_groups: admin_user
           gateway_master_secret: "{{ default_password }}"
           gateway_sso_authentication_provider: "{% if free_ipa == true %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.urls./**=authcBasic#authentication.param.main.ldapRealm=org.apache.knox.gateway.shirorealm.KnoxLdapRealm#authentication.param.main.ldapContextFactory=org.apache.knox.gateway.shirorealm.KnoxLdapContextFactory#authentication.param.main.ldapRealm.contextFactory=$ldapContextFactory#authentication.param.main.ldapRealm.contextFactory.authenticationMechanism=simple#authentication.param.main.ldapRealm.contextFactory.url={{ ipa_ldap_url }}#authentication.param.main.ldapRealm.contextFactory.systemUsername={{ ipa_ldap_user_bind_dn }}#authentication.param.main.ldapRealm.contextFactory.systemPassword={{ ipa_ldap_user_bind_password }}#authentication.param.main.ldapRealm.userDnTemplate=uid={0},{{ ipa_ldap_user_search_base }}#authentication.param.remove=main.pamRealm#authentication.param.remove=main.pamRealm.service{% else %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.main.pamRealm=org.apache.knox.gateway.shirorealm.KnoxPamRealm#authentication.param.main.pamRealm.service=login#authentication.param.urls./**=authcBasic{% endif %}"
+          conf/cdp-resources.xml_role_safety_valve: "<property><name>cdp-infra-proxy</name><value>providerConfigRef=sso#SOLR:url=http{% if auto_tls == true %}s{% endif %}://{{ node_infra_solr }}:{% if auto_tls == true %}8995{% else %}8993{% endif %}/solr/#</value><description>CDP INFRA SOLR topology</description></property><property><name>cdp-infra-proxy-api</name><value>providerConfigRef=pam#SOLR:url=http{% if auto_tls == true %}s{% endif %}://{{ node_infra_solr }}:{% if auto_tls == true %}8995{% else %}8993{% endif %}/solr/#</value><description>CDP INFRA SOLR API topology</description></property>"
 
       LIVY:
         LIVY_SERVER:

@@ -15,15 +15,19 @@ clusters:
         ATLAS_SERVER:
           atlas_admin_password: "{{ default_password }}"
           atlas_authentication_method_file: true
+
       #CRUISE_CONTROL:
       #  CRUISE_CONTROL_SERVER:
       #    security.protocol: "{{ kafka_protocol }}" 
+
       DAS:
         DAS_WEBAPP:
           data_analytics_studio_user_authentication: "{{ das_auth }}"
+
       #FLINK:
       #  FLINK_HISTORY_SERVER:
       #    historyserver_web_port: 8182    
+
       HBASE:
         SERVICEWIDE:
           hbase_restserver_security_authentication: "{{ hbase_auth }}"
@@ -31,6 +35,7 @@ clusters:
           hbase_superuser: "francois"
         REGIONSERVER:  
           hbase_regionserver_wal_codec: org.apache.hadoop.hbase.regionserver.wal.IndexedWALEditCodec
+
       HDFS:
         SERVICEWIDE:
           dfs_ha_fencing_methods: 'shell(true)'
@@ -49,20 +54,29 @@ clusters:
           dfs_journalnode_edits_dir: /dfs/jn  
         SECONDARYNAMENODE:
           fs_checkpoint_dir_list: /dfs/snn
+
       HIVE:
         HIVEMETASTORE:
           hive_enable_db_notification: true
-          hive_metastore_delegation_token_store: org.apache.hadoop.hive.thrift.DBTokenStore    
+          hive_metastore_delegation_token_store: org.apache.hadoop.hive.thrift.DBTokenStore
+
       HIVE_ON_TEZ:
         HIVESERVER2:
           hive_server2_transport_mode: "all"
+
+      HUE:
+        SERVICEWIDE:
+          auth_backend: desktop.auth.backend.KnoxSpnegoDjangoBackend
+
       IMPALA:
         IMPALAD:
           scratch_dirs: /tmp/impala
           enable_audit_event_log: true
+
       KAFKA:
         KAFKA_CONNECT: # Change below accordingly to right name of servers 
           bootstrap.servers: "{{ bootstrap_servers }}"
+
       KNOX:
         SERVICEWIDE:
           knox_encryptquerystring_secret: "{{ default_password }}"
@@ -71,6 +85,8 @@ clusters:
           gateway_knox_admin_groups: admin_user
           gateway_master_secret: "{{ default_password }}"
           gateway_sso_authentication_provider: "{% if free_ipa == true %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.urls./**=authcBasic#authentication.param.main.ldapRealm=org.apache.knox.gateway.shirorealm.KnoxLdapRealm#authentication.param.main.ldapContextFactory=org.apache.knox.gateway.shirorealm.KnoxLdapContextFactory#authentication.param.main.ldapRealm.contextFactory=$ldapContextFactory#authentication.param.main.ldapRealm.contextFactory.authenticationMechanism=simple#authentication.param.main.ldapRealm.contextFactory.url={{ ipa_ldap_url }}#authentication.param.main.ldapRealm.contextFactory.systemUsername={{ ipa_ldap_user_bind_dn }}#authentication.param.main.ldapRealm.contextFactory.systemPassword={{ ipa_ldap_user_bind_password }}#authentication.param.main.ldapRealm.userDnTemplate=uid={0},{{ ipa_ldap_user_search_base }}#authentication.param.remove=main.pamRealm#authentication.param.remove=main.pamRealm.service{% else %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.main.pamRealm=org.apache.knox.gateway.shirorealm.KnoxPamRealm#authentication.param.main.pamRealm.service=login#authentication.param.urls./**=authcBasic{% endif %}"
+          conf/cdp-resources.xml_role_safety_valve: "<property><name>cdp-infra-proxy</name><value>providerConfigRef=sso#SOLR:url=http{% if auto_tls == true %}s{% endif %}://{{ node_infra_solr }}:{% if auto_tls == true %}8995{% else %}8993{% endif %}/solr/#</value><description>CDP INFRA SOLR topology</description></property><property><name>cdp-infra-proxy-api</name><value>providerConfigRef=pam#SOLR:url=https://{{ node_infra_solr }}:8995/solr/#</value><description>CDP INFRA SOLR API topology</description></property>"
+
       KUDU:
         KUDU_MASTER:
           fs_wal_dir: /kudu/wal
@@ -78,16 +94,20 @@ clusters:
         KUDU_TSERVER:  
           fs_wal_dir: /kudu/wal
           fs_data_dirs: /kudu/data
+
       LIVY:
         LIVY_SERVER:
           livy_spnego_enabled: "{{ kerberos_activated }}" # Set it to false to disable authentication   
+
       OZONE:
         SERVICEWIDE:
           ozone.service.id: "{{ cluster_name }}"
           ozone.scm.primordial.node.id: "{{  groups.cluster_master_nodes | first | default(omit) }}"
+
       SPARK_ON_YARN:
         SERVICEWIDE:
           atlas_service: "atlas"
+
       RANGER:
         SERVICEWIDE:
           keyadmin_user_password: "{{ default_password }}"
@@ -109,6 +129,7 @@ clusters:
           ranger.usersync.group.nameattribute: "cn"
           ranger.usersync.group.memberattributename: "member"
           ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:u:admin_user&ROLE_SYS_ADMIN:u:francois"
+
       SCHEMAREGISTRY:
         SERVICEWIDE:
           database_password: "{{ database_default_password }}"
@@ -125,6 +146,7 @@ clusters:
           kafka.connect.host: "{{  groups.cluster_worker_no_hadoop | first | default(omit) }}"
           kafka.connect.protocol: "{{ kafka_connect_protocol }}"
           kafka.connect.port: "{{ kafka_connect_port }}"
+
       YARN:
         SERVICEWIDE:
           yarn_admin_acl: "${yarn_user},francois"
@@ -139,13 +161,16 @@ clusters:
         GATEWAY:
           mapred_submit_replication: 3
           mapred_reduce_tasks: 6    
+
       ZEPPELIN:
         ZEPPELIN_SERVER:
           zeppelin.shiro.roles.block: admin=*\nfrancois=*
           zeppelin.admin.group: francois
+
       ZOOKEEPER:
         SERVICEWIDE:
           zookeeper_datadir_autocreate: true
+          
     host_templates:
       Edge:
         #FLINK: [GATEWAY] # Flink is not working  in SSL as it does not have rights on host.jks file

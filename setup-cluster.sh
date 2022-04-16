@@ -53,10 +53,10 @@ export ENCRYPTION_ACTIVATED="false"
 # Versions
 export CM_VERSION="7.6.1"
 export CDH_VERSION="7.1.7.1000"
-export PVC_VERSION="1.3.3"
-export CSA_VERSION="1.5.3.1"
-export CFM_VERSION="2.0.4.0"
-export SPARK3_VERSION="3.1.7290.3"
+export PVC_VERSION="1.3.4"
+export CSA_VERSION="1.6.2.0"
+export CFM_VERSION="2.1.3.0"
+export SPARK3_VERSION="3.2.7171000.0"
 export AMBARI_VERSION="2.7.5.0"
 export HDP_VERSION="3.1.5.6091"
 export HDF_VERSION="3.5.0.0"
@@ -174,7 +174,7 @@ function usage()
     echo "  --ambari-version=$AMBARI_VERSION : (Optional) Version of Ambari (Default) $AMBARI_VERSION "
     echo "  --hdp-version=$HDP_VERSION : (Optional) Version of HDP (Default) $HDP_VERSION "
     echo "  --hdf-version=$HDF_VERSION : (Optional) Version of HDP (Default) $HDF_VERSION "
-    echo "  --spark3-version=$SPARK3_VERSION : (Optional) Version of SPARK3 (Default) 3.1.7270.0"
+    echo "  --spark3-version=$SPARK3_VERSION : (Optional) Version of SPARK3 (Default) $SPARK3_VERSION"
     echo "  --pvc-version=$PVC_VERSION : (Optional) Version of PVC for CDP deployment (Default) $PVC_VERSION "
     echo ""
     echo "  --cm-repo=$CM_REPO : (Optional) repo of CM (Default) $CM_REPO "
@@ -539,7 +539,6 @@ then
         export ANSIBLE_ALL_FILE="ansible-cdp-streaming-enc/all"
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-streaming-enc/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-streaming-enc/extra_vars.yml"
-        export USE_SPARK3="true"
         export USE_CSA="true"
         export USE_CFM="true"
         export ENCRYPTION_ACTIVATED="true"
@@ -986,6 +985,10 @@ then
         ######## Installation of CDP step by step in order to be able to track installation #######
         ################################################
         echo "******* Verificating cluster Definition *******"
+        if [ "${DEBUG}" = "true" ]
+        then
+            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_inventory_and_definition.yml "
+        fi
         ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_inventory_and_definition.yml' >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
@@ -998,11 +1001,15 @@ then
         fi
 
         echo "******* Installation of DB, Java, (KDC) etc... *******"
+        if [ "${DEBUG}" = "true" ]
+        then
+            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_infrastructure.yml "
+        fi
         ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_infrastructure.yml' >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
-          echo " SUCCESS: Creation of DB, KDC and HAProxy"
+          echo " SUCCESS: Creation of DB, Java, (KDC) etc..."
         else
           echo " FAILURE: Could not create DB, KDC and HA Proxy" 
           echo " See details in file: ${LOG_DIR}/deployment.log "
@@ -1010,6 +1017,10 @@ then
         fi
 
         echo "******* Verificating parcels *******"
+        if [ "${DEBUG}" = "true" ]
+        then
+            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_parcels.yml "
+        fi
         ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_parcels.yml' >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
@@ -1024,6 +1035,10 @@ then
         if [ "${FREE_IPA}" = "true" ]
         then
             echo "******* Installing Free IPA *******"
+            if [ "${DEBUG}" = "true" ]
+            then
+                echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml "
+            fi
             ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml' >> ${LOG_DIR}/deployment.log
             OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]
@@ -1037,6 +1052,10 @@ then
         fi
 
         echo "******* Applying nodes pre-requisites *******"
+        if [ "${DEBUG}" = "true" ]
+        then
+            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_nodes.yml "
+        fi
         ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_nodes.yml' >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
@@ -1049,6 +1068,10 @@ then
         fi
 
         echo "******* Installing Cloudera Manager *******"
+        if [ "${DEBUG}" = "true" ]
+        then
+            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cloudera_manager.yml "
+        fi
         ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cloudera_manager.yml' >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
@@ -1063,6 +1086,10 @@ then
         if [ "${CM_VERSION:0:1}" = "5" ]
         then
             echo "******* Fixing CDH 5 Paywall *******"
+            if [ "${DEBUG}" = "true" ]
+            then
+                echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_for_cdh5_paywall.yml "
+            fi
             ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_for_cdh5_paywall.yml' >> ${LOG_DIR}/deployment.log
             OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]
@@ -1076,6 +1103,10 @@ then
         fi
 
         echo "******* Setting up Kerberos *******"
+        if [ "${DEBUG}" = "true" ]
+        then
+            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_security.yml "
+        fi
         ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_security.yml' >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
@@ -1090,6 +1121,10 @@ then
         if [ "${TLS}" = "true" ]
         then
             echo "******* Enabling Auto-TLS *******"
+            if [ "${DEBUG}" = "true" ]
+            then
+                echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml extra_auto_tls.yml "
+            fi
             ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml extra_auto_tls.yml' >> ${LOG_DIR}/deployment.log
             OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]
@@ -1103,6 +1138,10 @@ then
         fi
 
         echo "******* Installing Cluster *******"
+        if [ "${DEBUG}" = "true" ]
+        then
+            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cluster.yml "
+        fi
         ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cluster.yml' >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
@@ -1117,6 +1156,10 @@ then
         if [ "${TLS}" = "true" ]
         then
             echo "******* Fixing Auto-TLS Settings *******"
+            if [ "${DEBUG}" = "true" ]
+            then
+                echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_auto_tls.yml "
+            fi
             ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_auto_tls.yml' >> ${LOG_DIR}/deployment.log
             OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]
@@ -1132,6 +1175,10 @@ then
         if [ "${ENCRYPTION_ACTIVATED}" = "true" ]
         then
             echo "******* Setting up Data Encryption at Rest *******"
+            if [ "${DEBUG}" = "true" ]
+            then
+                echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml setup_hdfs_encryption.yml "
+            fi
             ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml setup_hdfs_encryption.yml' >> ${LOG_DIR}/deployment.log
             OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]

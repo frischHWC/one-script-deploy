@@ -6,23 +6,28 @@
     - no-unlog
     - restart_cm
 
+- name: Check existing services
+  hosts: main
+  gather_facts: false
+  roles: 
+    - check_solr_hue_service
+
 - name: Fix krb5.conf for Hue with Free IPA
   hosts: all
   gather_facts: false
   roles: 
-    - { role: hue_free_ipa_krb5conf, when: free_ipa }
+    - { role: hue_free_ipa_krb5conf, when: free_ipa and hue_service_exists }
 
 - name: Fix Hue ticket lifetime for Free IPA
   hosts: main
   gather_facts: false
   roles: 
-    - { role: hue_free_ipa_ticket_lifetime, when: free_ipa }
+    - { role: hue_free_ipa_ticket_lifetime, when: free_ipa and hue_service_exists }
 
 - name: Create missing solr_plugin
   hosts: main
   gather_facts: false
   roles: 
-    - check_solr_service
     - { role: fix_solr_plugin, when: solr_service_exists }
 
 - name: Ranger extra policies to have enough rights with basic accounts

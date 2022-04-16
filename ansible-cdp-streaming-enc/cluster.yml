@@ -6,14 +6,13 @@ clusters:
       - "{{ cdh_repo }}"
 
   - name: "{{ cluster_name }}"
-    services: [ATLAS, FLINK, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, LIVY, OOZIE, OZONE, PHOENIX, QUEUEMANAGER, RANGER, SPARK_ON_YARN, SPARK3_ON_YARN, SQL_STREAM_BUILDER, SOLR, TEZ, YARN, ZEPPELIN, ZOOKEEPER]
+    services: [ATLAS, FLINK, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, LIVY, OOZIE, OZONE, PHOENIX, QUEUEMANAGER, RANGER, SPARK_ON_YARN, SOLR, SQL_STREAM_BUILDER, TEZ, YARN, ZEPPELIN, ZOOKEEPER]
     security:
       kerberos: "{{ kerberos_activated }}"
       hdfs_encryption: "{{ encryption_activated }}"
     repositories:
       - "{{ cdh_repo }}"
       - "{{ csa_repo }}"
-      - "{{ spark3_repo }}"
 
     data_contexts:
       - name: SDX
@@ -24,11 +23,11 @@ clusters:
         ATLAS_SERVER:
           atlas_admin_password: "{{ default_password }}"
           atlas_authentication_method_file: true
-
+      
       FLINK:
         FLINK_HISTORY_SERVER:
           historyserver_web_port: 8182
-      
+
       HBASE:
         SERVICEWIDE:
           hbase_restserver_security_authentication: "{{ hbase_auth }}"
@@ -65,6 +64,10 @@ clusters:
         HIVESERVER2:
           hive_server2_transport_mode: "all"
 
+      HUE:
+        SERVICEWIDE:
+          auth_backend: desktop.auth.backend.KnoxSpnegoDjangoBackend
+
       IMPALA:
         IMPALAD:
           scratch_dirs: /tmp/impala
@@ -78,6 +81,8 @@ clusters:
           gateway_knox_admin_groups: administrator
           gateway_master_secret: "{{ default_password }}"
           gateway_sso_authentication_provider: "{% if free_ipa == true %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.urls./**=authcBasic#authentication.param.main.ldapRealm=org.apache.knox.gateway.shirorealm.KnoxLdapRealm#authentication.param.main.ldapContextFactory=org.apache.knox.gateway.shirorealm.KnoxLdapContextFactory#authentication.param.main.ldapRealm.contextFactory=$ldapContextFactory#authentication.param.main.ldapRealm.contextFactory.authenticationMechanism=simple#authentication.param.main.ldapRealm.contextFactory.url={{ ipa_ldap_url }}#authentication.param.main.ldapRealm.contextFactory.systemUsername={{ ipa_ldap_user_bind_dn }}#authentication.param.main.ldapRealm.contextFactory.systemPassword={{ ipa_ldap_user_bind_password }}#authentication.param.main.ldapRealm.userDnTemplate=uid={0},{{ ipa_ldap_user_search_base }}#authentication.param.remove=main.pamRealm#authentication.param.remove=main.pamRealm.service{% else %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.main.pamRealm=org.apache.knox.gateway.shirorealm.KnoxPamRealm#authentication.param.main.pamRealm.service=login#authentication.param.urls./**=authcBasic{% endif %}"
+          conf/cdp-resources.xml_role_safety_valve: "<property><name>cdp-infra-proxy</name><value>providerConfigRef=sso#SOLR:url=http{% if auto_tls == true %}s{% endif %}://{{ node_infra_solr }}:{% if auto_tls == true %}8995{% else %}8993{% endif %}/solr/#</value><description>CDP INFRA SOLR topology</description></property><property><name>cdp-infra-proxy-api</name><value>providerConfigRef=pam#SOLR:url=http{% if auto_tls == true %}s{% endif %}://{{ node_infra_solr }}:{% if auto_tls == true %}8995{% else %}8993{% endif %}/solr/#</value><description>CDP INFRA SOLR API topology</description></property>"
+
 
       LIVY:
         LIVY_SERVER:
@@ -166,7 +171,6 @@ clusters:
         TEZ: [GATEWAY]
         SOLR: [GATEWAY]
         SPARK_ON_YARN: [GATEWAY]
-        SPARK3_ON_YARN: [GATEWAY]
         YARN: [GATEWAY]
         ZEPPELIN: [ZEPPELIN_SERVER]
 
@@ -184,7 +188,6 @@ clusters:
         OZONE: [OZONE_MANAGER, STORAGE_CONTAINER_MANAGER, GATEWAY]
         SOLR: [GATEWAY]
         SPARK_ON_YARN: [GATEWAY]
-        SPARK3_ON_YARN: [GATEWAY]
         TEZ: [GATEWAY]
         YARN: [GATEWAY]
         ZOOKEEPER: [SERVER]     
@@ -203,7 +206,6 @@ clusters:
         RANGER: [RANGER_ADMIN]
         SOLR: [GATEWAY]
         SPARK_ON_YARN: [SPARK_YARN_HISTORY_SERVER, GATEWAY]
-        SPARK3_ON_YARN: [GATEWAY]
         TEZ: [GATEWAY]
         YARN: [RESOURCEMANAGER, JOBHISTORY, GATEWAY]
         ZOOKEEPER: [SERVER]
@@ -223,7 +225,6 @@ clusters:
         QUEUEMANAGER: [QUEUEMANAGER_STORE, QUEUEMANAGER_WEBAPP]
         SOLR: [GATEWAY]
         SPARK_ON_YARN: [GATEWAY]
-        SPARK3_ON_YARN: [SPARK3_YARN_HISTORY_SERVER, GATEWAY]
         SQL_STREAM_BUILDER: [STREAMING_SQL_ENGINE, STREAMING_SQL_CONSOLE, MATERIALIZED_VIEW_ENGINE]
         TEZ: [GATEWAY]
         YARN: [RESOURCEMANAGER, GATEWAY]
@@ -241,7 +242,6 @@ clusters:
         TEZ: [GATEWAY]
         SOLR: [SOLR_SERVER, GATEWAY]
         SPARK_ON_YARN: [GATEWAY]
-        SPARK3_ON_YARN: [GATEWAY]
         YARN: [NODEMANAGER, GATEWAY]
 
       

@@ -1,5 +1,0 @@
-cloudera_manager_host: "localhost"
-cloudera_manager_user: "admin"
-cloudera_manager_password: "admin"
-ranger_user: "admin"
-ranger_password: "admin"

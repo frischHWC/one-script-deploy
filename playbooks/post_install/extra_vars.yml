@@ -4,6 +4,7 @@ cloudera_manager_user: admin
 cloudera_manager_password: admin 
 cluster_name: ${CLUSTER_NAME} 
 auto_tls: ${TLS} 
+encryption_activated: ${ENCRYPTION_ACTIVATED}
 cluster_type: ${CLUSTER_TYPE} 
 free_ipa: ${FREE_IPA} 
 ipaadmin_password: ${DEFAULT_PASSWORD} 

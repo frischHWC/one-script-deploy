@@ -3,9 +3,11 @@
 cloudera_manager_host: ${NODE_0}
 cloudera_manager_user: admin
 cloudera_manager_password: admin
+cm_version: ${CM_VERSION}
 database_host: ${NODE_0}
 postgres_version: 10
 pvc_version: ${PVC_VERSION}
+cluster_name: ${CLUSTER_NAME}
 cluster_name_pvc: ${CLUSTER_NAME_PVC}
 ipa_server: ${NODE_IPA}
 free_ipa: ${FREE_IPA}

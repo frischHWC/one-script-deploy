@@ -33,6 +33,7 @@
     - get_pvc_info 
     - setup_cdpcli
 
+
 - name: Create environments
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false
@@ -43,6 +44,7 @@
       with_items: "{{ environments }}"
       vars: 
         env: "{{ item }}"
+      ignore_errors: yes
 
 
 - name: Create Cloudera Data Warehouse
@@ -56,6 +58,7 @@
       vars: 
         warehouse: "{{ item }}"
       when: cdw | default(false)
+      ignore_errors: yes
 
 - name: Create Cloudera Data Engineering
   hosts: "{{ cloudera_manager_host }}"
@@ -68,6 +71,7 @@
       vars:
         virtual_cluster: "{{ item }}"
       when: cde | default(false)
+      ignore_errors: yes
 
 - name: Create Cloudera Machine Learning
   hosts: "{{ cloudera_manager_host }}"
@@ -80,6 +84,7 @@
       vars: 
         workspace: "{{ item }}"
       when: cml | default(false)
+      ignore_errors: yes
 
 
 - name: Setting up users' rights
@@ -92,3 +97,4 @@
       with_items: "{{ user_rights }}"
       vars: 
         user: "{{ item }}"
+      ignore_errors: yes

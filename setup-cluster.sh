@@ -760,7 +760,7 @@ do
     fi
 done
 
-if [ ! -z "${NODE_IPA}" ] && [ "${PRE_INSTALL}" = "true" ] 
+if [ ! -z "${NODE_IPA}" ]
 then
     echo "${NODE_IPA}" >> ${HOSTS_FILE}
     if [ "${PRE_INSTALL}" = "true" ] 

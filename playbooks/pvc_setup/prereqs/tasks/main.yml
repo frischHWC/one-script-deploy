@@ -36,10 +36,18 @@
     msg: "{{ cp_domain }}"
   when: debug | default(false)
 
-- name: Template Patch to CM host
+
+- name: Template Patch to CM 7.4 host
   template:
-    src: gen_credentials_ipa.p
+    src: gen_credentials_ipa_cm75.p
+    dest: /tmp/gen_credentials.p
+  when: cm_version.split('.')[1] == '4'
+
+- name: Template Patch to CM 7.5 host
+  template:
+    src: gen_credentials_ipa_cm75.p
     dest: /tmp/gen_credentials_ipa.p
+  when: cm_version.split('.')[1] == '5'
 
 - name: Apply patch remotely
   patch:

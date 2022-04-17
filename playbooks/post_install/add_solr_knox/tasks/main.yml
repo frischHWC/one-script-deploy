@@ -1,0 +1,34 @@
+---
+# Get all SolR hosts
+
+- set_fact:
+    solr_all_hosts: "{{ solr_roles.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'SOLR_SERVER'].hostRef.hostname"
+
+- name: DEBUG - solr_all_hosts
+  debug:
+    msg: "{{ solr_all_hosts }}"
+  when: debug | default(false)
+
+
+- name: add solr host in config
+  include_role:
+    name: add_solr_host_knox
+  with_items: "{{ solr_all_hosts }}"
+  vars: 
+    solr_host: "{{ item }}"
+
+# Restart Knox
+
+- name: Restart Knox
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ knox_service_name }}/commands/restart"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json

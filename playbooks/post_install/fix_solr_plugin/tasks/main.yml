@@ -18,6 +18,24 @@
     msg: "{{ solr_full_config }}"
   when: debug | default(false)
 
+- name: Get SolR full config for SOLR_SERVER-BASE
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ solr_service_name }}/roleConfigGroups/{{ solr_service_name }}-SOLR_SERVER-BASE/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: solr_full_config_base
+
+- name: DEBUG - solr_full_config_base
+  debug:
+    msg: "{{ solr_full_config_base }}"
+  when: debug | default(false)
+
 
 - name: Get SolR roles repartition
   uri:
@@ -71,28 +89,28 @@
 # Set SolR port
 
 - set_fact:
-    solr_port: "{{ solr_full_config.json | community.general.json_query(query) }}"
+    solr_port: "{{ solr_full_config_base.json | community.general.json_query(query) }}"
   vars:
     query: "items[?name == 'solr_https_port'].value | [0]"
-  when: "solr_ssl"
+  when: solr_ssl
 
 - set_fact:
-    solr_port: "{{ solr_full_config.json | community.general.json_query(query) }}"
+    solr_port: "{{ solr_full_config_base.json | community.general.json_query(query) }}"
   vars:
     query: "items[?name == 'solr_https_port'].default | [0]"
-  when: "solr_ssl and (solr_port is not defined or solr_port == '') "
+  when: solr_ssl and solr_port == ''
 
 - set_fact:
-    solr_port: "{{ solr_full_config.json | community.general.json_query(query) }}"
+    solr_port: "{{ solr_full_config_base.json | community.general.json_query(query) }}"
   vars:
     query: "items[?name == 'solr_http_port'].value | [0]"
-  when: " solr_port is not defined or solr_port == ''"
+  when: not solr_ssl 
 
 - set_fact:
-    solr_port: "{{ solr_full_config.json | community.general.json_query(query) }}"
+    solr_port: "{{ solr_full_config_base.json | community.general.json_query(query) }}"
   vars:
     query: "items[?name == 'solr_http_port'].default | [0]"
-  when: " solr_port is not defined or solr_port == '' "
+  when: not solr_ssl and solr_port == ''
 
 
 # Set SolR Servers
@@ -308,113 +326,3 @@
     validate_certs: no
     body_format: json
 
-# Set SolR URL in Knox
-
-- set_fact:
-    solr_all_hosts: "{{ solr_roles.json | community.general.json_query(query) }}"
-  vars:
-    query: "items[?type == 'SOLR_SERVER'].hostRef.hostname"
-
-- name: DEBUG - solr_all_hosts
-  debug:
-    msg: "{{ solr_all_hosts }}"
-  when: debug | default(false)
-
-- block:
-  - name: Get Knox Gateway full config
-    uri:
-      url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ knox_service_name }}/roleConfigGroups/{{ knox_service_name }}-KNOX_GATEWAY-BASE/config?view=full"
-      user: "{{ cloudera_manager_user }}"
-      password: "{{ cloudera_manager_password }}"
-      method: GET
-      force_basic_auth: yes
-      status_code: 200
-      return_content: yes
-      validate_certs: no
-      body_format: json
-    register: knox_full_config
-
-  - set_fact:
-      gateway_descriptor_cdp_proxy: "{{ knox_full_config.json | community.general.json_query(query) }}"
-    vars:
-      query: "items[?name == 'gateway_descriptor_cdp_proxy'].value | [0]"
-
-  - set_fact:
-      gateway_descriptor_cdp_proxy: "{{ knox_full_config.json | community.general.json_query(query) }}"
-    vars:
-      query: "items[?name == 'gateway_descriptor_cdp_proxy'].default | [0]"
-    when: gateway_descriptor_cdp_proxy == ""
-
-  - name: DEBUG - gateway_descriptor_cdp_proxy
-    debug:
-      msg: "{{ gateway_descriptor_cdp_proxy }}"
-    when: debug | default(false)
-
-  - set_fact:
-      new_gateway_descriptor_cdp_proxy: "{{ gateway_descriptor_cdp_proxy }}#SOLR:url={{ solr_protocol }}://{{ solr_host }}:{{ solr_port }}"
-
-  - set_fact:
-      gateway_descriptor_cdp_proxy_api: "{{ knox_full_config.json | community.general.json_query(query) }}"
-    vars:
-      query: "items[?name == 'gateway_descriptor_cdp_proxy_api'].value | [0]"
-
-  - set_fact:
-      gateway_descriptor_cdp_proxy: "{{ knox_full_config.json | community.general.json_query(query) }}"
-    vars:
-      query: "items[?name == 'gateway_descriptor_cdp_proxy_api'].default | [0]"
-    when: gateway_descriptor_cdp_proxy_api == ""
-
-  - name: DEBUG - gateway_descriptor_cdp_proxy_api
-    debug:
-      msg: "{{ gateway_descriptor_cdp_proxy_api }}"
-    when: debug | default(false)
-
-  - set_fact:
-      new_gateway_descriptor_cdp_proxy_api: "{{ gateway_descriptor_cdp_proxy_api }}#SOLR:url={{ solr_protocol }}://{{ solr_host }}:{{ solr_port }}"
-
-  - name: Push new Knox config
-    uri:
-      url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ knox_service_name }}/roleConfigGroups/{{ knox_service_name }}-KNOX_GATEWAY-BASE/config"
-      user: "{{ cloudera_manager_user }}"
-      password: "{{ cloudera_manager_password }}"
-      method: PUT
-      force_basic_auth: yes
-      status_code: 200
-      return_content: yes
-      validate_certs: no
-      body_format: json
-      body: "{{ lookup('template', 'solr_knox_url.json' ) }}"
-
-  - name: Push new Knox API config
-    uri:
-      url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ knox_service_name }}/roleConfigGroups/{{ knox_service_name }}-KNOX_GATEWAY-BASE/config"
-      user: "{{ cloudera_manager_user }}"
-      password: "{{ cloudera_manager_password }}"
-      method: PUT
-      force_basic_auth: yes
-      status_code: 200
-      return_content: yes
-      validate_certs: no
-      body_format: json
-      body: "{{ lookup('template', 'solr_knox_url_api.json' ) }}"
-
-  with_items: solr_all_hosts
-  vars:
-    solr_host: "{{ item }}"
-  when: knox_service_exists
-  ignore_errors: yes
-
-
-# Restart Knox
-
-- name: Restart Knox
-  uri:
-    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ knox_service_name }}/commands/restart"
-    user: "{{ cloudera_manager_user }}"
-    password: "{{ cloudera_manager_password }}"
-    method: POST
-    force_basic_auth: yes
-    status_code: 200
-    return_content: yes
-    validate_certs: no
-    body_format: json

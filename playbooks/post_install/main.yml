@@ -7,7 +7,7 @@
     - restart_cm
 
 - name: Check existing services
-  hosts: main
+  hosts: all
   gather_facts: false
   roles: 
     - check_solr_hue_service
@@ -24,11 +24,17 @@
   roles: 
     - { role: hue_free_ipa_ticket_lifetime, when: free_ipa and hue_service_exists }
 
-- name: Create missing solr_plugin
+- name: Create missing SolR plugin for Ranger
   hosts: main
   gather_facts: false
   roles: 
     - { role: fix_solr_plugin, when: solr_service_exists }
+
+- name: Add Solr urls to Knox
+  hosts: main
+  gather_facts: false
+  roles: 
+    - { role: add_solr_knox, when: solr_service_exists }
 
 - name: Add missing TLS values for Ranger KMS
   hosts: main

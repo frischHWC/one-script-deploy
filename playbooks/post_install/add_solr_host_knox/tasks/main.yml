@@ -1,0 +1,77 @@
+---
+- name: Get Knox Gateway full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ knox_service_name }}/roleConfigGroups/{{ knox_service_name }}-KNOX_GATEWAY-BASE/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: knox_full_config
+
+- set_fact:
+    gateway_descriptor_cdp_proxy: "{{ knox_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'gateway_descriptor_cdp_proxy'].value | [0]"
+
+- set_fact:
+    gateway_descriptor_cdp_proxy: "{{ knox_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'gateway_descriptor_cdp_proxy'].default | [0]"
+  when: gateway_descriptor_cdp_proxy == ""
+
+- name: DEBUG - gateway_descriptor_cdp_proxy
+  debug:
+    msg: "{{ gateway_descriptor_cdp_proxy }}"
+  when: debug | default(false)
+
+- set_fact:
+    new_gateway_descriptor_cdp_proxy: "{{ gateway_descriptor_cdp_proxy }}#SOLR:url={{ solr_protocol }}://{{ solr_host }}:{{ solr_port }}/solr/"
+
+- set_fact:
+    gateway_descriptor_cdp_proxy_api: "{{ knox_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'gateway_descriptor_cdp_proxy_api'].value | [0]"
+
+- set_fact:
+    gateway_descriptor_cdp_proxy_api: "{{ knox_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'gateway_descriptor_cdp_proxy_api'].default | [0]"
+  when: gateway_descriptor_cdp_proxy_api == ""
+
+- name: DEBUG - gateway_descriptor_cdp_proxy_api
+  debug:
+    msg: "{{ gateway_descriptor_cdp_proxy_api }}"
+  when: debug | default(false)
+
+- set_fact:
+    new_gateway_descriptor_cdp_proxy_api: "{{ gateway_descriptor_cdp_proxy_api }}#SOLR:url={{ solr_protocol }}://{{ solr_host }}:{{ solr_port }}/solr/"
+
+- name: Push new Knox config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ knox_service_name }}/roleConfigGroups/{{ knox_service_name }}-KNOX_GATEWAY-BASE/config"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: PUT
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    body: "{{ lookup('template', 'solr_knox_url.json' ) }}"
+
+- name: Push new Knox API config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ knox_service_name }}/roleConfigGroups/{{ knox_service_name }}-KNOX_GATEWAY-BASE/config"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: PUT
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    body: "{{ lookup('template', 'solr_knox_url_api.json' ) }}"

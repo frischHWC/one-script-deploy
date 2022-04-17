@@ -105,11 +105,11 @@ clusters:
 
       SQL_STREAM_BUILDER:
         STREAMING_SQL_CONSOLE:
-          cloudera_env.admin_password: "{{ default_password }}"
           flask.secret_key: "{{ default_password }}"
           flask.secret_verification_key: "{{ default_password }}"
           ssb-conf/ssb-console-conf.yaml_role_safety_valve: log_console_restapi_calls = true
         STREAMING_SQL_ENGINE:
+          default.admin.password: "{{ default_password }}" 
           ssb-conf/application.properties_role_safety_valve: log.sqlio.restapi = true
         MATERIALIZED_VIEW_ENGINE:
           ssb.mve.datasource.url: "jdbc:{{ database_type }}://{{ database_host }}:{{ database_type | default_database_port }}/ssb_mve"

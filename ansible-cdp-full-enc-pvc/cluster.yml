@@ -101,20 +101,6 @@ clusters:
         SERVICEWIDE:
           atlas_service: "atlas"
 
-      SQL_STREAM_BUILDER:
-        STREAMING_SQL_CONSOLE:
-          cloudera_env.admin_password: "{{ default_password }}"
-          flask.secret_key: "{{ default_password }}"
-          flask.secret_verification_key: "{{ default_password }}"
-          ssb-conf/ssb-console-conf.yaml_role_safety_valve: log_console_restapi_calls = true
-        STREAMING_SQL_ENGINE:
-          ssb-conf/application.properties_role_safety_valve: log.sqlio.restapi = true
-        MATERIALIZED_VIEW_ENGINE:
-          ssb.mve.datasource.url: "jdbc:{{ database_type }}://{{ database_host }}:{{ database_type | default_database_port }}/ssb_mve"
-          ssb.mve.datasource.username: ssb_mve
-          ssb.mve.datasource.password: "{{ database_default_password }}"
-          ssb-conf/application.properties_role_safety_valve: log.snapper.restapi = true
-
       RANGER:
         SERVICEWIDE:
           keyadmin_user_password: "{{ default_password }}"
@@ -122,7 +108,7 @@ clusters:
           rangertagsync_user_password: "{{ default_password }}"
           rangerusersync_user_password: "{{ default_password }}"
         RANGER_USERSYNC:
-          ranger.usersync.source.impl.class: "{% if free_ipa == true %}org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder{% else %}org.apache.ranger.unixusersync.process.UnixUserGroupBuilder{% endif %}"
+          ranger.usersync.source.impl.class: "org.apache.ranger.unixusersync.process.UnixUserGroupBuilder"
           ranger.usersync.ldap.url: "{{ ipa_ldap_url }}"
           ranger.usersync.ldap.binddn: "{{ ipa_ldap_user_bind_dn }}"
           ranger_usersync_ldap_ldapbindpassword: "{{ ipa_ldap_user_bind_password }}"
@@ -137,6 +123,19 @@ clusters:
           ranger.usersync.group.memberattributename: "member"
           ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:u:administrator&ROLE_SYS_ADMIN:u:dev"
           
+      SQL_STREAM_BUILDER:
+        STREAMING_SQL_CONSOLE:
+          flask.secret_key: "{{ default_password }}"
+          flask.secret_verification_key: "{{ default_password }}"
+          ssb-conf/ssb-console-conf.yaml_role_safety_valve: log_console_restapi_calls = true
+        STREAMING_SQL_ENGINE:
+          default.admin.password: "{{ default_password }}" 
+          ssb-conf/application.properties_role_safety_valve: log.sqlio.restapi = true
+        MATERIALIZED_VIEW_ENGINE:
+          ssb.mve.datasource.url: "jdbc:{{ database_type }}://{{ database_host }}:{{ database_type | default_database_port }}/ssb_mve"
+          ssb.mve.datasource.username: ssb_mve
+          ssb.mve.datasource.password: "{{ database_default_password }}"
+          ssb-conf/application.properties_role_safety_valve: log.snapper.restapi = true
 
       YARN:
         SERVICEWIDE:

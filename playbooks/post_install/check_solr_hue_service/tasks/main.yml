@@ -39,7 +39,7 @@
 - set_fact:
     hue_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
   vars:
-    query: "items[?type == 'HUE'].name | [1]"
+    query: "items[?type == 'HUE'].name | [0]"
 
 - name: DEBUG - hue_service_name
   debug:
@@ -52,4 +52,23 @@
 - name: DEBUG - hue_service_exists
   debug:
     msg: "{{ hue_service_exists }}"
+  when: debug | default(false)
+
+
+- set_fact:
+    knox_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'KNOX'].name | [0]"
+
+- name: DEBUG - knox_service_name
+  debug:
+    msg: "{{ knox_service_name }}"
+  when: debug | default(false)
+
+- set_fact: 
+    knox_service_exists: "{{ true if knox_service_name != '' else false }}"
+
+- name: DEBUG - knox_service_exists
+  debug:
+    msg: "{{ knox_service_exists }}"
   when: debug | default(false)

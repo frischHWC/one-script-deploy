@@ -23,6 +23,7 @@ cdw: ${CREATE_CDW}
 cde: ${CREATE_CDE}
 cml: ${CREATE_CML}
 pvc_type: ${PVC_TYPE}
+oc_tar_file_path: ${OC_TAR_FILE_PATH}
 
 # Environments
 environments:

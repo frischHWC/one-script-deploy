@@ -24,8 +24,6 @@ List of TODOs for this project
 
 ## Data Loading
 
-- Add CDP 7.1.7-SP1 
-- Test and ensure all services are adressed (do not requires more privileges in Ranger)
 - Add more models
 - Work on RD to make more possibilities
 

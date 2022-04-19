@@ -47,5 +47,5 @@
     "denyExceptions": [
       
     ],
-    "service": "{{ cluster_name | replace('-','_') }}_stream_NIFI_1"
+    "service": "{{ cluster_name | replace('-','_') }}_stream_nifi"
   }

@@ -1,7 +1,7 @@
 ---
 default_password: ${DEFAULT_PASSWORD}
 free_ipa: ${FREE_IPA} 
-ipa_server: ${FREE_IPA_NODE} 
+ipa_server: ${NODE_IPA} 
 cluster_name: ${CLUSTER_NAME} 
 debug: ${DEBUG}
 
@@ -10,8 +10,8 @@ users:
     password: ${DEFAULT_PASSWORD}
     group: admin_user
   - name: superman
-    password: superman
+    password: ${DEFAULT_PASSWORD}
     group: hero
   - name: batman
-    password: batman
+    password: ${DEFAULT_PASSWORD}
     group: hero

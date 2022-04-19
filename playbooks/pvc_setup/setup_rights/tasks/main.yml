@@ -124,6 +124,7 @@
   with_items: "{{ user.virtual_clusters }}"
   loop_control:
     loop_var: vc
+  when: cde | default(false)
 
 
 

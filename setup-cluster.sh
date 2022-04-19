@@ -1230,6 +1230,28 @@ then
     fi
 fi
 
+if [ "${USER_CREATION}" = "true" ]
+then
+    echo "############ User Creation ############"
+    if [ "${DEBUG}" = "true" ]
+    then
+        echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/user_creation/main.yml --extra-vars \"@/tmp/user_creation_extra_vars.yml\" "
+        echo " Follow advancement at: ${LOG_DIR}/user_creation.log "
+    fi
+    cp playbooks/user_creation/extra_vars.yml /tmp/user_creation_extra_vars.yml
+    envsubst < /tmp/user_creation_extra_vars.yml > /tmp/user_creation_extra_vars.yml.tmp && mv /tmp/user_creation_extra_vars.yml.tmp /tmp/user_creation_extra_vars.yml
+    ansible-playbook -i ${HOSTS_FILE} playbooks/user_creation/main.yml --extra-vars "@/tmp/user_creation_extra_vars.yml" 2>&1 > ${LOG_DIR}/user_creation.log
+    OUTPUT=$(tail -20 ${LOG_DIR}/user_creation.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
+    if [ "${OUTPUT}" == "2" ]
+    then
+      echo " SUCCESS: Users Creation "
+    else
+      echo " FAILURE: Could not create users " 
+      echo " See details in file: ${LOG_DIR}/user_creation.log "
+      exit 1
+    fi
+fi
+
 if [ "${PVC}" = "true" ] && [ "${INSTALL_PVC}" = "true" ]
 then
     echo "############ Creating PvC cluster ############" 
@@ -1264,28 +1286,6 @@ then
     else
       echo " FAILURE: Could not configure PVC " 
       echo " See details in file: ${LOG_DIR}/pvc_configuration.log "
-      exit 1
-    fi
-fi
-
-if [ "${USER_CREATION}" = "true" ]
-then
-    echo "############ User Creation ############"
-    if [ "${DEBUG}" = "true" ]
-    then
-        echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/user_creation/main.yml --extra-vars \"@/tmp/user_creation_extra_vars.yml\" "
-        echo " Follow advancement at: ${LOG_DIR}/user_creation.log "
-    fi
-    cp playbooks/user_creation/extra_vars.yml /tmp/user_creation_extra_vars.yml
-    envsubst < /tmp/user_creation_extra_vars.yml > /tmp/user_creation_extra_vars.yml.tmp && mv /tmp/user_creation_extra_vars.yml.tmp /tmp/user_creation_extra_vars.yml
-    ansible-playbook -i ${HOSTS_FILE} playbooks/user_creation/main.yml --extra-vars "@/tmp/user_creation_extra_vars.yml" 2>&1 > ${LOG_DIR}/user_creation.log
-    OUTPUT=$(tail -20 ${LOG_DIR}/user_creation.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
-    if [ "${OUTPUT}" == "2" ]
-    then
-      echo " SUCCESS: Users Creation "
-    else
-      echo " FAILURE: Could not create users " 
-      echo " See details in file: ${LOG_DIR}/user_creation.log "
       exit 1
     fi
 fi

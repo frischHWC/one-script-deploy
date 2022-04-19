@@ -88,8 +88,8 @@ virtual_clusters:
 
 # Rights
 user_rights:
-  - name: dev
-    keytab: /home/dev/dev.keytab # Used if defined to push keytab to CML and CDE
+  - name: francois
+    keytab: /home/francois/francois.keytab # Used if defined to push keytab to CML and CDE
     password: ${DEFAULT_PASSWORD}
     roles: [ "EnvironmentAdmin", "EnvironmentUser", "IamUser", "IamViewer", "PowerUser" ] # Optionnal: Used to define "admin" roles on CP for this user
     envs: 

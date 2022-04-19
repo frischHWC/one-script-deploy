@@ -12,7 +12,7 @@
     "resources": {
       "path": {
         "values": [
-          "/user/"
+          "/user/",
           "/tmp/",
           "/ranger/audit/"
         ],

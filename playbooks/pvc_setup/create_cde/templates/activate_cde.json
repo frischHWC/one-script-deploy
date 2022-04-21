@@ -4,7 +4,7 @@
   "config": {
     "properties": {
       "loadbalancer.internal": "true",
-      "dbus-wxm-client.enabled": "true",
+      "dbus-wxm-client.enabled": "false",
       "kubernetes.api.allowList": "",
       "mount.SSD": "false",
       "loadbalancer.allowList": "",

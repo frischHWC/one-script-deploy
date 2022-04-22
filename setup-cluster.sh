@@ -82,6 +82,7 @@ export CLUSTER_NAME_PVC=
 export NODES_PVC_ECS=
 export KUBECONFIG_PATH=
 export INSTALL_PVC="true"
+export CONFIGURE_PVC="true"
 export PVC="false"
 export PVC_TYPE="ECS"
 export CREATE_CDW="true"
@@ -152,6 +153,7 @@ function usage()
     echo "  --data-load=$DATA_LOAD : (Optional) Whether to initiate post deployment tasks including data loading (Default) false "
     echo "  --prepare-ansible-deployment=$PREPARE_ANSIBLE_DEPLOYMENT : (Optional) To prepare deployment by copying and setting all files for deployment on node 1 (Default) true"
     echo "  --install-pvc=$INSTALL_PVC : (Optional) To launch installation of PVC (Default) true"
+    echo "  --configure-pvc=$CONFIGURE_PVC : (Optional) To launch configuration of PVC (Default) true"
     echo "  --debug=$DEBUG : (Optional) To setup debug mode for all playbooks (Default) false"
     echo "  --log-dir=$LOG_DIR : (Optional) To specify where this script will logs its files (Default) ~/deploy_to_cloudcat_logs/ "
     echo ""
@@ -281,6 +283,9 @@ while [ "$1" != "" ]; do
         --install-pvc)
             INSTALL_PVC=$VALUE
             ;;
+        --configure-pvc)
+            CONFIGURE_PVC=$VALUE
+            ;;
         --debug)
             DEBUG=$VALUE
             ;;
@@ -382,9 +387,6 @@ while [ "$1" != "" ]; do
             ;;
         --install-python3)
             INSTALL_PYTHON3=$VALUE
-            ;;
-        --test)
-            CLUSTER_NAME=$VALUE
             ;;
         --pvc)
             PVC=$VALUE
@@ -1268,7 +1270,7 @@ then
     fi
 fi
 
-if [ "${PVC}" = "true" ]
+if [ "${PVC}" = "true" ] && [ "${CONFIGURE_PVC}" = "true" ]
 then
     echo "############ Configuring PvC cluster ############" 
     if [ "${DEBUG}" = "true" ]

@@ -1,50 +1,50 @@
 ---
-# - name: Prereqs for FreeIPA
-#   hosts: "{{ ipa_server }}"
-#   become: yes
-#   gather_facts: no
-#   roles:
-#     - prereqs_ipa
+- name: Prereqs for FreeIPA
+  hosts: "{{ ipa_server }}"
+  become: yes
+  gather_facts: no
+  roles:
+    - prereqs_ipa
 
-# - name: Pre-requisites on base DB
-#   hosts: "{{ database_host }}"
-#   gather_facts: false
-#   roles: 
-#     - prereqs_db
+- name: Pre-requisites on base DB
+  hosts: "{{ database_host }}"
+  gather_facts: false
+  roles: 
+    - prereqs_db
   
-# - name: Pre-requisites on Open Shift
-#   hosts: "{{ cloudera_manager_host }}"
-#   gather_facts: false
-#   roles: 
-#     - role: prereqs_oc
-#       when: pvc_type == "OC"
+- name: Pre-requisites on Open Shift
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: false
+  roles: 
+    - role: prereqs_oc
+      when: pvc_type == "OC"
 
-# - name: Pre-requisites and fixes for PvC 
-#   hosts: "{{ cloudera_manager_host }}"
-#   gather_facts: false
-#   roles: 
-#     - prereqs
+- name: Pre-requisites and fixes for PvC 
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: false
+  roles: 
+    - prereqs
 
-# - name: Setup PvC 
-#   hosts: "{{ cloudera_manager_host }}"
-#   gather_facts: false
-#   roles: 
-#     - cm_config
-#     - get_pvc_info 
-#     - setup_cdpcli
+- name: Setup PvC 
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: false
+  roles: 
+    - cm_config
+    - get_pvc_info 
+    - setup_cdpcli
 
 
-# - name: Create environments
-#   hosts: "{{ cloudera_manager_host }}"
-#   gather_facts: false
-#   tasks: 
-#     - name: create envs
-#       include_role:
-#         name: create_env
-#       with_items: "{{ environments }}"
-#       vars: 
-#         env: "{{ item }}"
-#       ignore_errors: yes
+- name: Create environments
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: false
+  tasks: 
+    - name: create envs
+      include_role:
+        name: create_env
+      with_items: "{{ environments }}"
+      vars: 
+        env: "{{ item }}"
+      ignore_errors: yes
 
 
 - name: Create Cloudera Data Warehouse

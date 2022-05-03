@@ -18,6 +18,10 @@ kerb_keytab: /home/francois/francois.keytab
 # Release to get and launch
 release_url: ${DATA_LOAD_REPO_URL}
 
+
+# Add other projects below as the one above
+
+
 ###### OPTIONAL ######
 ## All below variables could be filled in manually or let the playbook filled them automatically ##
 ## ##

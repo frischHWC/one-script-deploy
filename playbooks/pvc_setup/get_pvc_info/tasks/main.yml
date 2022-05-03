@@ -11,7 +11,7 @@
 
 # Get domain from kubeconfig file
 - set_fact: 
-    env_domain: "{{ (lookup('template', kube_config_path ) | from_yaml).clusters[0].cluster.server.split('//')[1].split(':')[0].replace('api','apps') }}"
+    env_domain: "{{ (lookup('template', kube_config_path ) | from_yaml).clusters[0].cluster.server.split('//')[1].split(':')[0].replace('api.','') }}"
 
 - name: DEBUG - env_domain
   debug:

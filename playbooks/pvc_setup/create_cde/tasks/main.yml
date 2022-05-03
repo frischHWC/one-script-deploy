@@ -212,7 +212,43 @@
   debug:
     msg: "{{ cde_vc_endpoint_hostname }}"
 
-# 2. Launch ./cdp-cde-utils.sh init-virtual-cluster -h <endpoint_host> -a on cm host
+- set_fact:
+    cde_vc_endpoint_hostname_wildcard: "*.{{ cde_vc_endpoint_hostname[9:] }}"
 
-- name: Launch init of VC
-  shell: "./cdp-cde-utils.sh init-virtual-cluster -h {{ cde_vc_endpoint_hostname }} -a"
+- name: DEBUG - cde_vc_endpoint_hostname_wildcard
+  debug:
+    msg: "{{ cde_vc_endpoint_hostname_wildcard }}"
+
+# Prepare certs
+
+- name: Check rootCA.crt
+  stat: 
+    path: ~/rootCA.crt
+  register: rootca_crt_stat
+
+- name: Check rootCA.key
+  stat: 
+    path: ~/rootCA.key
+  register: rootca_key_stat
+
+- name: Generates rootCA if needed
+  shell: |
+    openssl genrsa -out ~/rootCA.key 4096
+    openssl req -x509 -new -nodes -key ~/rootCA.key -sha256 -days 1024 -out ~/rootCA.crt -subj "/C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/CN=CDE_FRISCH"
+  when: not rootca_key_stat.stat.exists and not rootca_crt_stat.stat.exists
+
+- name: Fetch rootCA locally to add it to your browser
+  fetch: 
+    src: ~/rootCA.crt
+    dest: /tmp/rootCA-{{ virtual_cluster.env_name }}.crt
+
+- name: Generate key and csr for endpoint
+  shell: "openssl req -nodes -newkey rsa:2048 -keyout endpoint-{{ cde_vc_endpoint_hostname }}.key -out endpoint-{{ cde_vc_endpoint_hostname }}.csr -subj \"/C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/CN={{ cde_vc_endpoint_hostname_wildcard }}\" "
+
+- name: Sign it using rootCA
+  shell: "openssl x509 -req -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -days 365 -sha256 -in endpoint-{{ cde_vc_endpoint_hostname }}.csr -out endpoint-{{ cde_vc_endpoint_hostname }}.crt"
+
+# Send certs
+
+- name: Add certs with script to VC
+  shell: "./cdp-cde-utils.sh init-virtual-cluster -h {{ cde_vc_endpoint_hostname }} -c endpoint-{{ cde_vc_endpoint_hostname }}.crt -k endpoint-{{ cde_vc_endpoint_hostname }}.key"

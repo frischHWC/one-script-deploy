@@ -40,7 +40,7 @@ delegation_username: admin
 delegation_password: "{{ ipa_bind_password }}"
 
 warehouses: 
-  - name: "{{ cluster_name_pvc }}-env-1-hive"
+  - name: "Hive-1"
     database_catalog_name: "{{ cluster_name_pvc }}-env-1-datalake-default"
     env_name: "{{ cluster_name_pvc }}-env-1"
     low_resource_mode: true
@@ -52,7 +52,7 @@ warehouses:
     wait_time: 60 # default = 60
     disable_auto_suspend: false # default = false
 
-  - name: "{{ cluster_name_pvc }}-env-1-hive"
+  - name: "Impala-1"
     database_catalog_name: "{{ cluster_name_pvc }}-env-1-datalake-default"
     env_name: "{{ cluster_name_pvc }}-env-1"
     low_resource_mode: true
@@ -71,9 +71,9 @@ warehouses:
 
 # CML
 workspaces:
-  - name: "{{ cluster_name_pvc }}-env-1-workspace"
+  - name: "workspace-1"
     env_name: "{{ cluster_name_pvc }}-env-1"
-    disable_tls: true # default = true
+    disable_tls: false # default = false
     enable_monitoring: true # default = true
     enable_governance: false # default = false
     enable_model_metrics: false # default = false
@@ -81,9 +81,9 @@ workspaces:
 
 # CDE
 virtual_clusters:
-  - name: "{{ cluster_name_pvc }}-env-1-vc"
+  - name: "VC-1"
     env_name: "{{ cluster_name_pvc }}-env-1"
-    cde_service_name: "{{ cluster_name_pvc }}-env-1-cde"
+    cde_service_name: "CDE-Service-1"
 
 
 # Rights
@@ -96,11 +96,11 @@ user_rights:
       - name: "{{ cluster_name_pvc }}-env-1"
         roles: [ "DEAdmin", "DEUser", "DWAdmin", "DWUser", "MLAdmin", "MLUser" ]
     workspaces: # Optionnal: If not defined no keytab pushed to workspace
-      - name: "{{ cluster_name_pvc }}-env-1-workspace" 
+      - name: "Workspace-1" 
         env_name: "{{ cluster_name_pvc }}-env-1"
     virtual_clusters: # Optionnal: If not defined no keytab pushed to cde
-      - name: "{{ cluster_name_pvc }}-env-1-vc"
+      - name: "VC-1"
         env_name: "{{ cluster_name_pvc }}-env-1"
-        cde_service_name: "{{ cluster_name_pvc }}-env-1-cde"
+        cde_service_name: "CDE-Service-1"
     
     

@@ -93,13 +93,9 @@
 
 - name: Download cdp-cde-utils.sh.gz
   get_url:
-    url: "https://docs.cloudera.com/data-engineering/1.3.4/cdp-cde-utils.sh.gz"
+    url: "https://docs.cloudera.com/data-engineering/1.3.4/cdp-cde-utils.sh"
     dest: ~/cdp-cde-utils.sh.gz
     mode: '0775'
-  ignore_errors: true
-
-- name: Untar cdp-cde-utils file
-  shell: gunzip -f ~/cdp-cde-utils.sh.gz
   ignore_errors: true
     
 - name: Set cdp-cde script executable

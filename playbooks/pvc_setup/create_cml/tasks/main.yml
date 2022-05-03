@@ -41,3 +41,53 @@
   retries: 30
   delay: 60
 
+- set_fact: 
+    cml_endpoint: "{{ cml_activation.json.workspace.instanceUrl.split('//')[1] }}"
+
+# Prepare root cert
+
+- name: Check rootCA.crt
+  stat: 
+    path: ~/rootCA.crt
+  register: rootca_crt_stat
+  when: not workspace.disable_tls
+
+- name: Check rootCA.key
+  stat: 
+    path: ~/rootCA.key
+  register: rootca_key_stat
+  when: not workspace.disable_tls
+
+- name: Generates rootCA if needed
+  shell: |
+    openssl genrsa -out ~/rootCA.key 4096
+    openssl req -x509 -new -nodes -key ~/rootCA.key -sha256 -days 1024 -out ~/rootCA.crt -subj "/C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/CN=FRISCH"
+  when: not rootca_key_stat.stat.exists and not rootca_crt_stat.stat.exists and not workspace.disable_tls
+
+- name: Fetch rootCA locally to add it to your browser
+  fetch: 
+    src: ~/rootCA.crt
+    dest: /tmp/rootCA-{{ workspace.env_name }}.crt
+  when: not workspace.disable_tls
+
+- name: Template openssl-ext.conf
+  template: 
+    src: openssl-ext.conf
+    dest: "~/openssl-ext-{{ cml_endpoint }}.conf"
+  when: not workspace.disable_tls
+
+
+# Prepare cert for endpoint
+
+- name: Generate key and csr for endpoint
+  shell: "openssl req -nodes -newkey rsa:2048 -keyout endpoint-{{ cml_endpoint }}.key -out endpoint-{{ cml_endpoint }}.csr -subj \"/C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/CN={{ cml_endpoint }}\" "
+  when: not workspace.disable_tls
+
+- name: Sign it using rootCA
+  shell: "openssl x509 -req -extfile openssl-ext-{{ cml_endpoint }}.conf -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -days 365 -sha256 -in endpoint-{{ cml_endpoint }}.csr -out endpoint-{{ cml_endpoint }}.crt"
+  when: not workspace.disable_tls
+
+- name: Upload cert file
+  shell: "kubectl create secret tls cml-tls-secret --cert=endpoint-{{ cml_endpoint }}.crt --key=endpoint-{{ cml_endpoint }}.key -o yaml --dry-run | kubectl -n {{ workspace.name }} create -f - "
+  when: not workspace.disable_tls
+  

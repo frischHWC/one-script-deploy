@@ -8,3 +8,4 @@ known_hosts: ${KNOWN_HOSTS}
 license_file: ${LICENSE_FILE}
 authorized_keys: ${AUTHORIZED_KEYS}
 node_key: ${NODE_KEY}
+

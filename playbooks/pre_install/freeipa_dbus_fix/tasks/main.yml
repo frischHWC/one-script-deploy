@@ -1,0 +1,15 @@
+---
+- name: Copy DBUS config file
+  copy:
+    src: dbus_session.conf
+    dest: /etc/dbus-1/session-local.conf
+
+- name: Restart DBUS
+  service:
+    name: dbus
+    state: restarted
+
+- name: Restart logind
+  service:
+    name: systemd-logind
+    state: restarted

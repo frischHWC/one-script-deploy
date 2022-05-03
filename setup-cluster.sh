@@ -135,7 +135,7 @@ function usage()
     echo "  --node-key=$NODE_KEY : The key to connect to all nodes (Default) "
     echo "  --node-password=$NODE_PASSWORD : The password to connect to all nodes (Default) "
     echo ""
-    echo "  --nodes-base=$NODES_BASE : space separated list of all nodes (Default) "
+    echo "  --nodes-base=$NODES_BASE : A Space separated list of all nodes (Default) "
     echo "  --node-ipa=$NODE_IPA : Required only if using FreeIPA (Default) "
     echo "  --node-kts=$NODE_KTS : Required only if using KTS (Default) "
     echo ""
@@ -201,7 +201,7 @@ function usage()
     echo ""
     echo "  --pvc=$PVC : (Optional) If PVC should be deployed and configured (Default) false "
     echo "  --pvc-type=$PVC_TYPE : (Optional) Which type of PVC (OC or ECS) (Default) ECS "
-    echo "  --nodes-ecs=$NODES_PVC_ECS : (Optional) A comma separated list of ECS nodes (external to cluster) where to install ECS (Default)  "
+    echo "  --nodes-ecs=$NODES_PVC_ECS : (Optional) A Space separated list of ECS nodes (external to cluster) where to install ECS (Default)  "
     echo "  --kubeconfig-path=$KUBECONFIG_PATH : (Optional) To use with CDP PvC on Open Shift, it is then required (Default)   "
     echo "  --oc-tar-file-path=$OC_TAR_FILE_PATH Required if using OpenShift, local path to oc.tar file provided by RedHat (Default) "
     echo "  --cluster-name-pvc=$CLUSTER_NAME_PVC Optional as it is derived from cluster-name (Default) <cluster-name>-pvc"
@@ -792,7 +792,8 @@ fi
 
 if [ ! -z "${NODES_PVC_ECS}" ]
 then
-export NODES_PVC_ECS_SORTED=$( echo ${NODES_PVC_ECS} | sort | uniq )
+    export NODES_PVC_ECS_SORTED_ARRAY=$( echo ${NODES_PVC_ECS} | sort | uniq )
+    export NODES_PVC_ECS_SORTED=( ${NODES_PVC_ECS_SORTED_ARRAY} )
     for i in ${!NODES_PVC_ECS_SORTED[@]}
     do
         echo "${NODES_PVC_ECS_SORTED[$i]}" >> ${HOSTS_FILE}
@@ -808,7 +809,7 @@ export NODES_PVC_ECS_SORTED=$( echo ${NODES_PVC_ECS} | sort | uniq )
     done
 
 new_line=$'\n'
-export NODES_ECS_PRINTABLE="$(echo ${NODES_PVC_ECS} | sed 's/,/'"\\${new_line}"'/g')"
+export NODES_ECS_PRINTABLE="$(echo ${NODES_PVC_ECS} | sed 's/ /'"\\${new_line}"'/g')"
 
 fi
 

@@ -20,3 +20,10 @@
   strategy: free
   roles: 
     - auth_key_for_all
+
+- name: Fix FreeIPA Dbus configuration
+  hosts: all
+  gather_facts: false
+  strategy: free
+  roles: 
+    - { role: freeipa_dbus_fix , when: free_ipa }

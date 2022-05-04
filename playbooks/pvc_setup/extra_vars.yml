@@ -71,7 +71,7 @@ warehouses:
 
 # CML
 workspaces:
-  - name: "workspace-1"
+  - name: "{{ cluster_name_pvc }}-workspace-1"
     env_name: "{{ cluster_name_pvc }}-env-1"
     disable_tls: false # default = false
     enable_monitoring: true # default = true
@@ -96,7 +96,7 @@ user_rights:
       - name: "{{ cluster_name_pvc }}-env-1"
         roles: [ "DEAdmin", "DEUser", "DWAdmin", "DWUser", "MLAdmin", "MLUser" ]
     workspaces: # Optionnal: If not defined no keytab pushed to workspace
-      - name: "Workspace-1" 
+      - name: "{{ cluster_name_pvc }}-workspace-1" 
         env_name: "{{ cluster_name_pvc }}-env-1"
     virtual_clusters: # Optionnal: If not defined no keytab pushed to cde
       - name: "VC-1"

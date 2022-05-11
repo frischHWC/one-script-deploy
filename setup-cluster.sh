@@ -480,8 +480,6 @@ fi
 # To ensure log dirs exists 
 mkdir -p ${LOG_DIR}/
 
-# TODO: Add a default with: security + FreeIPA + KTS + Streaming with Nifi + Optional pvc
-
 #############################################################################################
 # Setup of deployment type
 # SIMPLIFY ALL deployment by using ONE Parameter to know what to deploy
@@ -550,7 +548,7 @@ then
     elif [ "${CLUSTER_TYPE}" = "enc-ha" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-enc-ha/hosts"
-        export ANSIBLE_ALL_FILE="ansible-cdp-enc-hac/all"
+        export ANSIBLE_ALL_FILE="ansible-cdp-enc-ha/all"
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-enc-ha/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-enc-ha/extra_vars.yml"
         export ENCRYPTION_ACTIVATED="true"
@@ -805,7 +803,7 @@ then
             IP_ADRESS_SOLVED=$( dig +short ${NODES_KTS_SORTED[$i]} )
             echo "${IP_ADRESS_SOLVED} ${NODES_KTS_SORTED[$i]}" >> ${HOSTS_ETC}
             echo "**** Connection setup to ${NODES_KTS_SORTED[$i]} ****"
-            if [ -z "${KTS_ACTIVE}"]
+            if [ -z "${KTS_ACTIVE}" ]
             then 
                 export KTS_ACTIVE=${NODES_KTS_SORTED[$i]}
             else 
@@ -918,7 +916,6 @@ ${NODE_0}"
     fi
 fi
 
-#TODO: Add two KTS (passive & active if possible)
 if [ "${ENCRYPTION_ACTIVATED}" = "true" ]
 then
     if [ -z "${KTS_PASSIVE}" ]
@@ -975,7 +972,7 @@ fi
 # Set ANSIBLE_CONFIG FILE
 export ANSIBLE_CONFIG=$(pwd)/ansible.cfg
 
-if [ ${USE_ANSIBLE_PYTHON_3} == 'true' ]
+if [ "${USE_ANSIBLE_PYTHON_3}" == "true" ]
 then
     export ANSIBLE_PYTHON_3_PARAMS='-e ansible_python_interpreter=/usr/bin/python3'
 fi

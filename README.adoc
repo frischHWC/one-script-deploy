@@ -18,7 +18,7 @@ To install a cluster, default one is a CDP 7 - 10 nodes with Kerberos and TLS se
         export CLUSTER_NAME=   # A name of your choice (ex: cloudera-test )
         export NODES=   # *Space* separated list of nodes (ex: "node1 node2 node3 ") (You must provide as much as nodes are needed for the type of installation you are launching, default being 10.)
 
-        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+        ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
                 --license-file=${LICENSE_FILE} \
                 --paywall-username=${PAYWALL_USER} \
                 --paywall-password=${PAYWALL_PASSWORD} \
@@ -30,14 +30,14 @@ __N.B. : This assumes that a passwordless connection is present from here to all
 
 Many more configurations are available, see them all with:
 
-        ./setup_machines.sh --help
+        ./setup_cluster.sh --help
 
 
 ### Examples
 
 #### CDP 7 - Full 10 nodes with almost all services (Kerberos / TLS)
 
-        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+        ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
             --license-file=${LICENSE_FILE} \
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
@@ -45,7 +45,7 @@ Many more configurations are available, see them all with:
 
 #### CDP 7 - Basic 6 nodes (Kerberos / TLS)
 
-        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+        ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
             --license-file=${LICENSE_FILE} \
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
@@ -54,7 +54,7 @@ Many more configurations are available, see them all with:
 
 #### CDP 7 - Basic encrypted 6 nodes (Kerberos / TLS)
 
-        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+        ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
             --license-file=${LICENSE_FILE} \
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
@@ -64,7 +64,7 @@ Many more configurations are available, see them all with:
 
 #### CDP 7 - Basic 6 nodes with Free IPA on a dedicated node (All CDP clusters can have free-ipa just by adding --free-ipa=true) (Kerberos / TLS)
  
-        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+        ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
             --license-file=${LICENSE_FILE} \
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
@@ -75,7 +75,7 @@ Many more configurations are available, see them all with:
 
 #### CDP 7 - 9 nodes with 3 dedicated for PvC with ECS (Kerberos / TLS / FreeIPA)
 
-        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+        ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
             --license-file=${LICENSE_FILE} \
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
@@ -86,7 +86,7 @@ Many more configurations are available, see them all with:
 
 #### CDP 7 - 6 nodes basic for PVC with Openshift (Experiences installed on an internal OCP cluster) (Kerberos / TLS / FreeIPA)
 
-        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+        ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
             --license-file=${LICENSE_FILE} \
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
@@ -98,7 +98,7 @@ Many more configurations are available, see them all with:
 
 #### CDP 7 - Streaming cluster (6 nodes basic with Spark 3 and Flink + a VPC of 3 nodes of Kafka/Nifi) (Kerberos / TLS)
 
-        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+        ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
            --license-file=${LICENSE_FILE} \
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
@@ -107,7 +107,7 @@ Many more configurations are available, see them all with:
 
 #### CDP 7 - Streaming cluster encrypted (6 nodes basic with Spark 3 and Flink + a VPC of 3 nodes of Kafka/Nifi) (Kerberos / TLS)
 
-        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+        ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
            --license-file=${LICENSE_FILE} \
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
@@ -117,7 +117,7 @@ Many more configurations are available, see them all with:
 
 #### CDP 7 - Unsecure
 
-        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+        ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
             --license-file=${LICENSE_FILE} \
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
@@ -127,7 +127,7 @@ Many more configurations are available, see them all with:
 
 #### CDH 6 (Kerberos)
 
-        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+        ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
             --license-file=${LICENSE_FILE} \
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
@@ -137,7 +137,7 @@ Many more configurations are available, see them all with:
 
 #### CDH 5 (Kerberos)
 
-        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+        ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
             --license-file=${LICENSE_FILE} \
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
@@ -148,7 +148,7 @@ Many more configurations are available, see them all with:
 
 #### HDP 3 (Kerberos)
 
-        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+        ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
             --license-file=${LICENSE_FILE} \
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
@@ -158,7 +158,7 @@ Many more configurations are available, see them all with:
 
 #### HDP 2 (Kerberos)
 
-        ./setup_machines.sh --cluster-name=${CLUSTER_NAME} \
+        ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
             --license-file=${LICENSE_FILE} \
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \

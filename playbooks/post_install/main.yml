@@ -42,6 +42,12 @@
   roles: 
     - { role: fix_kms_tls, when: encryption_activated }
 
+- name: Configure WXM
+  hosts: main
+  gather_facts: false
+  roles: 
+    - { role: wxm_config, when: use_wxm | default(false) }
+
 - name: Ranger extra policies to have enough rights with basic accounts
   hosts: main
   gather_facts: false

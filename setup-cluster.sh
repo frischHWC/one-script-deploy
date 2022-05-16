@@ -35,7 +35,7 @@ export LOG_DIR="/tmp/deploy_to_cloudcat_logs/"$(date +%m-%d-%Y-%H-%M-%S)
 
 # Ansible Deployment files 
 export DISTRIBUTION_TO_DEPLOY="CDP"
-export CLUSTER_TYPE="full-pvc"
+export CLUSTER_TYPE="full"
 export ANSIBLE_HOST_FILE="ansible-cdp/hosts"
 export ANSIBLE_ALL_FILE="ansible-cdp/all"
 export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp/cluster.yml"
@@ -55,6 +55,7 @@ export PVC_VERSION="1.3.4"
 export CSA_VERSION="1.6.2.0"
 export CFM_VERSION="2.1.3.0"
 export SPARK3_VERSION="3.2.7171000.0"
+export WXM_VERSION="2.2.2"
 export AMBARI_VERSION="2.7.5.0"
 export HDP_VERSION="3.1.5.6091"
 export HDF_VERSION="3.5.0.0"
@@ -66,6 +67,7 @@ export PVC_REPO=
 export CSA_BASE_REPO=
 export CFM_BASE_REPO=
 export SPARK3_BASE_REPO=
+export WXM_BASE_REPO=
 export AMBARI_REPO=
 export HDP_REPO=
 export HDF_REPO=
@@ -92,6 +94,11 @@ export OC_TAR_FILE_PATH=""
 export USE_CSA="false"
 export USE_CFM="false"
 export USE_SPARK3="false"
+export USE_WXM="false"
+
+# WXM Related
+export ALTUS_KEY_ID=
+export ALTUS_PRIVATE_KEY=
 
 # Installation
 export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/heads/main.zip"
@@ -179,6 +186,7 @@ function usage()
     echo "  --hdp-version=$HDP_VERSION : (Optional) Version of HDP (Default) $HDP_VERSION "
     echo "  --hdf-version=$HDF_VERSION : (Optional) Version of HDP (Default) $HDF_VERSION "
     echo "  --spark3-version=$SPARK3_VERSION : (Optional) Version of SPARK3 (Default) $SPARK3_VERSION"
+    echo "  --wxm-version=$WXM_VERSION : (Optional) Version of WXM (Default) $WXM_VERSION"
     echo "  --pvc-version=$PVC_VERSION : (Optional) Version of PVC for CDP deployment (Default) $PVC_VERSION "
     echo ""
     echo "  --cm-repo=$CM_REPO : (Optional) repo of CM (Default) $CM_REPO "
@@ -186,6 +194,7 @@ function usage()
     echo "  --csa-repo=$CSA_BASE_REPO : (Optional) repo of CSA (Default) $CSA_BASE_REPO "
     echo "  --cfm-repo=$CFM_BASE_REPO : (Optional) repo of CFM (Default) $CFM_BASE_REPO "
     echo "  --spark3-repo=$SPARK3_BASE_REPO : (Optional) repo of SPARK3 (Default) $SPARK3_BASE_REPO "
+    echo "  --wxm-repo=$WXM_BASE_REPO : (Optional) repo of WXM (Default) $WXM_BASE_REPO "
     echo "  --ambari-repo=$AMBARI_REPO : (Optional) repo of Ambari (Default) $AMBARI_REPO "
     echo "  --hdp-repo=$HDP_REPO : (Optional) repo of HDP (Default) $HDP_REPO "
     echo "  --hdf-repo=$HDF_REPO : (Optional) repo of HDP (Default) $HDF_REPO "
@@ -220,6 +229,10 @@ function usage()
     echo "  --use-csa=$USE_CSA : (Optional) Use of CSA (Default) false "
     echo "  --use-cfm=$USE_CFM : (Optional) Use of CFM (Default) false "
     echo "  --use-spark3=$USE_SPARK3 : (Optional) Use of Spark 3 (Default) false "
+    echo "  --use-wxm=$USE_WXM : (Optional) Use of WXM (Default) false "
+    echo ""
+    echo "  --altus-key-id=$ALTUS_KEY_ID : (Optional) Altus key ID needed for WXM (Default) "
+    echo "  --altus-private-key=$ALTUS_PRIVATE_KEY : (Optional) Path to th Altus Private Key file needed for WXM (Default) "
     echo ""
 }
 
@@ -337,6 +350,9 @@ while [ "$1" != "" ]; do
         --spark3-version)
             SPARK3_VERSION=$VALUE
             ;;
+        --wxm-version)
+            WXM_VERSION=$VALUE
+            ;;
         --pvc-version)
             PVC_VERSION=$VALUE
             ;;
@@ -363,6 +379,9 @@ while [ "$1" != "" ]; do
             ;;
         --spark3-repo)
             SPARK3_BASE_REPO=$VALUE
+            ;;
+        --wxm-repo)
+            WXM_BASE_REPO=$VALUE
             ;;
         --pvc-repo)
             PVC_REPO=$VALUE
@@ -444,7 +463,13 @@ while [ "$1" != "" ]; do
             ;;    
         --use-wxm)
             USE_WXM=$VALUE
-            ;;                          
+            ;;
+        --altus-key-id)
+            ALTUS_KEY_ID=$VALUE
+            ;;
+        --altus-private-key)
+            ALTUS_PRIVATE_KEY=$VALUE
+            ;;                       
         *)
             ;;
     esac
@@ -552,6 +577,13 @@ then
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-enc-ha/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-enc-ha/extra_vars.yml"
         export ENCRYPTION_ACTIVATED="true"
+    elif [ "${CLUSTER_TYPE}" = "wxm" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdp-wxm/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-wxm/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-wxm/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-wxm/extra_vars.yml"
+        export USE_WXM="true"
     elif [ "${CLUSTER_TYPE}" = "solr-nifi" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-solr-nifi/hosts"
@@ -714,8 +746,22 @@ then
         export CFM_REPO="${CFM_BASE_REPO}/tars/parcel/"
         export CFM_CSD_JAR=$(curl -s -X GET ${CFM_BASE_REPO}/tars/parcel/ | grep .jar | grep NIFI- | cut -d '>' -f 3 | cut -d '<' -f 1)
         export CFM_REGISTRY_CSD_JAR=$(curl -s -X GET ${CFM_BASE_REPO}/tars/parcel/ | grep .jar | grep NIFIREGISTRY | cut -d '>' -f 3 | cut -d '<' -f 1)
-        export CFM_CSD="${CFM_BASE_REPO}tars/parcel/${CFM_CSD_JAR}"
-        export CFM_REGISTRY_CSD="${CFM_BASE_REPO}tars/parcel/${CFM_REGISTRY_CSD_JAR}"
+        export CFM_CSD="${CFM_BASE_REPO}/tars/parcel/${CFM_CSD_JAR}"
+        export CFM_REGISTRY_CSD="${CFM_BASE_REPO}/tars/parcel/${CFM_REGISTRY_CSD_JAR}"
+    fi
+fi
+
+if [ "${USE_WXM}" = "true" ]
+then
+    if [ -z "${WXM_BASE_REPO}" ] 
+    then
+        export WXM_REPO="https://archive.cloudera.com/p/wxm/${WXM_VERSION}/parcels/"
+        export WXM_CSD_JAR=$(curl -s -X GET -u ${PAYWALL_USER}:${PAYWALL_PASSWORD} https://archive.cloudera.com/p/wxm/${WXM_VERSION}/csd/ | grep .jar | grep WXM | cut -d '>' -f 3 | cut -d '<' -f 1)
+        export WXM_CSD="https://archive.cloudera.com/p/wxm/${WXM_VERSION}/csd/${WXM_CSD_JAR}"
+    else
+        export WXM_REPO="${CFM_BASE_REPO}/parcels/"
+        export WXM_CSD_JAR=$(curl -s -X GET ${WXM_REPO}/csd/ | grep .jar | grep NIFI- | cut -d '>' -f 3 | cut -d '<' -f 1)
+        export WXM_CSD="${WXM_REPO}/csd/${WXM_CSD_JAR}"
     fi
 fi
 
@@ -792,6 +838,11 @@ if [ ! -z "${NODES_KTS}" ]
 then
     export NODES_KTS_ARRAY=$( echo ${NODES_KTS} | sort | uniq )
     export NODES_KTS_SORTED=( ${NODES_KTS_ARRAY} )
+    export KTS_ACTIVE=${NODES_KTS_SORTED[0]}
+    if [ ${#NODES_KTS_SORTED[@]} == 2 ]
+    then
+        export KTS_PASSIVE=${NODES_KTS_SORTED[1]}
+    fi
     for i in ${!NODES_KTS_SORTED[@]}
     do
         echo "${NODES_KTS_SORTED[$i]}" >> ${HOSTS_FILE}
@@ -803,12 +854,6 @@ then
             IP_ADRESS_SOLVED=$( dig +short ${NODES_KTS_SORTED[$i]} )
             echo "${IP_ADRESS_SOLVED} ${NODES_KTS_SORTED[$i]}" >> ${HOSTS_ETC}
             echo "**** Connection setup to ${NODES_KTS_SORTED[$i]} ****"
-            if [ -z "${KTS_ACTIVE}" ]
-            then 
-                export KTS_ACTIVE=${NODES_KTS_SORTED[$i]}
-            else 
-                export KTS_PASSIVE=${NODES_KTS_SORTED[$i]}
-            fi
         fi
     done
 fi
@@ -1055,22 +1100,6 @@ then
           exit 1
         fi
 
-        echo "******* Installation of DB, (KDC) etc... *******"
-        if [ "${DEBUG}" = "true" ]
-        then
-            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_infrastructure.yml ${ANSIBLE_PYTHON_3_PARAMS} "
-        fi
-        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_infrastructure.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 >> ${LOG_DIR}/deployment.log
-        OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
-        if [ "${OUTPUT}" == "2" ]
-        then
-          echo " SUCCESS: Creation of DB, (KDC) etc..."
-        else
-          echo " FAILURE: Could not create DB, KDC and HA Proxy" 
-          echo " See details in file: ${LOG_DIR}/deployment.log "
-          exit 1
-        fi
-
         echo "******* Verificating parcels *******"
         if [ "${DEBUG}" = "true" ]
         then
@@ -1099,6 +1128,22 @@ then
           echo " SUCCESS: Nodes pre-requisites"
         else
           echo " FAILURE: Could not apply pre-requisites for nodes" 
+          echo " See details in file: ${LOG_DIR}/deployment.log "
+          exit 1
+        fi
+
+        echo "******* Installation of DB, (KDC) etc... *******"
+        if [ "${DEBUG}" = "true" ]
+        then
+            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_infrastructure.yml ${ANSIBLE_PYTHON_3_PARAMS} "
+        fi
+        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_infrastructure.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 >> ${LOG_DIR}/deployment.log
+        OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
+        if [ "${OUTPUT}" == "2" ]
+        then
+          echo " SUCCESS: Creation of DB, (KDC) etc..."
+        else
+          echo " FAILURE: Could not create DB, KDC and HA Proxy" 
           echo " See details in file: ${LOG_DIR}/deployment.log "
           exit 1
         fi

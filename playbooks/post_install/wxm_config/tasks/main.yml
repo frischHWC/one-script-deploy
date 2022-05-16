@@ -1,0 +1,240 @@
+---
+# Add access key for Altus to CM
+
+- name: Set Altus private Key into one line
+  set_fact:
+    altus_private_key_one_line: "{{ lookup('file', altus_private_key ) | replace('\n', '\\n') | replace('\"', '\\\"' ) }}"
+
+- name: DEBUG - altus_private_key_one_line
+  debug:
+    msg: "{{ altus_private_key_one_line }}"
+  when: debug | default(false)
+
+- set_fact:
+    cloudera_manager_protocol: http
+    cloudera_manager_port: 7180
+  when: not auto_tls
+
+- set_fact:
+    cloudera_manager_protocol: https
+    cloudera_manager_port: 7183
+  when: auto_tls
+
+- set_fact:
+    cloudera_manager_url: "{{ cloudera_manager_protocol }}://{{ cloudera_manager_host }}:{{ cloudera_manager_port }}"
+
+- name: Get CM API Version
+  uri:
+    url: "{{ cloudera_manager_url }}/api/version"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_api_version_response
+
+- set_fact:
+    cloudera_manager_api_version: "{{ cloudera_manager_api_version_response.content }}"
+
+- set_fact:
+    cloudera_manager_api_url: "{{ cloudera_manager_url }}/api/{{ cloudera_manager_api_version }}"
+
+- name: Delete Altus account if it already exists
+  uri:
+    url: "{{ cloudera_manager_api_url }}/externalAccounts/delete/altus-key-for-wxm"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: DELETE
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+  
+
+- name: Create Altus Account
+  uri:
+    url: "{{ cloudera_manager_api_url }}/externalAccounts/create"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+    body: "{{ lookup('template', 'add_altus_key.json') }}"
+
+# Reference access key to telemetry publisher
+- name: Set Altus account reference to Telemetry
+  uri:
+    url: "{{ cloudera_manager_api_url }}/cm/config"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: PUT
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+    body: "{{ lookup('template', 'altus_key_config.json') }}"
+
+
+# Restart telemetry publisher
+- name: Restart Telemetry Publisher
+  uri:
+    url: "{{ cloudera_manager_api_url }}/cm/service/roleCommands/restart"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+    body: "{{ lookup('template', 'restart_telemetry.json') }}"
+
+# Restart clusters
+
+- name: Get All services from CM
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_all_services
+
+- set_fact:
+    hive_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'HIVE'].name | [0]"
+
+- name: DEBUG - hive_service_name
+  debug:
+    msg: "{{ hive_service_name }}"
+  when: debug | default(false)
+
+- set_fact:
+    hive_on_tez_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'HIVE_ON_TEZ'].name | [0]"
+
+- name: DEBUG - hive_on_tez_service_name
+  debug:
+    msg: "{{ hive_on_tez_service_name }}"
+  when: debug | default(false)
+
+- set_fact:
+    spark_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'SPARK_ON_YARN'].name | [0]"
+
+- name: DEBUG - spark_service_name
+  debug:
+    msg: "{{ spark_service_name }}"
+  when: debug | default(false)
+
+- set_fact:
+    impala_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'IMPALA'].name | [0]"
+
+- name: DEBUG - impala_service_name
+  debug:
+    msg: "{{ impala_service_name }}"
+  when: debug | default(false)
+
+- name: Restart Hive service
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ hive_service_name }}/commands/restart"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+
+- name: Sleep for 30 seconds to acknowledge restart
+  wait_for:
+    timeout: 30
+
+- name: Restart Hive on Tez service
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ hive_on_tez_service_name }}/commands/restart"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+
+- name: Sleep for 30 seconds to acknowledge restart
+  wait_for:
+    timeout: 30
+
+- name: Restart Spark service
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ spark_service_name }}/commands/restart"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+
+- name: Sleep for 30 seconds to acknowledge restart
+  wait_for:
+    timeout: 30
+
+- name: Restart Impala service
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ impala_service_name }}/commands/restart"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+
+# Restart WXM
+- name: Get All services from CM
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}-wxm/services/"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_all_services
+
+- set_fact:
+    wxm_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'WXM'].name | [0]"
+
+- name: DEBUG - wxm_service_name
+  debug:
+    msg: "{{ wxm_service_name }}"
+  when: debug | default(false)
+
+
+- name: Restart WXM 
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}-wxm/services/{{ wxm_service_name }}/commands/restart"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json

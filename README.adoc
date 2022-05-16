@@ -52,17 +52,17 @@ Many more configurations are available, see them all with:
             --cluster-type=basic \
             --nodes=${NODES}  
 
-#### CDP 7 - Basic encrypted 6 nodes (Kerberos / TLS)
+#### CDP 7 - Basic encrypted 6 nodes (Kerberos / TLS) (You can specify 1 or 2 nodes for KTS)
 
         ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
             --license-file=${LICENSE_FILE} \
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
             --cluster-type=basic \
-            --node-kts=<Dedicated Node for KTS> \
+            --nodes-kts=<Dedicated Node(s) for KTS> \
             --nodes=${NODES}  
 
-#### CDP 7 - Basic 6 nodes with Free IPA on a dedicated node (All CDP clusters can have free-ipa just by adding --free-ipa=true) (Kerberos / TLS)
+#### CDP 7 - Basic 6 nodes with Free IPA on a dedicated node (All CDP clusters can have free-ipa just by adding --free-ipa=true and provide a node with --node-ipa=) (Kerberos / TLS)
  
         ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
             --license-file=${LICENSE_FILE} \
@@ -84,7 +84,7 @@ Many more configurations are available, see them all with:
             --node-ipa=<One node dedicated to IPA> \
             --nodes=${NODES}  
 
-#### CDP 7 - 6 nodes basic for PVC with Openshift (Experiences installed on an internal OCP cluster) (Kerberos / TLS / FreeIPA)
+#### CDP 7 - 6 nodes basic for PVC with Openshift (Experiences installed on a provided OCP cluster) (Kerberos / TLS / FreeIPA)
 
         ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
             --license-file=${LICENSE_FILE} \
@@ -105,15 +105,39 @@ Many more configurations are available, see them all with:
             --cluster-type=streaming \
             --nodes=${NODES} 
 
-#### CDP 7 - Streaming cluster encrypted (6 nodes basic with Spark 3 and Flink + a VPC of 3 nodes of Kafka/Nifi) (Kerberos / TLS)
+#### CDP 7 - Streaming cluster encrypted (6 nodes basic with Spark 3 and Flink + a VPC of 3 nodes of Kafka/Nifi + Associated with an Openshift PVC) (Kerberos / TLS)
 
         ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
            --license-file=${LICENSE_FILE} \
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
-            --cluster-type=streaming-enc \
-            --node-kts=<Dedicated Node for KTS> \
+            --cluster-type=full-enc-pvc \
+            --nodes-kts=<Dedicated Node(s) for KTS> \
+            --node-ipa=<Dedicated Node for IPA> \
+            --kubeconfig-path=<Path to your kubeconfig file> \
+            --oc-tar-file-path=<Path to your oc.tar file downloaded from RedHat> \
             --nodes=${NODES} 
+
+#### CDP 7 - Double Streaming cluster (6 nodes basic + a VPC of 1 nodes of Nifi + a VPC of 2 nodes for SolR) (Kerberos / TLS)
+
+        ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
+           --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --cluster-type=solr-nifi \
+            --nodes=${NODES} 
+
+#### CDP 7 - Workload XM cluster (1 Basic 6 nodes cluster + 1 dedicated WXM cluster of 5 nodes associated with base cluster ) (Kerberos / TLS)
+
+        ./setup_cluster.sh --cluster-name=${CLUSTER_NAME} \
+           --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --cluster-type=wxm \
+            --altus-key-id=<ALTUS key ID provided by Cloudera> \
+            --altus-private-key=<path to ALTUS private key provided by Cloudera> \
+            --nodes=${NODES} 
+
 
 #### CDP 7 - Unsecure
 

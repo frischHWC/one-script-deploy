@@ -1,0 +1,139 @@
+---
+
+# Add access key for Altus to base CM
+
+- name: Set Altus private Key into one line
+  set_fact:
+    altus_private_key_one_line: "{{ lookup('file', altus_private_key ) | replace('\n', '\\n') | replace('\"', '\\\"' ) }}"
+  when: configure_wxm_with_base
+
+- name: DEBUG - altus_private_key_one_line
+  debug:
+    msg: "{{ altus_private_key_one_line }}"
+  when: debug | default(false) and configure_wxm_with_base
+
+- name: Delete Altus account if it already exists
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/externalAccounts/delete/altus-key-for-wxm"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: DELETE
+    force_basic_auth: yes
+    status_code: [200, 400]
+    validate_certs: no
+  ignore_errors: true
+  when: configure_wxm_with_base
+  
+- name: Create Altus Account
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/externalAccounts/create"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+    body: "{{ lookup('template', 'add_altus_key.json') }}"
+  when: configure_wxm_with_base
+
+# Add Telemetry to base cluster 
+- name: Get All Mgmt Roles from CM
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/cm/service/roles"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_mgmt_roles
+  when: configure_wxm_with_base
+
+- set_fact:
+    tp_base_name: "{{ cloudera_manager_mgmt_roles.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'TELEMETRYPUBLISHER'].name | [0]"
+  when: configure_wxm_with_base
+
+- name: DEBUG - tp_base_name
+  debug:
+    msg: "{{ tp_base_name }}"
+  when: debug | default(false) and configure_wxm_with_base
+
+- set_fact:
+    tp_exists: "{{ false if tp_base_name == '' else true }}"
+  when: configure_wxm_with_base
+
+- name: DEBUG - tp_host
+  debug:
+    msg: "{{ tp_host }}"
+  when: debug | default(false) and configure_wxm_with_base
+
+- name: Add Telemetry Publisher to CM
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/cm/service/roles"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+    body: "{{ lookup('template', 'add_telemetry.json') }}"
+    timeout: 120
+  when: configure_wxm_with_base and not tp_exists
+
+# Add reference to WXM for telemetry publisher
+- name: Get all Mgmt Roles
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/cm/service/roleConfigGroups"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    return_content: yes
+  register: cloudera_manager_all_mgmt_roles
+  when: configure_wxm_with_base
+
+- set_fact:
+    tp_mgmt_name: "{{ cloudera_manager_all_mgmt_roles.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?roleType == 'TELEMETRYPUBLISHER'].name | [0]"
+  when: configure_wxm_with_base
+
+- name: DEBUG - tp_mgmt_name
+  debug:
+    msg: "{{ tp_mgmt_name }}"
+  when: debug | default(false) and configure_wxm_with_base
+
+- name: Set WXM reference for telemetry publisher
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/cm/service/roleConfigGroups/{{ tp_mgmt_name }}/config"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: PUT
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+    body: "{{ lookup('template', 'wxm_config.json') }}"
+  when: configure_wxm_with_base
+
+# Reference access key to telemetry publisher
+- name: Set Altus account reference to Telemetry
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/cm/config"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: PUT
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+    body: "{{ lookup('template', 'altus_key_config.json') }}"
+  when: configure_wxm_with_base

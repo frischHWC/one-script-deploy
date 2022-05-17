@@ -104,3 +104,22 @@
   debug:
     msg: "{{ knox_service_exists }}"
   when: debug | default(false)
+
+
+- set_fact:
+    ranger_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'RANGER'].name | [0]"
+
+- name: DEBUG - ranger_service_name
+  debug:
+    msg: "{{ ranger_service_name }}"
+  when: debug | default(false)
+
+- set_fact: 
+    ranger_service_exists: "{{ true if ranger_service_name != '' else false }}"
+
+- name: DEBUG - ranger_service_exists
+  debug:
+    msg: "{{ ranger_service_exists }}"
+  when: debug | default(false)

@@ -59,5 +59,3 @@ kube_config_path: "/tmp/kubeconfig"
 install_python3: ${INSTALL_PYTHON3}
 oc_tar_file_path: ${OC_TAR_FILE_PATH}
 
-# WXM Properties
-wxm_host: ${NODE_11}

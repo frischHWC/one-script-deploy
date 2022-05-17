@@ -16,3 +16,7 @@ debug: ${DEBUG}
 use_wxm: ${USE_WXM}
 altus_key_id: ${ALTUS_KEY_ID}
 altus_private_key: ${ALTUS_PRIVATE_KEY}
+cloudera_manager_base_url: ${CM_BASE_URL}
+cloudera_manager_base_user: ${CM_BASE_USER}
+cloudera_manager_base_password: ${CM_BASE_PASSWORD}
+tp_host: ${TP_HOST}

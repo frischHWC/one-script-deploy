@@ -1,0 +1,177 @@
+---
+# Restart telemetry publisher
+- name: Restart Telemetry Publisher
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/cm/service/roleCommands/restart"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+    body: "{{ lookup('template', 'restart_telemetry.json') }}"
+  when: configure_wxm_with_base
+
+
+# Restart Services in Base cluster
+
+- name: Get All Clusters from CM
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/clusters/"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_all_clusters
+  when: configure_wxm_with_base
+
+- set_fact:
+    cluster_base_name: "{{ cloudera_manager_all_clusters.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?clusterType == 'BASE_CLUSTER'].name | [0]"
+  when: configure_wxm_with_base
+
+- name: DEBUG - cluster_base_name
+  debug:
+    msg: "{{ cluster_base_name }}"
+  when: debug | default(false) and configure_wxm_with_base
+
+- name: Get All services from CM
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/clusters/{{ cluster_base_name }}/services/"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_all_services
+  when: configure_wxm_with_base
+
+- set_fact:
+    hive_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'HIVE'].name | [0]"
+  when: configure_wxm_with_base
+
+- name: DEBUG - hive_service_name
+  debug:
+    msg: "{{ hive_service_name }}"
+  when: debug | default(false) and configure_wxm_with_base
+
+- set_fact:
+    hive_on_tez_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'HIVE_ON_TEZ'].name | [0]"
+  when: configure_wxm_with_base
+
+- name: DEBUG - hive_on_tez_service_name
+  debug:
+    msg: "{{ hive_on_tez_service_name }}"
+  when: debug | default(false) and configure_wxm_with_base
+
+- set_fact:
+    spark_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'SPARK_ON_YARN'].name | [0]"
+  when: configure_wxm_with_base
+
+- name: DEBUG - spark_service_name
+  debug:
+    msg: "{{ spark_service_name }}"
+  when: debug | default(false) and configure_wxm_with_base
+
+- set_fact:
+    impala_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'IMPALA'].name | [0]"
+  when: configure_wxm_with_base
+
+- name: DEBUG - impala_service_name
+  debug:
+    msg: "{{ impala_service_name }}"
+  when: debug | default(false) and configure_wxm_with_base
+
+- name: Restart Hive service
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/clusters/{{ cluster_base_name }}/services/{{ hive_service_name }}/commands/restart"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+  when: configure_wxm_with_base
+
+- name: Sleep for 30 seconds to acknowledge restart
+  wait_for:
+    timeout: 30
+  when: configure_wxm_with_base
+
+- name: Restart Hive on Tez service
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/clusters/{{ cluster_base_name }}/services/{{ hive_on_tez_service_name }}/commands/restart"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+  when: configure_wxm_with_base
+
+- name: Sleep for 30 seconds to acknowledge restart
+  wait_for:
+    timeout: 30
+  when: configure_wxm_with_base
+
+- name: Restart Spark service
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/clusters/{{ cluster_base_name }}/services/{{ spark_service_name }}/commands/restart"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+  when: configure_wxm_with_base
+
+- name: Sleep for 30 seconds to acknowledge restart
+  wait_for:
+    timeout: 30
+  when: configure_wxm_with_base
+
+- name: Restart Impala service
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/clusters/{{ cluster_base_name }}/services/{{ impala_service_name }}/commands/restart"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+  when: configure_wxm_with_base
+
+
+# Restart WXM
+
+- name: Restart WXM 
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ wxm_service_name }}/commands/restart"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json

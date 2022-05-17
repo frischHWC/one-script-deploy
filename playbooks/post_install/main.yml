@@ -10,7 +10,7 @@
   hosts: all
   gather_facts: false
   roles: 
-    - check_solr_hue_service
+    - check_existing_services
 
 - name: Fix krb5.conf for Hue with Free IPA
   hosts: all
@@ -42,14 +42,27 @@
   roles: 
     - { role: fix_kms_tls, when: encryption_activated }
 
-- name: Configure WXM
-  hosts: main
+- name: Pre-Configure WXM
+  hosts: main, tp_host
   gather_facts: false
   roles: 
     - { role: wxm_config, when: use_wxm | default(false) }
+
+- name: Configure Telemetry for WXM
+  hosts: tp_host
+  gather_facts: false
+  roles: 
+    - { role: wxm_configure_telemetry, when: use_wxm | default(false) }
+    - { role: wxm_truststore_to_base, when: use_wxm | default(false) }
+
+- name: Restart WXM and Services
+  hosts: main
+  gather_facts: false
+  roles: 
+    - { role: wxm_restart, when: use_wxm | default(false) }
 
 - name: Ranger extra policies to have enough rights with basic accounts
   hosts: main
   gather_facts: false
   roles: 
-    - ranger_extra_policies
+    - { role: ranger_extra_policies, when: ranger_service_exists }

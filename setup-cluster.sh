@@ -99,6 +99,10 @@ export USE_WXM="false"
 # WXM Related
 export ALTUS_KEY_ID=
 export ALTUS_PRIVATE_KEY=
+export CM_BASE_URL=
+export CM_BASE_USER="admin"
+export CM_BASE_PASSWORD="admin"
+export TP_HOST=
 
 # Installation
 export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/heads/main.zip"
@@ -233,6 +237,10 @@ function usage()
     echo ""
     echo "  --altus-key-id=$ALTUS_KEY_ID : (Optional) Altus key ID needed for WXM (Default) "
     echo "  --altus-private-key=$ALTUS_PRIVATE_KEY : (Optional) Path to th Altus Private Key file needed for WXM (Default) "
+    echo "  --cm-base-url=$CM_BASE_URL : (Optional) CM URL in http://<hostname>:<port> form for associating this cluster to WXM (Default) "
+    echo "  --cm-base-user=$CM_BASE_USER : (Optional) CM user to associate this cluster to WXM (Default) admin "
+    echo "  --cm-base-password=$CM_BASE_PASSWORD : (Optional)  CM password to associate this cluster to WXM (Default) admin "
+    echo "  --tp-host=$TP_HOST : (Optional)  On base cluster, where to install Telemetry (Default) "
     echo ""
 }
 
@@ -469,7 +477,19 @@ while [ "$1" != "" ]; do
             ;;
         --altus-private-key)
             ALTUS_PRIVATE_KEY=$VALUE
-            ;;                       
+            ;;
+        --cm-base-url)
+            CM_BASE_URL=$VALUE
+            ;;
+        --cm-base-user)
+            CM_BASE_USER=$VALUE
+            ;; 
+        --cm-base-url)
+            CM_BASE_PASSWORD=$VALUE
+            ;;
+        --tp-host)
+            TP_HOST=$VALUE
+            ;;                      
         *)
             ;;
     esac
@@ -584,6 +604,8 @@ then
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-wxm/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-wxm/extra_vars.yml"
         export USE_WXM="true"
+        export USER_CREATION="false"
+        export DATA_LOAD="false"
     elif [ "${CLUSTER_TYPE}" = "solr-nifi" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-solr-nifi/hosts"
@@ -885,6 +907,15 @@ fi
 echo "############ Setup of files to interact with cluster  ############"
 
 # Prepare hosts file to interact with cluster 
+if [ -z ${TP_HOST} ]
+then
+    export TP_HOST=${NODE_0}
+fi
+echo "
+[tp_host]
+$TP_HOST
+" >> ${HOSTS_FILE}
+
 echo "
 [main]
 ${NODE_0}

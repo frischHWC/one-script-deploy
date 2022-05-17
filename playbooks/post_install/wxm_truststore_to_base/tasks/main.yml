@@ -1,0 +1,46 @@
+---
+- name: Get truststore content into a file
+  uri:
+    url: "{{ cloudera_manager_api_url }}/certs/truststore?type=pem"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: "/tmp/wxm_truststore.pem"
+  when: configure_wxm_with_base
+
+- name: Get Base truststore password
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/certs/truststorePassword"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_truststore_password_api
+  when: configure_wxm_with_base
+
+- name: DEBUG - API truststore password
+  debug:
+    msg: "{{ cloudera_manager_truststore_password_api }}"
+  when: debug | default(false) and configure_wxm_with_base
+
+- set_fact:
+    cloudera_manager_base_truststore_password: "{{ cloudera_manager_truststore_password_api.content }}"
+  when: configure_wxm_with_base
+
+# Import CA from WXM cluster and import it into base truststore
+- name: Import truststore into Base truststore
+  shell: "echo 'yes' | keytool -import -alias wxm_truststore -keystore /var/lib/cloudera-scm-agent/agent-cert/cm-auto-global_truststore.jks -file /tmp/wxm_truststore.pem -storepass {{ cloudera_manager_base_truststore_password }}"
+  ignore_errors: true
+
+- name: Import truststore into Base truststore
+  shell: "echo 'yes' | keytool -import -alias wxm_truststore -keystore /var/lib/cloudera-scm-agent/agent-cert/cm-auto-in_cluster_truststore.jks -file /tmp/wxm_truststore.pem -storepass {{ cloudera_manager_base_truststore_password }}"
+  ignore_errors: true

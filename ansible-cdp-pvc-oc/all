@@ -96,5 +96,6 @@ ca_server_attrs_general:
   C: US
 
 # Other required configs
-local_temp_dir: /tmp
+
+local_temp_dir: "/home/tmp"
 skip_user_group_init: false

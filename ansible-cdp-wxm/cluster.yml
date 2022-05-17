@@ -1,0 +1,261 @@
+---
+clusters:
+  - name: "{{ cluster_name }}"
+    services: [HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KNOX, QUEUEMANAGER, RANGER, SPARK_ON_YARN, TEZ, YARN, ZOOKEEPER]
+    security:
+      kerberos: "{{ kerberos_activated }}"
+    repositories:
+      - "{{ cdh_repo }}"  
+    configs: 
+      HBASE:
+        SERVICEWIDE:
+          hbase_restserver_security_authentication: "{{ hbase_auth }}"
+          hadoop_secure_web_ui: "{{ kerberos_activated }}"
+          hbase_superuser: "francois"
+        REGIONSERVER:  
+          hbase_regionserver_wal_codec: org.apache.hadoop.hbase.regionserver.wal.IndexedWALEditCodec
+      HDFS:
+        SERVICEWIDE:
+          dfs_ha_fencing_methods: 'shell(true)'
+          dfs_namenode_acls_enabled: true
+          hdfs_verify_ec_with_topology_enabled: false
+          dfs_permissions_supergroup: admin_user
+        DATANODE:
+          dfs_data_dir_list: /dfs/dn
+        NAMENODE:
+          dfs_name_dir_list: /dfs/nn
+          dfs_federation_namenode_nameservice: "{{ cluster_name }}"
+          autofailover_enabled: true
+          dfs_namenode_quorum_journal_name: "{{ cluster_name }}"
+        JOURNALNODE:
+          dfs_journalnode_edits_dir: /dfs/jn  
+        SECONDARYNAMENODE:
+          fs_checkpoint_dir_list: /dfs/snn
+      HIVE_ON_TEZ:
+        HIVESERVER2:
+          hive_server2_transport_mode: "all"
+      HUE:
+        SERVICEWIDE:
+          auth_backend: desktop.auth.backend.KnoxSpnegoDjangoBackend
+      KNOX:
+        SERVICEWIDE:
+          knox_encryptquerystring_secret: "{{ default_password }}"
+          knox_hadoop_auth_config_signature_secret: "{{ default_password }}"
+        KNOX_GATEWAY:
+          gateway_knox_admin_groups: admin_user
+          gateway_master_secret: "{{ default_password }}"
+          gateway_sso_authentication_provider: "{% if free_ipa == true %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.urls./**=authcBasic#authentication.param.main.ldapRealm=org.apache.knox.gateway.shirorealm.KnoxLdapRealm#authentication.param.main.ldapContextFactory=org.apache.knox.gateway.shirorealm.KnoxLdapContextFactory#authentication.param.main.ldapRealm.contextFactory=$ldapContextFactory#authentication.param.main.ldapRealm.contextFactory.authenticationMechanism=simple#authentication.param.main.ldapRealm.contextFactory.url={{ ipa_ldap_url }}#authentication.param.main.ldapRealm.contextFactory.systemUsername={{ ipa_ldap_user_bind_dn }}#authentication.param.main.ldapRealm.contextFactory.systemPassword={{ ipa_ldap_user_bind_password }}#authentication.param.main.ldapRealm.userDnTemplate=uid={0},{{ ipa_ldap_user_search_base }}#authentication.param.remove=main.pamRealm#authentication.param.remove=main.pamRealm.service{% else %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.main.pamRealm=org.apache.knox.gateway.shirorealm.KnoxPamRealm#authentication.param.main.pamRealm.service=login#authentication.param.urls./**=authcBasic{% endif %}"
+          conf/cdp-resources.xml_role_safety_valve: "<property><name>cdp-infra-proxy</name><value>providerConfigRef=sso#SOLR:url=http{% if auto_tls == true %}s{% endif %}://{{ node_infra_solr }}:{% if auto_tls == true %}8995{% else %}8993{% endif %}/solr/#</value><description>CDP INFRA SOLR topology</description></property><property><name>cdp-infra-proxy-api</name><value>providerConfigRef=pam#SOLR:url=https://{{ node_infra_solr }}:8995/solr/#</value><description>CDP INFRA SOLR API topology</description></property>"
+      RANGER:
+        SERVICEWIDE:
+          keyadmin_user_password: "{{ default_password }}"
+          rangeradmin_user_password: "{{ default_password }}"
+          rangertagsync_user_password: "{{ default_password }}"
+          rangerusersync_user_password: "{{ default_password }}" 
+        RANGER_USERSYNC:
+          ranger.usersync.source.impl.class: "{% if free_ipa == true %}org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder{% else %}org.apache.ranger.unixusersync.process.UnixUserGroupBuilder{% endif %}"
+          ranger.usersync.ldap.url: "{{ ipa_ldap_url }}"
+          ranger.usersync.ldap.binddn: "{{ ipa_ldap_user_bind_dn }}"
+          ranger_usersync_ldap_ldapbindpassword: "{{ ipa_ldap_user_bind_password }}"
+          ranger.usersync.ldap.user.searchbase: "{{ ipa_ldap_user_search_base }}"
+          ranger.usersync.ldap.user.objectclass: "person"
+          ranger.usersync.ldap.user.searchfilter: "uid=*"
+          ranger.usersync.ldap.user.nameattribute: "uid"
+          ranger.usersync.ldap.referral: "follow"
+          ranger.usersync.group.searchbase: "{{ ipa_ldap_group_search_base }}"
+          ranger.usersync.group.objectclass: "groupofnames"
+          ranger.usersync.group.nameattribute: "cn"
+          ranger.usersync.group.memberattributename: "member"
+          ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:u:admin_user&ROLE_SYS_ADMIN:u:francois"
+      YARN:
+        SERVICEWIDE:
+          yarn_admin_acl: "${yarn_user},francois"
+        RESOURCEMANAGER:
+          yarn_scheduler_maximum_allocation_mb: 24576
+          yarn_scheduler_maximum_allocation_vcores: 12
+        NODEMANAGER:
+          yarn_nodemanager_resource_memory_mb: 24576
+          yarn_nodemanager_resource_cpu_vcores: 12
+          yarn_nodemanager_local_dirs:  /tmp/nm
+          yarn_nodemanager_log_dirs: /var/log/nm
+        GATEWAY:
+          mapred_submit_replication: 3
+          mapred_reduce_tasks: 6    
+      ZOOKEEPER:
+        SERVICEWIDE:
+          zookeeper_datadir_autocreate: true
+    host_templates:
+      Edge:
+        HBASE: [GATEWAY]
+        HDFS: [JOURNALNODE, GATEWAY]
+        HIVE: [GATEWAY]
+        HIVE_ON_TEZ: [GATEWAY]
+        HUE: [HUE_SERVER, HUE_LOAD_BALANCER]
+        KNOX: [KNOX_GATEWAY]
+        TEZ: [GATEWAY]
+        SPARK_ON_YARN: [GATEWAY]
+        YARN: [GATEWAY]
+        ZOOKEEPER: [SERVER]
+      Master1:
+        INFRA_SOLR: [SOLR_SERVER]
+        HBASE: [MASTER, GATEWAY]
+        HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
+        HIVE: [HIVEMETASTORE, GATEWAY]
+        HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
+        RANGER: [RANGER_TAGSYNC, RANGER_USERSYNC]
+        SPARK_ON_YARN: [GATEWAY]
+        TEZ: [GATEWAY]
+        YARN: [RESOURCEMANAGER, GATEWAY]
+        QUEUEMANAGER: [QUEUEMANAGER_STORE, QUEUEMANAGER_WEBAPP]
+        ZOOKEEPER: [SERVER]         
+      Master2:
+        INFRA_SOLR: [SOLR_SERVER]
+        HBASE: [MASTER, HBASERESTSERVER, HBASETHRIFTSERVER, GATEWAY]
+        HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
+        IMPALA: [STATESTORE, CATALOGSERVER]
+        HIVE: [HIVEMETASTORE, GATEWAY]
+        HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
+        RANGER: [RANGER_ADMIN]
+        SPARK_ON_YARN: [SPARK_YARN_HISTORY_SERVER, GATEWAY]
+        TEZ: [GATEWAY]
+        YARN: [RESOURCEMANAGER, JOBHISTORY, GATEWAY]
+        ZOOKEEPER: [SERVER]  
+      Workers:
+        HBASE: [REGIONSERVER, GATEWAY]
+        HDFS: [DATANODE, GATEWAY]
+        HIVE: [GATEWAY]
+        HIVE_ON_TEZ: [GATEWAY]
+        IMPALA: [IMPALAD]
+        TEZ: [GATEWAY]
+        SPARK_ON_YARN: [GATEWAY]
+        YARN: [NODEMANAGER, GATEWAY]  
+
+  - name: "{{ cluster_name }}-wxm"
+    services: [HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, PHOENIX, QUEUEMANAGER, SPARK_ON_YARN, TEZ, WXM, YARN, ZOOKEEPER]
+    security:
+      kerberos: "{{ kerberos_activated }}"
+    repositories:
+      - "{{ cdh_repo }}"  
+      - "{{ wxm_repo }}"
+    databases:
+      HIVE:
+        name: "hive-wxm"
+        user: hive-wxm
+      HUE:
+        name: "hue-wxm"
+        user: "hue-wxm"
+    configs: 
+      HBASE:
+        SERVICEWIDE:
+          hbase_restserver_security_authentication: "{{ hbase_auth }}"
+          hadoop_secure_web_ui: "{{ kerberos_activated }}"
+          hbase_superuser: "wxm"
+        REGIONSERVER:  
+          hbase_regionserver_wal_codec: org.apache.hadoop.hbase.regionserver.wal.IndexedWALEditCodec
+      HDFS:
+        SERVICEWIDE:
+          dfs_ha_fencing_methods: 'shell(true)'
+          dfs_namenode_acls_enabled: true
+          hdfs_verify_ec_with_topology_enabled: false
+          dfs_permissions_supergroup: wxm
+        DATANODE:
+          dfs_data_dir_list: /dfs/dn
+        NAMENODE:
+          dfs_name_dir_list: /dfs/nn
+          dfs_federation_namenode_nameservice: "{{ cluster_name }}"
+          autofailover_enabled: true
+          dfs_namenode_quorum_journal_name: "{{ cluster_name }}"
+        JOURNALNODE:
+          dfs_journalnode_edits_dir: /dfs/jn  
+        SECONDARYNAMENODE:
+          fs_checkpoint_dir_list: /dfs/snn
+      HIVE_ON_TEZ:
+        HIVESERVER2:
+          hive_server2_transport_mode: "all"
+      IMPALA:
+        IMPALAD:
+          scratch_dirs: /tmp/impala
+          enable_audit_event_log: true 
+      PHOENIX:
+        PHOENIX_QUERY_SERVER:
+          ssl_enabled: false
+      YARN:
+        SERVICEWIDE:
+          yarn_admin_acl: "${yarn_user},wxm"
+        RESOURCEMANAGER:
+          yarn_scheduler_maximum_allocation_mb: 24576
+          yarn_scheduler_maximum_allocation_vcores: 12
+        NODEMANAGER:
+          yarn_nodemanager_resource_memory_mb: 24576
+          yarn_nodemanager_resource_cpu_vcores: 12
+          yarn_nodemanager_local_dirs:  /tmp/nm
+          yarn_nodemanager_log_dirs: /var/log/nm
+        GATEWAY:
+          mapred_submit_replication: 3
+          mapred_reduce_tasks: 6    
+      ZOOKEEPER:
+        SERVICEWIDE:
+          zookeeper_datadir_autocreate: true
+    host_templates:
+      WxmMaster1:
+        HBASE: [MASTER, GATEWAY]
+        HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
+        HIVE: [HIVEMETASTORE, GATEWAY]
+        HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
+        HUE: [HUE_SERVER, HUE_LOAD_BALANCER]
+        PHOENIX: [PHOENIX_QUERY_SERVER]
+        IMPALA: [STATESTORE, CATALOGSERVER]
+        SPARK_ON_YARN: [GATEWAY]
+        TEZ: [GATEWAY]
+        YARN: [RESOURCEMANAGER, GATEWAY]
+        QUEUEMANAGER: [QUEUEMANAGER_STORE, QUEUEMANAGER_WEBAPP]
+        ZOOKEEPER: [SERVER]         
+      WxmMaster2:
+        HBASE: [MASTER, HBASERESTSERVER, HBASETHRIFTSERVER, GATEWAY]
+        HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
+        HIVE: [HIVEMETASTORE, GATEWAY]
+        HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
+        PHOENIX: [PHOENIX_QUERY_SERVER]
+        SPARK_ON_YARN: [SPARK_YARN_HISTORY_SERVER, GATEWAY]
+        TEZ: [GATEWAY]
+        YARN: [RESOURCEMANAGER, JOBHISTORY, GATEWAY]
+        ZOOKEEPER: [SERVER]   
+      WxmExclusive:
+        HDFS: [JOURNALNODE, GATEWAY]
+        ZOOKEEPER: [SERVER]
+        WXM: [DBUS_API_SERVICE, SIGMA_ADB_SERVICE, SIGMAADMIN_API_SERVICE, SIGMA_API_SERVICE, SIGMA_BASELINE_SERVICE, SIGMA_DBUS_SERVICE, SIGMA_ENTITIES_SERVICE, SIGMA_PIPELINES_SERVICE, SIGMA_SDX_SERVICE, THUNDERHEAD_SIGMA_CONSOLE]
+      WxmWorker:
+        HBASE: [REGIONSERVER, GATEWAY]
+        HDFS: [DATANODE, GATEWAY]
+        HIVE: [GATEWAY]
+        HIVE_ON_TEZ: [GATEWAY]
+        PHOENIX: [PHOENIX_QUERY_SERVER]
+        IMPALA: [IMPALAD]
+        TEZ: [GATEWAY]
+        SPARK_ON_YARN: [GATEWAY]
+        YARN: [NODEMANAGER, GATEWAY] 
+        WXM: [DBUS_API_SERVICE, SIGMA_ADB_SERVICE, SIGMA_BASELINE_SERVICE, SIGMA_DBUS_SERVICE, SIGMA_ENTITIES_SERVICE, SIGMA_PIPELINES_SERVICE, SIGMA_SDX_SERVICE]
+
+
+mgmt:
+  name: Cloudera Management Service
+  services: [ALERTPUBLISHER, EVENTSERVER, HOSTMONITOR, REPORTSMANAGER, SERVICEMONITOR, TELEMETRYPUBLISHER]
+  configs:
+    SERVICEMONITOR:
+      firehose_heapsize: 2147483648
+    TELEMETRYPUBLISHER:
+      telemetrypublisher_safety_valve: "telemetry.upload.job.logs=true\ntelemetry.altus.url=https://{{ wxm_host }}:12022"
+
+
+hosts:
+  configs:
+    host_default_proc_memswap_thresholds:
+      warning: never
+      critical: never
+    host_memswap_thresholds:
+      warning: never
+      critical: never
+    host_config_suppression_agent_system_user_group_validator: true
+    host_clock_offset_thresholds:
+      warning: never
+      critical: never

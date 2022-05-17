@@ -4,13 +4,11 @@
 # Setup of all variables and help
 ###############################
 
-# TODO: Test with new release
-
 # Main cluster info
 export CLUSTER_NAME=
 export NODES_BASE=
 export NODE_IPA=
-export NODE_KTS=
+export NODES_KTS=
 
 # License 
 export PAYWALL_USER=
@@ -37,7 +35,7 @@ export LOG_DIR="/tmp/deploy_to_cloudcat_logs/"$(date +%m-%d-%Y-%H-%M-%S)
 
 # Ansible Deployment files 
 export DISTRIBUTION_TO_DEPLOY="CDP"
-export CLUSTER_TYPE="full-pvc"
+export CLUSTER_TYPE="full"
 export ANSIBLE_HOST_FILE="ansible-cdp/hosts"
 export ANSIBLE_ALL_FILE="ansible-cdp/all"
 export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp/cluster.yml"
@@ -57,6 +55,7 @@ export PVC_VERSION="1.3.4"
 export CSA_VERSION="1.6.2.0"
 export CFM_VERSION="2.1.3.0"
 export SPARK3_VERSION="3.2.7171000.0"
+export WXM_VERSION="2.2.2"
 export AMBARI_VERSION="2.7.5.0"
 export HDP_VERSION="3.1.5.6091"
 export HDF_VERSION="3.5.0.0"
@@ -68,6 +67,7 @@ export PVC_REPO=
 export CSA_BASE_REPO=
 export CFM_BASE_REPO=
 export SPARK3_BASE_REPO=
+export WXM_BASE_REPO=
 export AMBARI_REPO=
 export HDP_REPO=
 export HDF_REPO=
@@ -94,6 +94,11 @@ export OC_TAR_FILE_PATH=""
 export USE_CSA="false"
 export USE_CFM="false"
 export USE_SPARK3="false"
+export USE_WXM="false"
+
+# WXM Related
+export ALTUS_KEY_ID=
+export ALTUS_PRIVATE_KEY=
 
 # Installation
 export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/heads/main.zip"
@@ -109,10 +114,14 @@ export DEMO_REPO_URL=""
 # INTERNAL USAGE OF THESE VARIABLES, do no touch these
 export KTS_SERVERS=""
 export KTS_SERVERS_GROUP=""
+export KTS_ACTIVE=""
+export KTS_PASSIVE=""
 export KRB5_SERVERS=""
 export KRB_SERVER_TYPE=""
 export CA_SERVERS=""
 export KMS_SERVERS=""
+export ANSIBLE_PYTHON_3_PARAMS=""
+export USE_ANSIBLE_PYTHON_3="false"
 
 function usage()
 {
@@ -137,7 +146,7 @@ function usage()
     echo ""
     echo "  --nodes-base=$NODES_BASE : A Space separated list of all nodes (Default) "
     echo "  --node-ipa=$NODE_IPA : Required only if using FreeIPA (Default) "
-    echo "  --node-kts=$NODE_KTS : Required only if using KTS (Default) "
+    echo "  --node-kts=$NODES_KTS : Required only if using KTS as a space separated list of maximum two nodes (Default) "
     echo ""
     echo "  --cluster-type=$CLUSTER_TYPE : To simplify deployment, this parameter will adjust number of nodes, security and templates to deploy.  "
     echo "       Choices: basic, streaming, pvc, pvc-oc, full, full-pvc, cdh5, cdh6, hdp3, hdp2 (Default) Will install a CDP 7 with almost all services"
@@ -177,6 +186,7 @@ function usage()
     echo "  --hdp-version=$HDP_VERSION : (Optional) Version of HDP (Default) $HDP_VERSION "
     echo "  --hdf-version=$HDF_VERSION : (Optional) Version of HDP (Default) $HDF_VERSION "
     echo "  --spark3-version=$SPARK3_VERSION : (Optional) Version of SPARK3 (Default) $SPARK3_VERSION"
+    echo "  --wxm-version=$WXM_VERSION : (Optional) Version of WXM (Default) $WXM_VERSION"
     echo "  --pvc-version=$PVC_VERSION : (Optional) Version of PVC for CDP deployment (Default) $PVC_VERSION "
     echo ""
     echo "  --cm-repo=$CM_REPO : (Optional) repo of CM (Default) $CM_REPO "
@@ -184,6 +194,7 @@ function usage()
     echo "  --csa-repo=$CSA_BASE_REPO : (Optional) repo of CSA (Default) $CSA_BASE_REPO "
     echo "  --cfm-repo=$CFM_BASE_REPO : (Optional) repo of CFM (Default) $CFM_BASE_REPO "
     echo "  --spark3-repo=$SPARK3_BASE_REPO : (Optional) repo of SPARK3 (Default) $SPARK3_BASE_REPO "
+    echo "  --wxm-repo=$WXM_BASE_REPO : (Optional) repo of WXM (Default) $WXM_BASE_REPO "
     echo "  --ambari-repo=$AMBARI_REPO : (Optional) repo of Ambari (Default) $AMBARI_REPO "
     echo "  --hdp-repo=$HDP_REPO : (Optional) repo of HDP (Default) $HDP_REPO "
     echo "  --hdf-repo=$HDF_REPO : (Optional) repo of HDP (Default) $HDF_REPO "
@@ -198,6 +209,7 @@ function usage()
     echo "  --os=$OS : (Optional) OS to use (Default) centos"
     echo "  --os-version=$OS_VERSION : (Optional) OS version to use (Default) 7.7" 
     echo "  --install-python3=$INSTALL_PYTHON3 : (Optional) To install python3 on all hosts (Default) false "
+    echo "  --ansible-python-3=$USE_ANSIBLE_PYTHON_3 : (Optional) To use python3 for ansible (Default) false "
     echo ""
     echo "  --pvc=$PVC : (Optional) If PVC should be deployed and configured (Default) false "
     echo "  --pvc-type=$PVC_TYPE : (Optional) Which type of PVC (OC or ECS) (Default) ECS "
@@ -217,6 +229,10 @@ function usage()
     echo "  --use-csa=$USE_CSA : (Optional) Use of CSA (Default) false "
     echo "  --use-cfm=$USE_CFM : (Optional) Use of CFM (Default) false "
     echo "  --use-spark3=$USE_SPARK3 : (Optional) Use of Spark 3 (Default) false "
+    echo "  --use-wxm=$USE_WXM : (Optional) Use of WXM (Default) false "
+    echo ""
+    echo "  --altus-key-id=$ALTUS_KEY_ID : (Optional) Altus key ID needed for WXM (Default) "
+    echo "  --altus-private-key=$ALTUS_PRIVATE_KEY : (Optional) Path to th Altus Private Key file needed for WXM (Default) "
     echo ""
 }
 
@@ -256,8 +272,8 @@ while [ "$1" != "" ]; do
         --node-ipa)
             NODE_IPA=$VALUE
             ;;
-        --node-kts)
-            NODE_KTS=$VALUE
+        --nodes-kts)
+            NODES_KTS=$VALUE
             ;;
          --cluster-type)
             CLUSTER_TYPE=$VALUE
@@ -334,6 +350,9 @@ while [ "$1" != "" ]; do
         --spark3-version)
             SPARK3_VERSION=$VALUE
             ;;
+        --wxm-version)
+            WXM_VERSION=$VALUE
+            ;;
         --pvc-version)
             PVC_VERSION=$VALUE
             ;;
@@ -344,10 +363,10 @@ while [ "$1" != "" ]; do
             CDH_REPO=$VALUE
             ;;
         --csa-repo)
-            CSA_REPO=$VALUE
+            CSA_BASE_REPO=$VALUE
             ;;
         --cfm-repo)
-            CFM_REPO=$VALUE
+            CFM_BASE_REPO=$VALUE
             ;;
         --ambari-repo)
             AMBARI_REPO=$VALUE
@@ -359,7 +378,10 @@ while [ "$1" != "" ]; do
             HDF_REPO=$VALUE
             ;;
         --spark3-repo)
-            SPARK3_REPO=$VALUE
+            SPARK3_BASE_REPO=$VALUE
+            ;;
+        --wxm-repo)
+            WXM_BASE_REPO=$VALUE
             ;;
         --pvc-repo)
             PVC_REPO=$VALUE
@@ -387,6 +409,9 @@ while [ "$1" != "" ]; do
             ;;
         --install-python3)
             INSTALL_PYTHON3=$VALUE
+            ;;
+        --use-ansible-python-3)
+            USE_ANSIBLE_PYTHON_3=$VALUE
             ;;
         --pvc)
             PVC=$VALUE
@@ -438,7 +463,13 @@ while [ "$1" != "" ]; do
             ;;    
         --use-wxm)
             USE_WXM=$VALUE
-            ;;                          
+            ;;
+        --altus-key-id)
+            ALTUS_KEY_ID=$VALUE
+            ;;
+        --altus-private-key)
+            ALTUS_PRIVATE_KEY=$VALUE
+            ;;                       
         *)
             ;;
     esac
@@ -448,12 +479,6 @@ done
 #############################################################################################
 ##### Check on important variables before starting
 #############################################################################################
-if [ -z ${CLUSTER_NAME} ] || [ "${#CLUSTER_NAME}" -lt 4 ] || [[ "${CLUSTER_NAME}" =~ ['!@#$%^&*()_+-'] ]]
-then
-    echo "Cluster Name should be specified properly with option --cluster-name, must contain 3 characters, only lowercases and no special characters " 
-    echo " '${CLUSTER_NAME}' is not a valid name"  
-    exit 1 
-fi
 
 if [ -z ${CLUSTER_NAME_PVC} ]
 then
@@ -479,8 +504,6 @@ fi
 
 # To ensure log dirs exists 
 mkdir -p ${LOG_DIR}/
-
-# TODO: Add a default with: security + FreeIPA + KTS + Streaming with Nifi + Optional pvc
 
 #############################################################################################
 # Setup of deployment type
@@ -547,6 +570,27 @@ then
         export CDH_VERSION="7.1.7.0"
         export PVC="true"
         export ENCRYPTION_ACTIVATED="true"
+    elif [ "${CLUSTER_TYPE}" = "enc-ha" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdp-enc-ha/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-enc-ha/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-enc-ha/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-enc-ha/extra_vars.yml"
+        export ENCRYPTION_ACTIVATED="true"
+    elif [ "${CLUSTER_TYPE}" = "wxm" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdp-wxm/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-wxm/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-wxm/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-wxm/extra_vars.yml"
+        export USE_WXM="true"
+    elif [ "${CLUSTER_TYPE}" = "solr-nifi" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdp-solr-nifi/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-solr-nifi/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-solr-nifi/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-solr-nifi/extra_vars.yml"
+        export USE_CFM="true"
     elif [ "${CLUSTER_TYPE}" = "cdh6" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdh-6/hosts"
@@ -593,10 +637,10 @@ then
         export DATA_LOAD="false"
         export POST_INSTALL="false"
     else
-        export ANSIBLE_HOST_FILE="${CLUSTER_TYPE}/hosts"
-        export ANSIBLE_ALL_FILE="${CLUSTER_TYPE}/all"
-        export ANSIBLE_CLUSTER_YML_FILE="${CLUSTER_TYPE}/cluster.yml"
-        export ANSIBLE_EXTRA_VARS_YML_FILE="${CLUSTER_TYPE}/extra_vars.yml"
+        export ANSIBLE_HOST_FILE="ansible-cdp-${CLUSTER_TYPE}/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-${CLUSTER_TYPE}/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-${CLUSTER_TYPE}/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-${CLUSTER_TYPE}/extra_vars.yml"
     fi
 
 fi
@@ -606,7 +650,7 @@ fi
 ###############################
 
 # Cloudera repository required variables
-if [ "${OS}" = "centos" ]
+if [ "${OS}" = "centos" ] || [ "${OS}" = "rhel" ]
 then
     export OS_BY_CLDR="redhat"
 else
@@ -693,17 +737,31 @@ if [ "${USE_CFM}" = "true" ]
 then
     if [ -z "${CFM_BASE_REPO}" ] 
     then
-        export CFM_REPO="https://archive.cloudera.com/p/CFM/2.x/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}/tars/parcel/"
-        export CFM_CSD_JAR=$(curl -s -X GET -u ${PAYWALL_USER}:${PAYWALL_PASSWORD} https://archive.cloudera.com/p/CFM/2.x/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}/tars/parcel/ | grep .jar | grep NIFI- | cut -d '>' -f 3 | cut -d '<' -f 1)
-        export CFM_REGISTRY_CSD_JAR=$(curl -s -X GET -u ${PAYWALL_USER}:${PAYWALL_PASSWORD} https://archive.cloudera.com/p/CFM/2.x/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}/tars/parcel/ | grep .jar | grep NIFIREGISTRY | cut -d '>' -f 3 | cut -d '<' -f 1)
-        export CFM_CSD="https://archive.cloudera.com/p/CFM/2.x/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}/tars/parcel/${CFM_CSD_JAR}"
-        export CFM_REGISTRY_CSD="https://archive.cloudera.com/p/CFM/2.x/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}/tars/parcel/${CFM_REGISTRY_CSD_JAR}"
+        export CFM_REPO="https://archive.cloudera.com/p/cfm2/${CFM_VERSION}/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}/tars/parcel/"
+        export CFM_CSD_JAR=$(curl -s -X GET -u ${PAYWALL_USER}:${PAYWALL_PASSWORD} https://archive.cloudera.com/p/cfm2/${CFM_VERSION}/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}/tars/parcel/ | grep .jar | grep NIFI- | cut -d '>' -f 3 | cut -d '<' -f 1)
+        export CFM_REGISTRY_CSD_JAR=$(curl -s -X GET -u ${PAYWALL_USER}:${PAYWALL_PASSWORD} https://archive.cloudera.com/p/cfm2/${CFM_VERSION}/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}/tars/parcel/ | grep .jar | grep NIFIREGISTRY | cut -d '>' -f 3 | cut -d '<' -f 1)
+        export CFM_CSD="https://archive.cloudera.com/p/cfm2/${CFM_VERSION}/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}/tars/parcel/${CFM_CSD_JAR}"
+        export CFM_REGISTRY_CSD="https://archive.cloudera.com/p/cfm2/${CFM_VERSION}/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}/tars/parcel/${CFM_REGISTRY_CSD_JAR}"
     else
-        export CFM_REPO="${CFM_BASE_REPO}tars/parcel/"
+        export CFM_REPO="${CFM_BASE_REPO}/tars/parcel/"
         export CFM_CSD_JAR=$(curl -s -X GET ${CFM_BASE_REPO}/tars/parcel/ | grep .jar | grep NIFI- | cut -d '>' -f 3 | cut -d '<' -f 1)
         export CFM_REGISTRY_CSD_JAR=$(curl -s -X GET ${CFM_BASE_REPO}/tars/parcel/ | grep .jar | grep NIFIREGISTRY | cut -d '>' -f 3 | cut -d '<' -f 1)
-        export CFM_CSD="${CFM_BASE_REPO}tars/parcel/${CFM_CSD_JAR}"
-        export CFM_REGISTRY_CSD="${CFM_BASE_REPO}tars/parcel/${CFM_REGISTRY_CSD_JAR}"
+        export CFM_CSD="${CFM_BASE_REPO}/tars/parcel/${CFM_CSD_JAR}"
+        export CFM_REGISTRY_CSD="${CFM_BASE_REPO}/tars/parcel/${CFM_REGISTRY_CSD_JAR}"
+    fi
+fi
+
+if [ "${USE_WXM}" = "true" ]
+then
+    if [ -z "${WXM_BASE_REPO}" ] 
+    then
+        export WXM_REPO="https://archive.cloudera.com/p/wxm/${WXM_VERSION}/parcels/"
+        export WXM_CSD_JAR=$(curl -s -X GET -u ${PAYWALL_USER}:${PAYWALL_PASSWORD} https://archive.cloudera.com/p/wxm/${WXM_VERSION}/csd/ | grep .jar | grep WXM | cut -d '>' -f 3 | cut -d '<' -f 1)
+        export WXM_CSD="https://archive.cloudera.com/p/wxm/${WXM_VERSION}/csd/${WXM_CSD_JAR}"
+    else
+        export WXM_REPO="${CFM_BASE_REPO}/parcels/"
+        export WXM_CSD_JAR=$(curl -s -X GET ${WXM_REPO}/csd/ | grep .jar | grep NIFI- | cut -d '>' -f 3 | cut -d '<' -f 1)
+        export WXM_CSD="${WXM_REPO}/csd/${WXM_CSD_JAR}"
     fi
 fi
 
@@ -776,18 +834,28 @@ then
     fi
 fi
 
-if [ ! -z "${NODE_KTS}" ]
+if [ ! -z "${NODES_KTS}" ]
 then
-    echo "${NODE_KTS}" >> ${HOSTS_FILE}
-    if [ "${PRE_INSTALL}" = "true" ] 
+    export NODES_KTS_ARRAY=$( echo ${NODES_KTS} | sort | uniq )
+    export NODES_KTS_SORTED=( ${NODES_KTS_ARRAY} )
+    export KTS_ACTIVE=${NODES_KTS_SORTED[0]}
+    if [ ${#NODES_KTS_SORTED[@]} == 2 ]
     then
-        SSHKey=`ssh-keyscan ${NODE_KTS} 2> /dev/null`
-        echo $SSHKey >> ~/.ssh/known_hosts
-        echo $SSHKey >> ${KNOWN_HOSTS}
-        IP_ADRESS_SOLVED=$( dig +short ${NODE_KTS} )
-        echo "${IP_ADRESS_SOLVED} ${NODE_KTS}" >> ${HOSTS_ETC}
-        echo "**** Connection setup to ${NODE_KTS} ****"
+        export KTS_PASSIVE=${NODES_KTS_SORTED[1]}
     fi
+    for i in ${!NODES_KTS_SORTED[@]}
+    do
+        echo "${NODES_KTS_SORTED[$i]}" >> ${HOSTS_FILE}
+        if [ "${PRE_INSTALL}" = "true" ] 
+        then
+            SSHKey=`ssh-keyscan ${NODES_KTS_SORTED[$i]} 2> /dev/null`
+            echo $SSHKey >> ~/.ssh/known_hosts
+            echo $SSHKey >> ${KNOWN_HOSTS}
+            IP_ADRESS_SOLVED=$( dig +short ${NODES_KTS_SORTED[$i]} )
+            echo "${IP_ADRESS_SOLVED} ${NODES_KTS_SORTED[$i]}" >> ${HOSTS_ETC}
+            echo "**** Connection setup to ${NODES_KTS_SORTED[$i]} ****"
+        fi
+    done
 fi
 
 if [ ! -z "${NODES_PVC_ECS}" ]
@@ -895,18 +963,36 @@ fi
 
 if [ "${ENCRYPTION_ACTIVATED}" = "true" ]
 then
-    export KTS_SERVERS="
+    if [ -z "${KTS_PASSIVE}" ]
+    then
+        export KTS_SERVERS="
 [kts_active]
-${NODE_KTS}
+${KTS_ACTIVE}
 
 [kts_servers:children]
 kts_active"
 
-    export KTS_SERVERS_GROUP="kts_servers"
-
-    export KMS_SERVERS="
+        export KMS_SERVERS="
 [kms_servers]
-${NODE_0}"
+${NODE_1}"
+    else
+        export KTS_SERVERS="
+[kts_active]
+${KTS_ACTIVE}
+
+[kts_passive]
+${KTS_PASSIVE}
+
+[kts_servers:children]
+kts_active
+kts_passive"
+        export KMS_SERVERS="
+[kms_servers]
+${NODE_1}
+${NODE_2}"
+    fi
+
+    export KTS_SERVERS_GROUP="kts_servers"
 fi
 
 if [ ! -z ${NODE_IPA} ]
@@ -928,6 +1014,14 @@ then
     env | tr '\n' '\t' | sort 
 fi
 
+# Set ANSIBLE_CONFIG FILE
+export ANSIBLE_CONFIG=$(pwd)/ansible.cfg
+
+if [ "${USE_ANSIBLE_PYTHON_3}" == "true" ]
+then
+    export ANSIBLE_PYTHON_3_PARAMS='-e ansible_python_interpreter=/usr/bin/python3'
+fi
+
 ###############################
 # Launch of scripts to deploy
 ###############################
@@ -937,12 +1031,12 @@ then
     echo "############ Setup cluster hosts ############"
     if [ "${DEBUG}" = "true" ]
     then
-        echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/pre_install/main.yml --extra-vars \"@/tmp/pre_install_extra_vars.yml\" "
+        echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/pre_install/main.yml --extra-vars \"@/tmp/pre_install_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
         echo " Follow advancement at: ${LOG_DIR}/pre_install.log "
     fi
     cp playbooks/pre_install/extra_vars.yml /tmp/pre_install_extra_vars.yml
     envsubst < /tmp/pre_install_extra_vars.yml > /tmp/pre_install_extra_vars.yml.tmp && mv /tmp/pre_install_extra_vars.yml.tmp /tmp/pre_install_extra_vars.yml
-    ansible-playbook -i ${HOSTS_FILE} playbooks/pre_install/main.yml --extra-vars "@/tmp/pre_install_extra_vars.yml" 2>&1 > ${LOG_DIR}/pre_install.log
+    ansible-playbook -i ${HOSTS_FILE} playbooks/pre_install/main.yml --extra-vars "@/tmp/pre_install_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} 2>&1 > ${LOG_DIR}/pre_install.log
     OUTPUT=$(tail -20 ${LOG_DIR}/pre_install.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
@@ -959,12 +1053,12 @@ then
     echo "############ On ${NODE_0} : Prepare Ansible Deployment ############"
     if [ "${DEBUG}" = "true" ]
     then
-        echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/ansible_install_preparation/main.yml --extra-vars \"@/tmp/ansible_install_preparation_extra_vars.yml\" "
+        echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/ansible_install_preparation/main.yml --extra-vars \"@/tmp/ansible_install_preparation_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
         echo " Follow advancement at: ${LOG_DIR}/prepare_ansible_deployment.log "
     fi
     cp playbooks/ansible_install_preparation/extra_vars.yml /tmp/ansible_install_preparation_extra_vars.yml
     envsubst < /tmp/ansible_install_preparation_extra_vars.yml > /tmp/ansible_install_preparation_extra_vars.yml.tmp && mv /tmp/ansible_install_preparation_extra_vars.yml.tmp /tmp/ansible_install_preparation_extra_vars.yml
-    ansible-playbook -i ${HOSTS_FILE} playbooks/ansible_install_preparation/main.yml --extra-vars "@/tmp/ansible_install_preparation_extra_vars.yml" 2>&1 > ${LOG_DIR}/prepare_ansible_deployment.log
+    ansible-playbook -i ${HOSTS_FILE} playbooks/ansible_install_preparation/main.yml --extra-vars "@/tmp/ansible_install_preparation_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} 2>&1 > ${LOG_DIR}/prepare_ansible_deployment.log
     OUTPUT=$(tail -20 ${LOG_DIR}/prepare_ansible_deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
@@ -985,7 +1079,7 @@ then
         ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; export CLOUD_TO_USE=static ; export INVENTORY_TO_USE=hosts ; bash install_cluster.sh' > ${LOG_DIR}/deployment.log
     else
         echo "******* Installing required packages *******"
-        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-galaxy install -r requirements.yml ; ansible-galaxy collection install -r requirements.yml ' 2>&1 > ${LOG_DIR}/deployment.log
+        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-galaxy install -r requirements.yml ; ansible-galaxy collection install -r requirements.yml " 2>&1 > ${LOG_DIR}/deployment.log
         
         ################################################
         ######## Installation of CDP step by step in order to be able to track installation #######
@@ -993,9 +1087,9 @@ then
         echo "******* Verificating cluster Definition *******"
         if [ "${DEBUG}" = "true" ]
         then
-            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_inventory_and_definition.yml "
+            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_inventory_and_definition.yml ${ANSIBLE_PYTHON_3_PARAMS} "
         fi
-        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_inventory_and_definition.yml' 2>&1 >> ${LOG_DIR}/deployment.log
+        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_inventory_and_definition.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
@@ -1006,28 +1100,12 @@ then
           exit 1
         fi
 
-        echo "******* Installation of DB, Java, (KDC) etc... *******"
-        if [ "${DEBUG}" = "true" ]
-        then
-            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_infrastructure.yml "
-        fi
-        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_infrastructure.yml' 2>&1 >> ${LOG_DIR}/deployment.log
-        OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
-        if [ "${OUTPUT}" == "2" ]
-        then
-          echo " SUCCESS: Creation of DB, Java, (KDC) etc..."
-        else
-          echo " FAILURE: Could not create DB, KDC and HA Proxy" 
-          echo " See details in file: ${LOG_DIR}/deployment.log "
-          exit 1
-        fi
-
         echo "******* Verificating parcels *******"
         if [ "${DEBUG}" = "true" ]
         then
-            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_parcels.yml "
+            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_parcels.yml ${ANSIBLE_PYTHON_3_PARAMS} "
         fi
-        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_parcels.yml' 2>&1 >> ${LOG_DIR}/deployment.log
+        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_parcels.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
@@ -1038,14 +1116,46 @@ then
           exit 1
         fi
 
+        echo "******* Applying nodes pre-requisites *******"
+        if [ "${DEBUG}" = "true" ]
+        then
+            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_nodes.yml ${ANSIBLE_PYTHON_3_PARAMS} "
+        fi
+        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_nodes.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 >> ${LOG_DIR}/deployment.log
+        OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
+        if [ "${OUTPUT}" == "2" ]
+        then
+          echo " SUCCESS: Nodes pre-requisites"
+        else
+          echo " FAILURE: Could not apply pre-requisites for nodes" 
+          echo " See details in file: ${LOG_DIR}/deployment.log "
+          exit 1
+        fi
+
+        echo "******* Installation of DB, (KDC) etc... *******"
+        if [ "${DEBUG}" = "true" ]
+        then
+            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_infrastructure.yml ${ANSIBLE_PYTHON_3_PARAMS} "
+        fi
+        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_infrastructure.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 >> ${LOG_DIR}/deployment.log
+        OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
+        if [ "${OUTPUT}" == "2" ]
+        then
+          echo " SUCCESS: Creation of DB, (KDC) etc..."
+        else
+          echo " FAILURE: Could not create DB, KDC and HA Proxy" 
+          echo " See details in file: ${LOG_DIR}/deployment.log "
+          exit 1
+        fi
+
         if [ "${FREE_IPA}" = "true" ]
         then
             echo "******* Installing Free IPA *******"
             if [ "${DEBUG}" = "true" ]
             then
-                echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml "
+                echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml ${ANSIBLE_PYTHON_3_PARAMS} "
             fi
-            ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml' 2>&1 >> ${LOG_DIR}/deployment.log
+            ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 >> ${LOG_DIR}/deployment.log
             OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]
             then
@@ -1057,28 +1167,12 @@ then
             fi
         fi
 
-        echo "******* Applying nodes pre-requisites *******"
-        if [ "${DEBUG}" = "true" ]
-        then
-            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_nodes.yml "
-        fi
-        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_nodes.yml' 2>&1 >> ${LOG_DIR}/deployment.log
-        OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
-        if [ "${OUTPUT}" == "2" ]
-        then
-          echo " SUCCESS: Nodes pre-requisites"
-        else
-          echo " FAILURE: Could not apply pre-requisites for nodes" 
-          echo " See details in file: ${LOG_DIR}/deployment.log "
-          exit 1
-        fi
-
         echo "******* Installing Cloudera Manager *******"
         if [ "${DEBUG}" = "true" ]
         then
-            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cloudera_manager.yml "
+            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cloudera_manager.yml ${ANSIBLE_PYTHON_3_PARAMS} "
         fi
-        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cloudera_manager.yml' 2>&1 >> ${LOG_DIR}/deployment.log
+        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cloudera_manager.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
@@ -1094,9 +1188,9 @@ then
             echo "******* Fixing CDH 5 Paywall *******"
             if [ "${DEBUG}" = "true" ]
             then
-                echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_for_cdh5_paywall.yml "
+                echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_for_cdh5_paywall.yml ${ANSIBLE_PYTHON_3_PARAMS} "
             fi
-            ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_for_cdh5_paywall.yml' 2>&1 >> ${LOG_DIR}/deployment.log
+            ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_for_cdh5_paywall.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 >> ${LOG_DIR}/deployment.log
             OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]
             then
@@ -1111,9 +1205,9 @@ then
         echo "******* Setting up Kerberos *******"
         if [ "${DEBUG}" = "true" ]
         then
-            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_security.yml "
+            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_security.yml ${ANSIBLE_PYTHON_3_PARAMS} "
         fi
-        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_security.yml' 2>&1 >> ${LOG_DIR}/deployment.log
+        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_security.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
@@ -1129,9 +1223,9 @@ then
             echo "******* Enabling Auto-TLS *******"
             if [ "${DEBUG}" = "true" ]
             then
-                echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml extra_auto_tls.yml "
+                echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml extra_auto_tls.yml ${ANSIBLE_PYTHON_3_PARAMS} "
             fi
-            ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml extra_auto_tls.yml' 2>&1 >> ${LOG_DIR}/deployment.log
+            ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml extra_auto_tls.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 >> ${LOG_DIR}/deployment.log
             OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]
             then
@@ -1146,9 +1240,9 @@ then
         echo "******* Installing Cluster *******"
         if [ "${DEBUG}" = "true" ]
         then
-            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cluster.yml "
+            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cluster.yml ${ANSIBLE_PYTHON_3_PARAMS} "
         fi
-        ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cluster.yml' 2>&1 >> ${LOG_DIR}/deployment.log
+        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cluster.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 >> ${LOG_DIR}/deployment.log
         OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
@@ -1164,9 +1258,9 @@ then
             echo "******* Fixing Auto-TLS Settings *******"
             if [ "${DEBUG}" = "true" ]
             then
-                echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_auto_tls.yml "
+                echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_auto_tls.yml ${ANSIBLE_PYTHON_3_PARAMS} "
             fi
-            ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_auto_tls.yml' 2>&1 >> ${LOG_DIR}/deployment.log
+            ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_auto_tls.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 >> ${LOG_DIR}/deployment.log
             OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]
             then
@@ -1183,9 +1277,9 @@ then
             echo "******* Setting up Data Encryption at Rest *******"
             if [ "${DEBUG}" = "true" ]
             then
-                echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml setup_hdfs_encryption.yml "
+                echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml setup_hdfs_encryption.yml ${ANSIBLE_PYTHON_3_PARAMS} "
             fi
-            ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml setup_hdfs_encryption.yml' 2>&1 >> ${LOG_DIR}/deployment.log
+            ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml setup_hdfs_encryption.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 >> ${LOG_DIR}/deployment.log
             OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]
             then
@@ -1216,12 +1310,12 @@ then
     echo "############ Post-Install configuration for CDP ############"
     if [ "${DEBUG}" = "true" ]
     then
-        echo " Command launched: ansible-playbook -i ${HOSTS_FILE} playbooks/ansible_install_preparation/main.yml --extra-vars \"@/tmp/post_install_extra_vars.yml\" "
+        echo " Command launched: ansible-playbook -i ${HOSTS_FILE} playbooks/ansible_install_preparation/main.yml --extra-vars \"@/tmp/post_install_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS}"
         echo " Follow advancement at: ${LOG_DIR}/post_install.log "
     fi
     cp playbooks/post_install/extra_vars.yml /tmp/post_install_extra_vars.yml
     envsubst < /tmp/post_install_extra_vars.yml > /tmp/post_install_extra_vars.yml.tmp && mv /tmp/post_install_extra_vars.yml.tmp /tmp/post_install_extra_vars.yml
-    ansible-playbook -i ${HOSTS_FILE} playbooks/post_install/main.yml --extra-vars "@/tmp/post_install_extra_vars.yml" 2>&1 > ${LOG_DIR}/post_install.log
+    ansible-playbook -i ${HOSTS_FILE} playbooks/post_install/main.yml --extra-vars "@/tmp/post_install_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} 2>&1 > ${LOG_DIR}/post_install.log
     OUTPUT=$(tail -20 ${LOG_DIR}/post_install.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
@@ -1238,12 +1332,12 @@ then
     echo "############ User Creation ############"
     if [ "${DEBUG}" = "true" ]
     then
-        echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/user_creation/main.yml --extra-vars \"@/tmp/user_creation_extra_vars.yml\" "
+        echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/user_creation/main.yml --extra-vars \"@/tmp/user_creation_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS}"
         echo " Follow advancement at: ${LOG_DIR}/user_creation.log "
     fi
     cp playbooks/user_creation/extra_vars.yml /tmp/user_creation_extra_vars.yml
-    envsubst < /tmp/user_creation_extra_vars.yml > /tmp/user_creation_extra_vars.yml.tmp && mv /tmp/user_creation_extra_vars.yml.tmp /tmp/user_creation_extra_vars.yml
-    ansible-playbook -i ${HOSTS_FILE} playbooks/user_creation/main.yml --extra-vars "@/tmp/user_creation_extra_vars.yml" 2>&1 > ${LOG_DIR}/user_creation.log
+    envsubst < /tmp/user_creation_extra_vars.yml > /tmp/user_creation_extra_vars.yml.tmp && mv /tmp/user_creation_extra_vars.yml.tmp /tmp/user_creation_extra_vars.yml 
+    ansible-playbook -i ${HOSTS_FILE} playbooks/user_creation/main.yml --extra-vars "@/tmp/user_creation_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} 2>&1 > ${LOG_DIR}/user_creation.log 
     OUTPUT=$(tail -20 ${LOG_DIR}/user_creation.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
@@ -1259,7 +1353,7 @@ if [ "${PVC}" = "true" ] && [ "${INSTALL_PVC}" = "true" ]
 then
     echo "############ Creating PvC cluster ############" 
     echo " Follow advancement at: ${LOG_DIR}/pvc_deployment.log "
-    ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml pvc.yml' 2>&1 > ${LOG_DIR}/pvc_deployment.log
+    ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml pvc.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 > ${LOG_DIR}/pvc_deployment.log
     OUTPUT=$(tail -20 ${LOG_DIR}/pvc_deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
@@ -1276,12 +1370,12 @@ then
     echo "############ Configuring PvC cluster ############" 
     if [ "${DEBUG}" = "true" ]
     then
-        echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/pvc_setup/main.yml --extra-vars \"@/tmp/pvc_setup_extra_vars.yml\" "
+        echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/pvc_setup/main.yml --extra-vars \"@/tmp/pvc_setup_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
         echo " Follow advancement at: ${LOG_DIR}/pvc_configuration.log "
     fi
     cp playbooks/pvc_setup/extra_vars.yml /tmp/pvc_setup_extra_vars.yml
     envsubst < /tmp/pvc_setup_extra_vars.yml > /tmp/pvc_setup_extra_vars.yml.tmp && mv /tmp/pvc_setup_extra_vars.yml.tmp /tmp/pvc_setup_extra_vars.yml
-    ansible-playbook -i ${HOSTS_FILE} playbooks/pvc_setup/main.yml --extra-vars "@/tmp/pvc_setup_extra_vars.yml" 2>&1 > ${LOG_DIR}/pvc_configuration.log
+    ansible-playbook -i ${HOSTS_FILE} playbooks/pvc_setup/main.yml --extra-vars "@/tmp/pvc_setup_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} 2>&1 > ${LOG_DIR}/pvc_configuration.log
     OUTPUT=$(tail -20 ${LOG_DIR}/pvc_configuration.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
@@ -1314,12 +1408,12 @@ then
     fi
     if [ "${DEBUG}" = "true" ]
     then
-        echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/data_load/main.yml --extra-vars \"@/tmp/data_load_extra_vars.yml\" "
+        echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/data_load/main.yml --extra-vars \"@/tmp/data_load_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
         echo " Follow advancement at: ${LOG_DIR}/data_load.log "
     fi
     cp playbooks/data_load/extra_vars.yml /tmp/data_load_extra_vars.yml
     envsubst < /tmp/data_load_extra_vars.yml > /tmp/data_load_extra_vars.yml.tmp && mv /tmp/data_load_extra_vars.yml.tmp /tmp/data_load_extra_vars.yml
-    ansible-playbook -i ${HOSTS_FILE} playbooks/data_load/main.yml --extra-vars "@/tmp/data_load_extra_vars.yml" 2>&1 > ${LOG_DIR}/data_load.log
+    ansible-playbook -i ${HOSTS_FILE} playbooks/data_load/main.yml --extra-vars "@/tmp/data_load_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} 2>&1 > ${LOG_DIR}/data_load.log
     OUTPUT=$(tail -20 ${LOG_DIR}/data_load.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then

@@ -46,5 +46,6 @@ ca_server_attrs_general:
   ST: CA
   C: US
 
-local_temp_dir: /tmp
+
+local_temp_dir: "/home/tmp"
 skip_user_group_init: false

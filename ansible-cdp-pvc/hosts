@@ -24,14 +24,17 @@ ${CA_SERVERS}
 
 ${KRB5_SERVERS}
 
+[pvc_hosts]
+${NODES_ECS_PRINTABLE}
+
+
 [cluster:children]
 cluster_master_nodes
 cluster_worker_nodes
 cloudera_manager
 ${KTS_SERVERS_GROUP}
+pvc_hosts
 
-[pvc_hosts]
-${NODES_ECS_PRINTABLE}
 
 [all:vars]
 tls=False

@@ -89,6 +89,7 @@ export CREATE_CDW="true"
 export CREATE_CDE="true"
 export CREATE_CML="true"
 export OC_TAR_FILE_PATH=""
+export PVC_APP_DOMAIN=""
 
 # External CSD
 export USE_CSA="false"
@@ -219,6 +220,7 @@ function usage()
     echo "  --pvc=$PVC : (Optional) If PVC should be deployed and configured (Default) false "
     echo "  --pvc-type=$PVC_TYPE : (Optional) Which type of PVC (OC or ECS) (Default) ECS "
     echo "  --nodes-ecs=$NODES_PVC_ECS : (Optional) A Space separated list of ECS nodes (external to cluster) where to install ECS (Default)  "
+    echo "  --pvc-app-domain=$PVC_APP_DOMAIN (Optional) To use with PVC ECS to specify the app domain (that will be suffix url for all your deployments) (Default) "
     echo "  --kubeconfig-path=$KUBECONFIG_PATH : (Optional) To use with CDP PvC on Open Shift, it is then required (Default)   "
     echo "  --oc-tar-file-path=$OC_TAR_FILE_PATH Required if using OpenShift, local path to oc.tar file provided by RedHat (Default) "
     echo "  --cluster-name-pvc=$CLUSTER_NAME_PVC Optional as it is derived from cluster-name (Default) <cluster-name>-pvc"
@@ -448,6 +450,9 @@ while [ "$1" != "" ]; do
             ;;
         --create-cml)
             CREATE_CML=$VALUE
+            ;;
+        --pvc-app-domain)
+            PVC_APP_DOMAIN=$VALUE
             ;;
         --install-repo-url)
             INSTALL_REPO_URL=$VALUE
@@ -902,6 +907,11 @@ then
 new_line=$'\n'
 export NODES_ECS_PRINTABLE="$(echo ${NODES_PVC_ECS} | sed 's/ /'"\\${new_line}"'/g')"
 export PVC_ECS_SERVER_HOST="${NODES_PVC_ECS_SORTED[0]}"
+
+if [ -z "${PVC_APP_DOMAIN}" ]
+then
+    export PVC_APP_DOMAIN=${PVC_ECS_SERVER_HOST}
+fi
 
 fi
 

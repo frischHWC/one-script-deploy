@@ -1,0 +1,15 @@
+---
+# Set up aliases for kubeconfig
+
+# TODO: Add alias for kubeconfig and docker command
+- name: Insert KUBECONFIG vars to bashrc
+  blockinfile:
+    path: ~/.bashrc
+    block: |
+      export KUBECTL='/var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml'
+      "export DOCKER=/opt/cloudera/parcels/ECS-1.3.4-b211-ecs-1.3.4-b211.p0/docker/docker"
+
+- name: Fetch kubeconfig file
+  fetch: 
+    src: /etc/rancher/rke2/rke2.yaml
+    dest: /tmp/kubeconfig/

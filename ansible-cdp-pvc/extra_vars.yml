@@ -57,8 +57,9 @@ node_infra_solr: ${NODE_3}
 pvc_type: ${PVC_TYPE}
 pvc_version: ${PVC_VERSION}
 pvc_repo_url: ${PVC_REPO}
-pvc_app_domain_name: ${NODE_0}
+pvc_app_domain_name: ${CLUSTER_NAME_PVC}.vpc.cloudera.com
 pvc_htpasswdCredentials: "YWRtaW46JDJ5JDA1JDJwOTJFNVRRa1VnelkvbFNsVklYMGUyVnEzd0JtRExuc3RTRUZUanJEUGVSRHUzS0J5UUoyCg=="
 kube_config_path: "/tmp/kubeconfig"
 install_python3: ${INSTALL_PYTHON3}
 oc_tar_file_path: ${OC_TAR_FILE_PATH}
+pvc_ecs_server_host: ${PVC_ECS_SERVER_HOST}

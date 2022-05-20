@@ -123,3 +123,22 @@
   debug:
     msg: "{{ ranger_service_exists }}"
   when: debug | default(false)
+
+
+- set_fact:
+    oozie_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'OOZIE'].name | [0]"
+
+- name: DEBUG - oozie_service_name
+  debug:
+    msg: "{{ oozie_service_name }}"
+  when: debug | default(false)
+
+- set_fact: 
+    oozie_service_exists: "{{ true if oozie_service_name != '' else false }}"
+
+- name: DEBUG - oozie_service_exists
+  debug:
+    msg: "{{ oozie_service_exists }}"
+  when: debug | default(false)

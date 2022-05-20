@@ -19,6 +19,20 @@
     - role: prereqs_oc
       when: pvc_type == "OC"
 
+- name: Pre-requisites on ECS Server Node
+  hosts: "{{ pvc_ecs_server_host }}"
+  gather_facts: false
+  roles: 
+    - role: prereqs_ecs_server
+      when: pvc_type == "ECS"
+
+- name: Pre-requisites on ECS
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: false
+  roles: 
+    - role: prereqs_ecs
+      when: pvc_type == "ECS"
+
 - name: Pre-requisites and fixes for PvC 
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false

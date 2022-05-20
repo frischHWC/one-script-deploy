@@ -42,6 +42,12 @@
   roles: 
     - { role: fix_kms_tls, when: encryption_activated }
 
+- name: Add missing ExtJS for Oozie
+  hosts: all
+  gather_facts: false
+  roles: 
+    - { role: fix_oozie_ui, when: oozie_service_exists }
+
 - name: Pre-Configure WXM
   hosts: main, tp_host
   gather_facts: false

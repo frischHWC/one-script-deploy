@@ -126,6 +126,7 @@ export CA_SERVERS=""
 export KMS_SERVERS=""
 export ANSIBLE_PYTHON_3_PARAMS=""
 export USE_ANSIBLE_PYTHON_3="false"
+export PVC_ECS_SERVER_HOST=""
 
 function usage()
 {
@@ -900,6 +901,7 @@ then
 
 new_line=$'\n'
 export NODES_ECS_PRINTABLE="$(echo ${NODES_PVC_ECS} | sed 's/ /'"\\${new_line}"'/g')"
+export PVC_ECS_SERVER_HOST="${NODES_PVC_ECS_SORTED[0]}"
 
 fi
 

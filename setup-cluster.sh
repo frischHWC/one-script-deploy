@@ -1496,6 +1496,11 @@ then
     echo ""
 fi
 
+if [ "${PVC}" = "true" ] && [ "${PVC_TYPE}" = "ECS" ]
+then
+    echo " WARNING: It is required to have this wildcard DNS entry *apps.${PVC_APP_DOMAIN} to access Control Plane UI"
+fi
+
 if [ "${KERBEROS}" = "true" ] && [ "${USER_CREATION}" = "true" ]
 then
     echo ""

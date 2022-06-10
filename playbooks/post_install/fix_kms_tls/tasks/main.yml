@@ -20,7 +20,7 @@
 - set_fact:
     kms_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
   vars:
-    query: "items[?type == 'SOLR'].name | [0]"
+    query: "items[?type == 'RANGER_KMS_KTS'].name | [0]"
 
 - name: DEBUG - kms_service_name
   debug:
@@ -29,7 +29,7 @@
 
 - name: Push TLS settings
   uri:
-    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ knox_service_name }}/roleConfigGroups/{{ knox_service_name }}-RANGER_KMS_SERVER_KTS-BASE/config"
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ kms_service_name }}/roleConfigGroups/{{ kms_service_name }}-RANGER_KMS_SERVER_KTS-BASE/config"
     user: "{{ cloudera_manager_user }}"
     password: "{{ cloudera_manager_password }}"
     method: PUT
@@ -40,3 +40,74 @@
     body_format: json
     body: "{{ lookup('file', 'kms_tls.json', errors='ignore' ) }}"
   ignore_errors: yes
+
+
+- name: Restart Cluster 
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/commands/restart"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  
+- name: Acknowledge Restart of the cluster
+  pause:
+    minutes: 3
+
+- name: Check cluster is up again
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: result
+  until: result.json.entityStatus == "GOOD_HEALTH"
+  retries: 60
+  delay: 20
+  
+- name: Redeploy config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/commands/deployClientConfig"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+
+- name: Restart Cluster-Stream if needed
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}-stream/commands/restart"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  ignore_errors: true
+
+- name: Redeploy config for stream if needed
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}-stream/commands/deployClientConfig"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  ignore_errors: true

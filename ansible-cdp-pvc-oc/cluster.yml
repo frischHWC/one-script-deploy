@@ -86,7 +86,7 @@ clusters:
         NODEMANAGER:
           yarn_nodemanager_resource_memory_mb: 24576
           yarn_nodemanager_resource_cpu_vcores: 12
-          yarn_nodemanager_local_dirs:  /tmp/nm
+          yarn_nodemanager_local_dirs:  /data/nm
           yarn_nodemanager_log_dirs: /var/log/nm
         GATEWAY:
           mapred_submit_replication: 3

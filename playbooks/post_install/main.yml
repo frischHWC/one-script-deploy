@@ -16,37 +16,37 @@
   hosts: all
   gather_facts: false
   roles: 
-    - { role: hue_free_ipa_krb5conf, when: free_ipa and hue_service_exists }
+    - { role: hue_free_ipa_krb5conf, when: free_ipa and hue_service_exists | default(false) }
 
 - name: Fix Hue ticket lifetime for Free IPA
   hosts: main
   gather_facts: false
   roles: 
-    - { role: hue_free_ipa_ticket_lifetime, when: free_ipa and hue_service_exists }
+    - { role: hue_free_ipa_ticket_lifetime, when: free_ipa and hue_service_exists | default(false) }
 
 - name: Create missing SolR plugin for Ranger
   hosts: main
   gather_facts: false
   roles: 
-    - { role: fix_solr_plugin, when: solr_service_exists }
+    - { role: fix_solr_plugin, when: solr_service_exists | default(false) }
 
 - name: Add Solr urls to Knox
   hosts: main
   gather_facts: false
   roles: 
-    - { role: add_solr_knox, when: solr_service_exists }
+    - { role: add_solr_knox, when: solr_service_exists | default(false) }
 
 - name: Add missing TLS values for Ranger KMS
   hosts: main
   gather_facts: false
   roles: 
-    - { role: fix_kms_tls, when: encryption_activated }
+    - { role: fix_kms_tls, when: encryption_activated | default(false) }
 
 - name: Add missing ExtJS for Oozie
   hosts: all
   gather_facts: false
   roles: 
-    - { role: fix_oozie_ui, when: oozie_service_exists }
+    - { role: fix_oozie_ui, when: oozie_service_exists | default(false) }
 
 - name: Pre-Configure WXM
   hosts: main, tp_host

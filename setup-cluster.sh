@@ -719,7 +719,7 @@ fi
 
 if [ -z "${PVC_REPO}" ]
 then
-    export PVC_REPO="https://archive.cloudera.com/p/cdp-pvc-ds/latest/"
+    export PVC_REPO="https://archive.cloudera.com/p/cdp-pvc-ds/latest"
 fi
 
 
@@ -1054,7 +1054,7 @@ envsubst < ${TO_DEPLOY_FOLDER}/all > ${TO_DEPLOY_FOLDER}/all.tmp && mv ${TO_DEPL
 
 if [ "${DEBUG}" = "true" ]
 then
-    env | tr '\n' '\t' | sort 
+    env | sort | tr '\n' '\t' 
 fi
 
 # Set ANSIBLE_CONFIG FILE
@@ -1498,7 +1498,9 @@ fi
 
 if [ "${PVC}" = "true" ] && [ "${PVC_TYPE}" = "ECS" ]
 then
-    echo " WARNING: It is required to have this wildcard DNS entry *apps.${PVC_APP_DOMAIN} to access Control Plane UI"
+    echo " **** WARNING: It is required to have this wildcard DNS entry *apps.${PVC_APP_DOMAIN} to access Control Plane UI ****"
+    echo " Add this line to your /etc/hosts: "
+    echo "$(cat /etc/hosts | grep -m1 ${PVC_ECS_SERVER_HOST} | cut -d ' ' -f1 ) *apps.${PVC_APP_DOMAIN}"
 fi
 
 if [ "${KERBEROS}" = "true" ] && [ "${USER_CREATION}" = "true" ]

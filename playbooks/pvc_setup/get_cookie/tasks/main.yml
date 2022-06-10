@@ -26,6 +26,10 @@
   vars:
     query: "items[?namespace == '{{ cluster_name_pvc }}' ].dnsSuffix | [0]"
 
+- set_fact:
+    cp_dns_suffix: "{{ pvc_ecs_server_host }}"
+  when: pvc_type == 'ECS'
+
 - name: DEBUG - cp_dns_suffix
   debug:
     msg: "{{ cp_dns_suffix }}"
@@ -33,6 +37,10 @@
 
 - set_fact:
     cdp_endpoint_url: "https://console-{{ cluster_name_pvc }}.apps.{{ cp_dns_suffix }}"
+
+- set_fact:
+    cdp_endpoint_url: "https://console-cdp.apps.{{ cp_dns_suffix }}"
+  when: pvc_type == 'ECS'
 
 - name: DEBUG - cdp_endpoint_url
   debug:

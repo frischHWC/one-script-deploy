@@ -30,6 +30,11 @@
 # Apply Patch to generate_crendentials for FreeIPA
 - set_fact: 
     cp_domain: "{{ (lookup('template', kube_config_path ) | from_yaml).clusters[0].cluster.server.split('//')[1].split(':')[0].replace('api.', '') }}"
+  when: pvc_type == "OC"
+
+- set_fact: 
+    cp_domain: "{{ pvc_ecs_server_host }}"
+  when: pvc_type == "ECS"
 
 - name: DEBUG - cp_domain
   debug:

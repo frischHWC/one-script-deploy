@@ -1052,17 +1052,19 @@ fi
 envsubst < ${TO_DEPLOY_FOLDER}/hosts > ${TO_DEPLOY_FOLDER}/hosts.tmp && mv ${TO_DEPLOY_FOLDER}/hosts.tmp ${TO_DEPLOY_FOLDER}/hosts
 envsubst < ${TO_DEPLOY_FOLDER}/all > ${TO_DEPLOY_FOLDER}/all.tmp && mv ${TO_DEPLOY_FOLDER}/all.tmp ${TO_DEPLOY_FOLDER}/all
 
-if [ "${DEBUG}" = "true" ]
-then
-    env | sort | tr '\n' '\t' 
-fi
-
 # Set ANSIBLE_CONFIG FILE
 export ANSIBLE_CONFIG=$(pwd)/ansible.cfg
 
 if [ "${USE_ANSIBLE_PYTHON_3}" == "true" ]
 then
     export ANSIBLE_PYTHON_3_PARAMS='-e ansible_python_interpreter=/usr/bin/python3'
+fi
+
+# Print Env variables
+if [ "${DEBUG}" = "true" ]
+then
+    env | sort | tr '\n' '\t' 
+    echo ""
 fi
 
 ###############################

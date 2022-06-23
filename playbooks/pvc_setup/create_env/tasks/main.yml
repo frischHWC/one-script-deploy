@@ -106,12 +106,14 @@
     return_content: yes
     validate_certs: no
   register: env_creation
-  when: (is_env_existing and env.to_delete) or not is_env_existing
+  when: pvc_type == "OC" and (is_env_existing and env.to_delete) or not is_env_existing
 
 - name: DEBUG - env_creation
   debug:
     msg: "{{ env_creation }}"
   when: (is_env_existing and env.to_delete) or not is_env_existing and (debug | default(false))
+
+
 
 - name: List Environments and get its crn
   uri:
@@ -157,9 +159,9 @@
     return_content: yes
     validate_certs: no
   register: answer_to_register_cluster
-  when: (is_env_existing and env.to_delete) or not is_env_existing
+  when: pvc_type == "OC" and ((is_env_existing and env.to_delete) or not is_env_existing)
 
 - name: DEBUG - answer_to_register_cluster
   debug:
     msg: "{{ answer_to_register_cluster }}"
-  when: (is_env_existing and env.to_delete) or not is_env_existing
+  when: pvc_type == "OC" and ((is_env_existing and env.to_delete) or not is_env_existing)

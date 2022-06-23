@@ -14,8 +14,13 @@
     state: directory
     mode: '0755'
 
+- name: Install unzip
+  package:
+    name: unzip
+    state: latest
+
 - name: Unzip ext-2.2 file
-  shell: unzip ext-2.2.zip -d /var/lib/oozie
+  shell: unzip /tmp/ext-2.2.zip -d /var/lib/oozie
 
 - name: Chown ext-2.2
   shell: chown -R oozie:oozie /var/lib/oozie/ext-2.2

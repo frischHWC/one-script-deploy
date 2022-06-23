@@ -1,0 +1,146 @@
+---
+clusters:
+  - name: "{{ cluster_name }}-kts"
+    type: kts
+    repositories:
+      - "{{ cdh_repo }}"
+      - "http://{{ groups['custom_repo'][0] | default('localhost') }}/keytrustee-server/6.1.0/parcels/"
+      - "http://{{ groups['custom_repo'][0] | default('localhost') }}/keytrustee-kms/6.3.0/parcels/"
+
+  - name: "{{ cluster_name }}"
+    services: [FLUME, HDFS, HBASE, HIVE, HUE, IMPALA, KS_INDEXER, OOZIE, SENTRY, SOLR, SPARK_ON_YARN, SQOOP_CLIENT, YARN, ZOOKEEPER]
+    security:
+      kerberos: "{{ kerberos_activated }}"
+      hdfs_encryption:  "{{ encryption_activated }}"
+
+    repositories:
+      - "{{ cdh_repo }}"
+      - "http://{{ groups['custom_repo'][0] | default('localhost') }}/keytrustee-server/6.1.0/parcels/"
+      - "http://{{ groups['custom_repo'][0] | default('localhost') }}/keytrustee-kms/6.3.0/parcels/"
+
+    data_contexts:
+      - name: SDX
+        services: [HDFS, HIVE, SENTRY]
+
+    configs:
+      HBASE:
+        SERVICEWIDE:
+          hbase_restserver_security_authentication: "{{ hbase_auth }}"
+        MASTER:
+          hbase_master_port: 16001
+      HDFS:
+        SERVICEWIDE:
+          dfs_ha_fencing_methods: 'shell(true)'
+          dfs_namenode_acls_enabled: true
+          hdfs_verify_ec_with_topology_enabled: false
+          dfs_permissions_supergroup: hadoop
+        DATANODE:
+          dfs_data_dir_list: /dfs/dn
+          dfs_datanode_max_locked_memory: 0
+        NAMENODE:
+          dfs_name_dir_list: /dfs/nn
+          dfs_federation_namenode_nameservice: "{{ cluster_name }}"
+          autofailover_enabled: true
+          dfs_namenode_quorum_journal_name: "{{ cluster_name }}"
+        JOURNALNODE:
+          dfs_journalnode_edits_dir: /dfs/jn  
+        SECONDARYNAMENODE:
+          fs_checkpoint_dir_list: /dfs/snn  
+      IMPALA:
+        IMPALAD:
+          scratch_dirs: /tmp/impala 
+      YARN:
+        RESOURCEMANAGER:
+          yarn_scheduler_maximum_allocation_mb: 4096
+          yarn_scheduler_maximum_allocation_vcores: 4
+        NODEMANAGER:
+          yarn_nodemanager_resource_memory_mb: 4096
+          yarn_nodemanager_resource_cpu_vcores: 4
+          yarn_nodemanager_local_dirs:  /tmp/nm
+          yarn_nodemanager_log_dirs: /var/log/nm
+        GATEWAY:
+          mapred_submit_replication: 3
+          mapred_reduce_tasks: 6
+      ZOOKEEPER:
+        SERVICEWIDE:
+          zookeeper_datadir_autocreate: true
+    host_templates:
+      Edge:
+        HBASE: [GATEWAY]
+        HDFS: [JOURNALNODE, GATEWAY]
+        HIVE: [GATEWAY]
+        HUE: [HUE_SERVER, HUE_LOAD_BALANCER]
+        FLUME: [AGENT]
+        OOZIE: [OOZIE_SERVER]
+        SOLR: [GATEWAY]
+        SPARK_ON_YARN: [GATEWAY]
+        YARN: [GATEWAY]
+        ZOOKEEPER: [SERVER]
+      Master1:
+        HBASE: [MASTER, HBASERESTSERVER, HBASETHRIFTSERVER, GATEWAY]
+        HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
+        HIVE: [HIVEMETASTORE, HIVESERVER2, GATEWAY]
+        IMPALA: [STATESTORE, CATALOGSERVER]
+        SENTRY: [SENTRY_SERVER, GATEWAY]
+        SPARK_ON_YARN: [SPARK_YARN_HISTORY_SERVER, GATEWAY]
+        SQOOP_CLIENT: [GATEWAY]
+        SOLR: [GATEWAY]
+        YARN: [RESOURCEMANAGER, JOBHISTORY, GATEWAY]
+        ZOOKEEPER: [SERVER]
+      Master2:
+        HBASE: [MASTER, GATEWAY]
+        HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
+        HIVE: [HIVEMETASTORE, HIVESERVER2, GATEWAY]
+        SENTRY: [GATEWAY]
+        SOLR: [GATEWAY]
+        SPARK_ON_YARN: [GATEWAY]
+        SQOOP_CLIENT: [GATEWAY]
+        YARN: [RESOURCEMANAGER, GATEWAY]
+        ZOOKEEPER: [SERVER]
+      Workers:
+        HBASE: [REGIONSERVER, GATEWAY]
+        HDFS: [DATANODE, GATEWAY]
+        HIVE: [GATEWAY]
+        IMPALA: [IMPALAD]
+        KS_INDEXER: [HBASE_INDEXER]
+        SENTRY: [GATEWAY]
+        SOLR: [SOLR_SERVER, GATEWAY]
+        SPARK_ON_YARN: [GATEWAY]
+        YARN: [NODEMANAGER, GATEWAY]  
+
+  - name: "{{ cluster_name }}-stream"
+    type: compute
+    services: [KAFKA, ZOOKEEPER]
+    security:
+      kerberos: "{{ kerberos_activated }}"
+    repositories:
+      - "{{ cdh_repo }}"
+
+    baseCluster:
+      name: "{{ cluster_name }}"
+      dataContext: SDX
+
+    host_templates:
+      StreamWorker:
+        KAFKA: [KAFKA_BROKER, GATEWAY]
+        ZOOKEEPER: [SERVER]
+
+mgmt:
+  name: Cloudera Management Service
+  services: [ALERTPUBLISHER, EVENTSERVER, HOSTMONITOR, REPORTSMANAGER, SERVICEMONITOR, NAVIGATOR, NAVIGATORMETASERVER]
+  configs:
+    SERVICEMONITOR:
+      firehose_heapsize: 2147483648
+
+hosts:
+  configs:
+    host_default_proc_memswap_thresholds:
+      warning: never
+      critical: never
+    host_memswap_thresholds:
+      warning: never
+      critical: never
+    host_config_suppression_agent_system_user_group_validator: true
+    host_clock_offset_thresholds:
+      warning: never
+      critical: never

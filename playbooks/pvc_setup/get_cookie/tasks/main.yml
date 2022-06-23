@@ -1,6 +1,5 @@
 ---
 # Get cdp_endpoint_url
-# Get URL with: "console-" + namespace + ".apps." + dnsSuffix
 
 - name: Get All Control Planes
   uri:
@@ -55,7 +54,40 @@
     msg: "{{ pvc_api_call }}"
   when: debug | default(false)
 
+# ECS related
+- name: Get Account ID (ECS)
+  uri:
+    url: "{{ cdp_endpoint_url }}/authenticate/login?loginRedirect={{ cdp_endpoint_url }}/commonconsole"
+    method: GET
+    status_code: [200, 302, 303]
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    follow_redirects: no
+  register: pvc_first_call_for_account_id
+  when: pvc_type == 'ECS'
 
+- name: DEBUG - pvc_first_call_for_account_id (ECS)
+  debug:
+    msg: "{{ pvc_first_call_for_account_id }}"
+  when: pvc_type == 'ECS' and debug | default(false)
+
+- set_fact:
+    local_account_id: "{{ pvc_first_call_for_account_id.location.split('accountId=')[1].split('&')[0] }}" 
+  when: pvc_type == 'ECS'
+
+- name: DEBUG - local_account_id (ECS)
+  debug:
+    msg: "{{ local_account_id }}"
+  when: pvc_type == 'ECS' and debug | default(false)
+
+- set_fact:
+    first_cookie: ""
+  when: pvc_type == 'ECS'
+
+
+
+# Open Shift related
 - name: Get First Cookie
   uri:
     url: "{{ cdp_endpoint_url }}/"
@@ -66,19 +98,21 @@
     body_format: json
     follow_redirects: no
   register: pvc_first_call
+  when: pvc_type == 'OC'
 
 - name: DEBUG - pvc_first_call
   debug:
     msg: "{{ pvc_first_call }}"
-  when: debug | default(false)
+  when: pvc_type == 'OC' and debug | default(false)
 
 - set_fact:
     first_cookie: "{{ pvc_first_call.set_cookie.split(';')[0] }};"
+  when: pvc_type == 'OC'
 
 - name: DEBUG - first_cookie
   debug:
     msg: "{{ first_cookie }}"
-  when: debug | default(false)
+  when: pvc_type == 'OC' and debug | default(false)
 
 - name: Get Local Account ID
   uri:
@@ -92,21 +126,25 @@
     body_format: json
     follow_redirects: no
   register: pvc_call_for_accountid
+  when: pvc_type == 'OC'
 
 - name: DEBUG - pvc_call_for_accountid
   debug:
     msg: "{{ pvc_call_for_accountid }}"
-  when: debug | default(false)
+  when: pvc_type == 'OC' and debug | default(false)
 
 - set_fact:
     local_account_id: "{{ pvc_call_for_accountid.location.split('accountId=')[1].split('&')[0] }}" 
+  when: pvc_type == 'OC'
 
 - name: DEBUG - local_account_id
   debug:
     msg: "{{ local_account_id }}"
-  when: debug | default(false)
+  when: pvc_type == 'OC' and debug | default(false)
 
 
+
+# Common to ECS & OC to get auth cookie
 - name: Get Authentication Cookie
   uri:
     url: "{{ cdp_endpoint_url }}/authenticate/callback/local?accountId={{ local_account_id }}&loginRedirect={{ cdp_endpoint_url }}/commonconsole"

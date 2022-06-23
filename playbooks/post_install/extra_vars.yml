@@ -20,3 +20,4 @@ cloudera_manager_base_url: ${CM_BASE_URL}
 cloudera_manager_base_user: ${CM_BASE_USER}
 cloudera_manager_base_password: ${CM_BASE_PASSWORD}
 tp_host: ${TP_HOST}
+distribution: ${DISTRIBUTION_TO_DEPLOY}

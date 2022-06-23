@@ -31,3 +31,15 @@
     src: "{{ deploy_folder }}/kubeconfig"
     dest: "/tmp/kubeconfig"
   when: pvc and pvc_type == 'OC'
+
+- name: Copy KTS tar file for CDH 6
+  copy:
+    src: "{{ cdh6_kts_path }}"
+    dest: "/tmp/"
+  when: distribution == 'CDH' and encryption_activated
+
+- name: Copy KTS-KMS tar file for CDH 6
+  copy:
+    src: "{{ cdh6_kts_kms_path }}"
+    dest: "/tmp/"
+  when: distribution == 'CDH' and encryption_activated

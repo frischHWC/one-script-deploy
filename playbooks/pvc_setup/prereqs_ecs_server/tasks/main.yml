@@ -1,7 +1,38 @@
 ---
-# Set up aliases for kubeconfig
 
-# TODO: Add alias for kubeconfig and docker command
+# Set krb5.conf prereqs also on this node
+- name: Comment include dir lines of /etc/krb5.conf
+  replace:
+    path: /etc/krb5.conf
+    regexp: '^(includedir)'
+    replace: '#\1'
+
+- name: Resolve ipa_server's IP
+  shell: "cat /etc/hosts | grep -m 1 {{ ipa_server }} | cut -d' ' -f1 | xargs"
+  register: ipa_server_ip_resolve
+
+- name: DEBUG - ipa_server's IP
+  debug:
+    msg: "{{ ipa_server_ip_resolve }}"
+  when: debug | default(false)
+
+- name: Resolve ipa_server's IP
+  set_fact: 
+    ipa_server_ip: "{{ ipa_server_ip_resolve.stdout }}"
+
+- name: DEBUG - ipa_server's IP
+  debug:
+    msg: "{{ ipa_server_ip }}"
+  when: debug | default(false)
+
+- name: Replace IPA's server hostname with IP
+  replace:
+    path: /etc/krb5.conf
+    regexp: "{{ ipa_server }}"
+    replace: "{{ ipa_server_ip }}"
+
+
+# Set up aliases for kubeconfig
 - name: Get ECS directory name
   find:
     paths: /opt/cloudera/parcels/
@@ -15,9 +46,29 @@
     path: ~/.bashrc
     block: |
       alias kubectl-ecs='/var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml'
-      "alias docker-ecs={{ ecs_directory.files[0].path }}/docker/docker"
+      alias docker-ecs={{ ecs_directory.files[0].path }}/docker/docker
 
 - name: Fetch kubeconfig file
   fetch: 
     src: /etc/rancher/rke2/rke2.yaml
     dest: /tmp/kubeconfig/
+
+
+# Change core-dns to use dnsmasq set on CM node
+
+- name: Resolve CM server's IP
+  shell: "cat /etc/hosts | grep -m 1 {{ cloudera_manager_host }} | cut -d' ' -f1 | xargs"
+  register: cm_host_ip
+
+- name: Get core dns to a file
+  shell: kubectl-ecs -n kube-system get cm rke2-coredns-rke2-coredns -o yaml > rke2-coredns-rke2-coredns.yaml
+
+- name: Update core dns to point directly to dnsmasq's host
+  replace:
+    path: rke2-coredns-rke2-coredns.yaml
+    regexp: "forward.*\\n"
+    replace: "forward . {{ cm_host_ip }}"
+    backup: yes
+
+- name: Update core dns
+  shell: kubectl-ecs -n kube-system -f rke2-coredns-rke2-coredns.yaml

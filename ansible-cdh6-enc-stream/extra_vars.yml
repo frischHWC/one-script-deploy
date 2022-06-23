@@ -1,0 +1,32 @@
+---
+cluster_definition: environment/
+cloudera_manager_version: ${CM_VERSION}
+cloudera_manager_license_type: enterprise
+cloudera_manager_license_file: ~/license.txt
+cloudera_manager_repo_username: ${PAYWALL_USER}
+cloudera_manager_repo_password: ${PAYWALL_PASSWORD}
+cloudera_manager_repo_url: ${CM_REPO}
+
+default_password: ${DEFAULT_PASSWORD}
+kerberos_activated: ${KERBEROS}
+tls_activated: ${TLS}
+cluster_name: ${CLUSTER_NAME}
+realm_user: ${REALM}
+free_ipa: ${FREE_IPA}
+krb5_server_type: ${KRB_SERVER_TYPE}
+
+kafka_protocol: ${KAFKA_PROTOCOL}
+hbase_auth: ${HBASE_AUTH}
+bootstrap_servers: ${NODE_3}:${BOOTSTRAP_SERVERS_PORT},${NODE_4}:${BOOTSTRAP_SERVERS_PORT},${NODE_5}:${BOOTSTRAP_SERVERS_PORT}
+
+cdh_repo: ${CDH_REPO}
+auto_tls: ${TLS}
+encryption_activated: ${ENCRYPTION_ACTIVATED}
+
+cdh6_kts_path: ${CDH6_KTS_PATH}
+cdh6_kts_kms_path: ${CDH6_KTS_KMS_PATH}
+repo_tar_files: ["${CDH6_KTS_FILE}", "${CDH6_KTS_KMS_FILE}"]
+repo_tar_local_dir: "/tmp/"
+
+debug: ${DEBUG}
+

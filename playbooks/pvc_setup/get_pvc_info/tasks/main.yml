@@ -3,20 +3,22 @@
 - name: Set kubeconfig into one line
   set_fact:
     pvc_kube_config: "{{ lookup('file', kube_config_path ) | replace('\n', '\\n') | replace('\"', '\\\"' ) }}"
+  when: pvc_type == 'OC'
 
 - name: DEBUG - pvc_kube_config
   debug:
     msg: "{{ pvc_kube_config }}"
-  when: debug | default(false)
+  when: pvc_type == 'OC' and debug | default(false)
 
 # Get domain from kubeconfig file
 - set_fact: 
     env_domain: "{{ (lookup('template', kube_config_path ) | from_yaml).clusters[0].cluster.server.split('//')[1].split(':')[0].replace('api.','') }}"
+  when: pvc_type == 'OC'
 
 - name: DEBUG - env_domain
   debug:
     msg: "{{ env_domain }}"
-  when: debug | default(false)
+  when: pvc_type == 'OC' and debug | default(false)
 
 
 - name: Get admin user CRN

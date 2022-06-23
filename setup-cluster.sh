@@ -115,6 +115,9 @@ export DATA_LOAD_REPO_URL=""
 # Demo
 export DEMO_REPO_URL=""
 
+# CDH 6 - KTS 
+export CDH6_KTS_PATH="~/Downloads/keytrustee-server-6.1.0-parcels.tar.gz"
+export CDH6_KTS_KMS_PATH="~/Downloads/keytrustee-kms-6.3.0-parcels.tar.gz"
 
 # INTERNAL USAGE OF THESE VARIABLES, do no touch these
 export KTS_SERVERS=""
@@ -244,6 +247,9 @@ function usage()
     echo "  --cm-base-user=$CM_BASE_USER : (Optional) CM user to associate this cluster to WXM (Default) admin "
     echo "  --cm-base-password=$CM_BASE_PASSWORD : (Optional)  CM password to associate this cluster to WXM (Default) admin "
     echo "  --tp-host=$TP_HOST : (Optional)  On base cluster, where to install Telemetry (Default) "
+    echo ""
+    echo "  --cdh6-kts-path=$CDH6_KTS_PATH : (Optional) Path to KTS tar gz for CDH6 (Default) "
+    echo "  --cdh6-kts-kms-path=$CDH6_KTS_KMS_PATH : (Optional) Path to KTS-KMS tar gz for CDH6 (Default) "
     echo ""
 }
 
@@ -495,6 +501,12 @@ while [ "$1" != "" ]; do
             ;;
         --tp-host)
             TP_HOST=$VALUE
+            ;;
+        --cdh6-kts-path)
+            CDH6_KTS_PATH=$VALUE
+            ;;
+        --cdh6-kts-kms-path)
+            CDH6_KTS_KMS_PATH=$VALUE
             ;;                      
         *)
             ;;
@@ -630,7 +642,18 @@ then
         export CDH_VERSION="6.3.4"
         export TLS="false"
         export DATA_LOAD="false"
-        export POST_INSTALL="false"
+    elif [ "${CLUSTER_TYPE}" = "cdh6-enc-stream" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdh6-enc-stream/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdh6-enc-stream/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdh6-enc-stream/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdh6-enc-stream/extra_vars.yml"
+        export DISTRIBUTION_TO_DEPLOY="CDH"
+        export CM_VERSION="6.3.4"
+        export CDH_VERSION="6.3.4"
+        export TLS="true"
+        export ENCRYPTION_ACTIVATED="true"
+        export DATA_LOAD="false"
     elif [ "${CLUSTER_TYPE}" = "cdh5" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdh-5/hosts"
@@ -665,10 +688,10 @@ then
         export DATA_LOAD="false"
         export POST_INSTALL="false"
     else
-        export ANSIBLE_HOST_FILE="ansible-cdp-${CLUSTER_TYPE}/hosts"
-        export ANSIBLE_ALL_FILE="ansible-cdp-${CLUSTER_TYPE}/all"
-        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-${CLUSTER_TYPE}/cluster.yml"
-        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-${CLUSTER_TYPE}/extra_vars.yml"
+        export ANSIBLE_HOST_FILE="ansible-${CLUSTER_TYPE}/hosts"
+        export ANSIBLE_ALL_FILE="ansible-${CLUSTER_TYPE}/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-${CLUSTER_TYPE}/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-${CLUSTER_TYPE}/extra_vars.yml"
     fi
 
 fi
@@ -953,6 +976,21 @@ cp ${HOSTS_FILE} /tmp/hosts-${CLUSTER_NAME}
 # Preparation of files for ansible installation
 ###############################
 
+if [ "${DISTRIBUTION_TO_DEPLOY}" == "CDH" ] && [ "${ENCRYPTION_ACTIVATED}" = "true" ]
+then
+    kts_paths=$(echo $CDH6_KTS_PATH | tr "/" "\n")
+    for kts_path in $kts_paths
+    do
+        export CDH6_KTS_FILE=$kts_path
+    done
+
+    kts_kms_paths=$(echo $CDH6_KTS_KMS_PATH | tr "/" "\n")
+    for kts_kms_path in $kts_kms_paths
+    do
+        export CDH6_KTS_KMS_FILE=$kts_kms_path
+    done
+fi
+
 export DAS_AUTH="NONE"
 export HBASE_AUTH="simple"
 export KAFKA_PROTOCOL="PLAINTEXT"
@@ -1145,22 +1183,6 @@ then
           exit 1
         fi
 
-        echo "******* Verificating parcels *******"
-        if [ "${DEBUG}" = "true" ]
-        then
-            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_parcels.yml ${ANSIBLE_PYTHON_3_PARAMS} "
-        fi
-        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_parcels.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 >> ${LOG_DIR}/deployment.log
-        OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
-        if [ "${OUTPUT}" == "2" ]
-        then
-          echo " SUCCESS: Verification of Parcels"
-        else
-          echo " FAILURE: Could verify Parcels" 
-          echo " See details in file: ${LOG_DIR}/deployment.log "
-          exit 1
-        fi
-
         echo "******* Applying nodes pre-requisites *******"
         if [ "${DEBUG}" = "true" ]
         then
@@ -1189,6 +1211,22 @@ then
           echo " SUCCESS: Creation of DB, (KDC) etc..."
         else
           echo " FAILURE: Could not create DB, KDC and HA Proxy" 
+          echo " See details in file: ${LOG_DIR}/deployment.log "
+          exit 1
+        fi
+
+        echo "******* Verificating parcels *******"
+        if [ "${DEBUG}" = "true" ]
+        then
+            echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_parcels.yml ${ANSIBLE_PYTHON_3_PARAMS} "
+        fi
+        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_parcels.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 >> ${LOG_DIR}/deployment.log
+        OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
+        if [ "${OUTPUT}" == "2" ]
+        then
+          echo " SUCCESS: Verification of Parcels"
+        else
+          echo " FAILURE: Could verify Parcels" 
           echo " See details in file: ${LOG_DIR}/deployment.log "
           exit 1
         fi
@@ -1350,7 +1388,7 @@ then
     fi
 fi
 
-if [ "${POST_INSTALL}" = "true" ] && [ "${DISTRIBUTION_TO_DEPLOY}" = "CDP" ]
+if [ "${POST_INSTALL}" = "true" ]
 then
     echo "############ Post-Install configuration for CDP ############"
     if [ "${DEBUG}" = "true" ]

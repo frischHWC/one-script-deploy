@@ -6,11 +6,11 @@
     "clusterNames": [
       "{{ env.cluster_names }}"
     ],
-    "kubeConfig": "{{ pvc_kube_config }}",
+    "kubeConfig": "{{ pvc_kube_config | default('') }}",
     "storageClass": "",
     "authenticationTokenType": "CLEARTEXT_PASSWORD",
     "namespacePrefix": "cdp",
-    "domain": "{{ env_domain }}",
+    "domain": "{{ env_domain | default('') }}",
     "dockerConfigJson": "",
     "description": ""
   }

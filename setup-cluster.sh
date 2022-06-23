@@ -574,7 +574,6 @@ then
         export ANSIBLE_ALL_FILE="ansible-cdp-pvc/all"
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-pvc/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-pvc/extra_vars.yml"
-        export CDH_VERSION="7.1.7.0"
         export PVC="true"
     elif [ "${CLUSTER_TYPE}" = "pvc-oc" ]
     then
@@ -582,7 +581,6 @@ then
         export ANSIBLE_ALL_FILE="ansible-cdp-pvc-oc/all"
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-pvc-oc/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-pvc-oc/extra_vars.yml"
-        export CDH_VERSION="7.1.7.0"
         export PVC="true"
         export PVC_TYPE="OC"
     elif [ "${CLUSTER_TYPE}" = "streaming" ]
@@ -602,7 +600,6 @@ then
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-full-enc-pvc/extra_vars.yml"
         export USE_CSA="true"
         export USE_CFM="true"
-        export CDH_VERSION="7.1.7.0"
         export PVC="true"
         export ENCRYPTION_ACTIVATED="true"
     elif [ "${CLUSTER_TYPE}" = "enc-ha" ]

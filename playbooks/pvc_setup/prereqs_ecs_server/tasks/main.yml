@@ -61,7 +61,7 @@
   register: cm_host_ip
 
 - name: Get core dns to a file
-  shell: kubectl-ecs -n kube-system get cm rke2-coredns-rke2-coredns -o yaml > rke2-coredns-rke2-coredns.yaml
+  shell: /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml -n kube-system get cm rke2-coredns-rke2-coredns -o yaml > rke2-coredns-rke2-coredns.yaml
 
 - name: Update core dns to point directly to dnsmasq's host
   replace:

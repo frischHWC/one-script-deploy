@@ -240,7 +240,7 @@
 - name: Fetch rootCA locally to add it to your browser
   fetch: 
     src: ~/rootCA.crt
-    dest: /tmp/rootCA-{{ virtual_cluster.env_name }}.crt
+    dest: /tmp/rootCA-{{ virtual_cluster.env_name }}.pem
 
 - name: Generate key and csr for endpoint
   shell: "openssl req -nodes -newkey rsa:2048 -keyout endpoint-{{ cde_vc_endpoint_hostname }}.key -out endpoint-{{ cde_vc_endpoint_hostname }}.csr -subj \"/C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/CN={{ cde_vc_endpoint_hostname_wildcard }}\" "

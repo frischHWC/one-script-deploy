@@ -2,7 +2,8 @@
   "name": "{{ virtual_cluster.name }}",
   "config": {
     "properties": {
-      "livy.ingress.enabled": "true"
+      "livy.ingress.enabled": "true",
+      "spark.version":"{{ virtual_cluster.spark_version }}"
     }
   }
 }

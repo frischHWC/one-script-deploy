@@ -67,7 +67,7 @@
 - name: Fetch rootCA locally to add it to your browser
   fetch: 
     src: ~/rootCA.crt
-    dest: /tmp/rootCA-{{ workspace.env_name }}.crt
+    dest: /tmp/rootCA-{{ workspace.env_name }}.pem
   when: not workspace.disable_tls
 
 - name: Template openssl-ext.conf

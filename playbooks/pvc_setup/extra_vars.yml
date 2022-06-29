@@ -86,6 +86,11 @@ virtual_clusters:
   - name: "VC-1"
     env_name: "{{ cluster_name_pvc }}-env-1"
     cde_service_name: "CDE-Service-1"
+    spark_version: "3.2.0"
+  - name: "VC-2"
+    env_name: "{{ cluster_name_pvc }}-env-1"
+    cde_service_name: "CDE-Service-1"
+    spark_version: "2.4.7"
 
 
 # Rights
@@ -102,6 +107,9 @@ user_rights:
         env_name: "{{ cluster_name_pvc }}-env-1"
     virtual_clusters: # Optionnal: If not defined no keytab pushed to cde
       - name: "VC-1"
+        env_name: "{{ cluster_name_pvc }}-env-1"
+        cde_service_name: "CDE-Service-1"
+      - name: "VC-2"
         env_name: "{{ cluster_name_pvc }}-env-1"
         cde_service_name: "CDE-Service-1"
     

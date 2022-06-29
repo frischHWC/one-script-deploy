@@ -575,6 +575,7 @@ then
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-pvc/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-pvc/extra_vars.yml"
         export PVC="true"
+        export FREE_IPA="true"
     elif [ "${CLUSTER_TYPE}" = "pvc-oc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-pvc-oc/hosts"
@@ -583,6 +584,7 @@ then
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-pvc-oc/extra_vars.yml"
         export PVC="true"
         export PVC_TYPE="OC"
+        export FREE_IPA="true"
     elif [ "${CLUSTER_TYPE}" = "streaming" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-streaming/hosts"

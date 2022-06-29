@@ -99,5 +99,10 @@
 - name: Write user principal to file
   shell: "echo \"{{ user.name }}@{{ realm }}\" > /tmp/{{ user.name }}.principal"
 
+- name: DEBUG - command to upload keytab
+  debug:
+    msg: "./cdp-cde-utils.sh init-user-in-virtual-cluster -h {{ cde_vc_endpoint_hostname }} -u {{ user.name }} -p /tmp/{{ user.name }}.principal -k {{ user.keytab }}"
+  when: debug | default(False)
+
 - name: Send keytab to cde cluster
   shell: "./cdp-cde-utils.sh init-user-in-virtual-cluster -h {{ cde_vc_endpoint_hostname }} -u {{ user.name }} -p /tmp/{{ user.name }}.principal -k {{ user.keytab }}"

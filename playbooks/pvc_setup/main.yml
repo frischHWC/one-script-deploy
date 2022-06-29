@@ -47,7 +47,6 @@
     - get_pvc_info 
     - setup_cdpcli
 
-
 - name: Create environments
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false

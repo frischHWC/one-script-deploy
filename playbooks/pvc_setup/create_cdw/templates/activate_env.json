@@ -1,7 +1,9 @@
 {
   "clusterName": "{{ warehouse.env_name }}",
-  "storageClassName": "{{ local_block_storage_class }}",
+  {% if pvc_type == 'OC' %}"storageClassName": "{{ local_block_storage_class }}",{% endif %}
   "enableLowResourceMode": {{ warehouse.low_resource_mode | default('true') }},
   "delegationUserName": "{{ delegation_username }}",
-  "delegationUserPassword": "{{ delegation_password }}"
+  "delegationUserPassword": "{{ delegation_password }}",
+  "skipValidation":true,
+  "envBootstrap":{"awsInfo":{},"azureInfo":{}}
 }

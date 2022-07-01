@@ -82,6 +82,23 @@
     msg: "{{ dwx_env_id }}"
   when: dwx_env_status != 'Running'
 
+#  Wait for Environment to be running
+- name: Check Environment running
+  uri:
+    url: "{{ dwx_endpoint_api }}/environments/{{ dwx_env_id }}"
+    method: GET
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: env_activation
+  until: " env_activation.json.cluster.status == 'Running' "
+  retries: 60
+  delay: 5
+
 # Check if Database Catalog is already set up
 - name: Get Environments to check Database Catalog Creation
   uri:
@@ -115,23 +132,6 @@
 - name: DEBUG - dwx_dbc_is_existing
   debug:
     msg: "{{ dwx_dbc_is_existing }}"
-
-#  Wait for Environment to be running
-- name: Check Environment running
-  uri:
-    url: "{{ dwx_endpoint_api }}/environments/{{ dwx_env_id }}"
-    method: GET
-    headers: 
-      Content-Type: application/json
-      Accept: application/json
-      Cookie: "{{ all_cookies }}"
-    status_code: 200
-    return_content: yes
-    validate_certs: no
-  register: env_activation
-  until: " env_activation.json.cluster.status == 'Running' "
-  retries: 60
-  delay: 5
 
 # Create DBC if not already present 
 - name: Create Database Catalog 

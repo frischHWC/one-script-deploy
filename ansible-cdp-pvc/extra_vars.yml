@@ -66,7 +66,7 @@ pvc_ecs_server_host: ${PVC_ECS_SERVER_HOST}
 
 # Possible values to be overrided for pvc installation of ECS
 nfs_over_provisioning: 1000
-nfs_provisioned: 100
+nfs_provisioned: 500
 # longhorn_replication: 2
 # ecs_longhorn_storage: /ecs/longhorn-storage
 # ecs_local_storage: /ecs/local-storage

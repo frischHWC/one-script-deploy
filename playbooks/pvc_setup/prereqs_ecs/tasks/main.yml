@@ -33,6 +33,12 @@
     src: "/tmp/kubeconfig/{{ pvc_ecs_server_host }}/etc/rancher/rke2/rke2.yaml"
     dest: "/root/kubeconfig"
 
+- name: Replace in kubeconfig the pvc_ecs_server_host
+  replace:
+    path: /root/kubeconfig
+    regexp: "127.0.0.1"
+    replace: "{{ pvc_ecs_server_host }}"
+
 - name: Insert KUBECONFIG vars to bashrc
   blockinfile:
     path: ~/.bashrc

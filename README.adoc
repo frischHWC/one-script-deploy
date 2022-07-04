@@ -127,7 +127,7 @@ Many more configurations are available, see them all with:
             --cluster-type=solr-nifi \
             --nodes="${NODES}"
 
-#### CDP 7 - Workload XM cluster (1 Basic 6 nodes cluster + 1 dedicated WXM cluster of 5 nodes associated with base cluster ) (Kerberos / TLS)
+#### CDP 7 - Workload XM cluster (1 WXM cluster of 5 nodes associated with a base cluster (provided in command line) ) (Kerberos / TLS)
 
         ./setup-cluster.sh --cluster-name=${CLUSTER_NAME} \
             --license-file=${LICENSE_FILE} \

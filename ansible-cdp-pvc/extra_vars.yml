@@ -65,7 +65,7 @@ oc_tar_file_path: ${OC_TAR_FILE_PATH}
 pvc_ecs_server_host: ${PVC_ECS_SERVER_HOST}
 
 # Possible values to be overrided for pvc installation of ECS
-nfs_over_provisioning: 300
+nfs_over_provisioning: 1000
 nfs_provisioned: 100
 # longhorn_replication: 2
 # ecs_longhorn_storage: /ecs/longhorn-storage

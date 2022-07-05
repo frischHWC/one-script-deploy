@@ -72,6 +72,32 @@
     msg: "{{ tp_host }}"
   when: debug | default(false) and configure_wxm_with_base
 
+
+# Get host Id of the TP host as it is required to add it 
+- name: Get Telemetry host ID 
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/hosts"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+  register: hosts_details
+  when: configure_wxm_with_base and not tp_exists
+
+- set_fact:
+    tp_host_id: "{{ hosts_details.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?hostname == '{{ tp_host }}'].hostId | [0]"
+  when: configure_wxm_with_base and not tp_exists
+
+- name: DEBUG - tp_host_id
+  debug:
+    msg: "{{ tp_host_id }}"
+  when: debug | default(false) and configure_wxm_with_base and not tp_exists
+
+
 - name: Add Telemetry Publisher to CM
   uri:
     url: "{{ cloudera_manager_base_api_url }}/cm/service/roles"

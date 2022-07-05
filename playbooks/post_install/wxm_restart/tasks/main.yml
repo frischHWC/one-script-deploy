@@ -33,7 +33,7 @@
 - set_fact:
     cluster_base_name: "{{ cloudera_manager_all_clusters.json | community.general.json_query(query) }}"
   vars:
-    query: "items[?clusterType == 'BASE_CLUSTER'].name | [0]"
+    query: "items[?clusterType == 'BASE_CLUSTER'].name[?contains(@, 'kts') == `false` ] | [0]"
   when: configure_wxm_with_base
 
 - name: DEBUG - cluster_base_name

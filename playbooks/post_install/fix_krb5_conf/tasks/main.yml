@@ -1,0 +1,17 @@
+---
+- name: Adding Renewable ticket lifetime
+  blockinfile:
+    dest: "/etc/krb5.conf"
+    insertafter: 'ticket_lifetime = 24h'
+    block: |
+      renew_lifetime = 7d
+      max_life = 365d
+      max_renewable_life = 365d
+  ignore_errors: true
+
+- name: Comment default_ccache_name in krb5.conf
+  replace:
+    dest: /etc/krb5.conf
+    regexp: 'default_ccache_name = KEYRING:persistent:%{uid}'
+    replace: '#default_ccache_name = KEYRING:persistent:%{uid}'
+  ignore_errors: true

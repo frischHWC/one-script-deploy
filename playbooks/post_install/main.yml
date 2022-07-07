@@ -12,6 +12,12 @@
   roles: 
     - check_existing_services
 
+- name: Fix krb5.conf with Free IPA
+  hosts: all
+  gather_facts: false
+  roles: 
+    - { role: fix_krb5_conf, when: free_ipa | default(false) }
+
 - name: Fix krb5.conf for Hue with Free IPA
   hosts: all
   gather_facts: false

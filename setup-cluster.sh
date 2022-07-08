@@ -1389,7 +1389,7 @@ then
     echo "############ Post-Install configuration for CDP ############"
     if [ "${DEBUG}" = "true" ]
     then
-        echo " Command launched: ansible-playbook -i ${HOSTS_FILE} playbooks/ansible_install_preparation/main.yml --extra-vars \"@/tmp/post_install_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS}"
+        echo " Command launched: ansible-playbook -i ${HOSTS_FILE} playbooks/post_install/main.yml --extra-vars \"@/tmp/post_install_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS}"
         echo " Follow advancement at: ${LOG_DIR}/post_install.log "
     fi
     cp playbooks/post_install/extra_vars.yml /tmp/post_install_extra_vars.yml

@@ -25,11 +25,6 @@
     dest: /tmp/kudu_roles.json
   register: kudu_roles
 
-- name: DEBUG - kudu_roles
-  debug:
-    msg: "{{ kudu_roles }}"
-  when: debug | default(false)
-
  
 ### SET Kudu CONFIGS ###
 

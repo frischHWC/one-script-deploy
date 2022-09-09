@@ -32,6 +32,11 @@
 - set_fact:
     cloudera_manager_api_url: "{{ cloudera_manager_url }}/api/{{ cloudera_manager_api_version }}"
 
+- name: DEBUG - cloudera_manager_api_url
+  debug:
+    msg: "{{ cloudera_manager_api_url }}"
+  when: debug | default(false)
+
 # Get WXM host and service name
 - name: Get All services from CM
   uri:
@@ -151,3 +156,8 @@
 - set_fact:
     cloudera_manager_base_api_url: "{{ cloudera_manager_base_url }}/api/{{ cloudera_manager_base_api_version }}"
   when: configure_wxm_with_base
+
+- name: DEBUG - cloudera_manager_base_api_url
+  debug:
+    msg: "{{ cloudera_manager_base_api_url }}"
+  when: configure_wxm_with_base and debug | default(false)

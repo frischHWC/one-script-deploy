@@ -6,15 +6,11 @@
     password: "{{ cloudera_manager_password }}"
     method: GET
     force_basic_auth: yes
-    status_code: 200, -1
+    status_code: 200, -1, 304
     return_content: yes
     validate_certs: no
+    dest: /tmp/cluster_deployment
   register: cluster_deployment
-
-- name: DEBUG - API Call
-  debug:
-    msg: "{{ cluster_deployment }}"
-  when: debug | default(false)
 
 - set_fact:
     cloudera_manager_protocol: http
@@ -29,15 +25,10 @@
     password: "{{ cloudera_manager_password }}"
     method: GET
     force_basic_auth: yes
-    status_code: 200, -1
+    status_code: 200, -1, 304
     return_content: yes
     validate_certs: no
   register: cluster_deployment
-
-- name: DEBUG - API Call
-  debug:
-    msg: "{{ cluster_deployment }}"
-  when: debug | default(false)
 
 - set_fact:
     cloudera_manager_protocol: https
@@ -87,6 +78,11 @@
     msg: "{{ cloudera_manager_url }}"
   when: debug | default(false)
 
+- name: DEBUG - cloudera_manager_api_url
+  debug:
+    msg: "{{ cloudera_manager_api_url }}"
+  when: debug | default(false)
+
 - set_fact:
     truststore_location: "/tmp/truststore.jks"
   when: truststore_location is not defined
@@ -105,11 +101,6 @@
     dest: "{{ truststore_location }}"
   register: cloudera_manager_truststore_content
 
-- name: DEBUG - API truststore content
-  debug:
-    msg: "{{ cloudera_manager_truststore_content }}"
-  when: debug | default(false)
-
 - name: Get truststore password
   uri:
     url: "{{ cloudera_manager_api_url }}/certs/truststorePassword"
@@ -122,11 +113,6 @@
     validate_certs: no
     body_format: json
   register: cloudera_manager_truststore_password_api
-
-- name: DEBUG - API truststore password
-  debug:
-    msg: "{{ cloudera_manager_truststore_password_api }}"
-  when: debug | default(false)
 
 - set_fact:
     cloudera_manager_truststore_password: "{{ cloudera_manager_truststore_password_api.content }}"
@@ -145,12 +131,6 @@
     body_format: json
     dest: /tmp/cloudera_manager_deployment.json
   register: cloudera_manager_deployment
-
-- name: DEBUG - cloudera_manager_deployment
-  debug:
-    msg: "{{ cloudera_manager_deployment }}"
-  when: debug | default(false)
-
 
 - set_fact:
     cluster_name: "{{ cloudera_manager_deployment.json | community.general.json_query(query) }}"
@@ -187,7 +167,3 @@
     dest: /tmp/cloudera_manager_all_services.json
   register: cloudera_manager_all_services
 
-- name: DEBUG - cloudera_manager_all_services
-  debug:
-    msg: "{{ cloudera_manager_all_services }}"
-  when: debug | default(false)

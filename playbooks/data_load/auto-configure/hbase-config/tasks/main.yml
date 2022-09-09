@@ -26,11 +26,6 @@
     dest: /tmp/hbase_full_config.json
   register: hbase_full_config
 
-- name: DEBUG - hbase_full_config
-  debug:
-    msg: "{{ hbase_full_config }}"
-  when: debug | default(false)
-
 
 ### SET HBASE CONFIGS ###
 

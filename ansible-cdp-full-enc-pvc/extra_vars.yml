@@ -12,13 +12,14 @@ cloudera_manager_csds:
   - ${CSA_SSB_CSD}
   - ${CFM_CSD}
   - ${CFM_REGISTRY_CSD}
-  # - ${SPARK3_CSD}
+  - ${SPARK3_CSD}
+  - ${SPARK3_LIVY_CSD}
 cloudera_manager_options:
 # set values to null to delete (and revert to default)
   custom_banner_html: ""
   custom_ia_policy: ""
 # valid values for colour are (case sensitive): BROWN, RED, BLACK, GREEN, TEAL, PINK, YELLOW, GRAY, PURPLE, BLUE, DARKBLUE
-  custom_header_color: "PURPLE"
+  custom_header_color: "BLACK"
 message: ""
 
 # MAIN PARAMETERS

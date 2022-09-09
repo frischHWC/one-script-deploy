@@ -1,9 +1,0 @@
----
-- name: Adding enctypes and fixing Hue
-  blockinfile:
-    dest: "/etc/krb5.conf"
-    insertafter: 'ticket_lifetime = 24h'
-    block: |
-      default_tgs_enctypes= des3-cbc-sha1 aes256-cts-hmac-sha1-96 arcfour-hmac aes128-cts-hmac-sha1-96 des-cbc-md5
-      default_tkt_enctypes = des3-cbc-sha1 aes256-cts-hmac-sha1-96 arcfour-hmac aes128-cts-hmac-sha1-96 des-cbc-md5
-  ignore_errors: true

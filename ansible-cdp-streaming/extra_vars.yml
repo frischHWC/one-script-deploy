@@ -13,6 +13,7 @@ cloudera_manager_csds:
   - ${CFM_CSD}
   - ${CFM_REGISTRY_CSD}
   - ${SPARK3_CSD}
+  - ${SPARK3_LIVY_CSD}
 cloudera_manager_options:
 # set values to null to delete (and revert to default)
   custom_banner_html: ""

@@ -1,6 +1,19 @@
 ---
 # Get all SolR hosts
-
+- name: Get SolR roles repartition
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ solr_service_name }}/roles"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/solr_roles.json
+  register: solr_roles
+  
 - set_fact:
     solr_all_hosts: "{{ solr_roles.json | community.general.json_query(query) }}"
   vars:
@@ -18,17 +31,3 @@
   with_items: "{{ solr_all_hosts }}"
   vars: 
     solr_host: "{{ item }}"
-
-# Restart Knox
-
-- name: Restart Knox
-  uri:
-    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ knox_service_name }}/commands/restart"
-    user: "{{ cloudera_manager_user }}"
-    password: "{{ cloudera_manager_password }}"
-    method: POST
-    force_basic_auth: yes
-    status_code: 200
-    return_content: yes
-    validate_certs: no
-    body_format: json

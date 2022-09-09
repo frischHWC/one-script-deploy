@@ -26,12 +26,6 @@
     dest: /tmp/kafka_full_config.json
   register: kafka_full_config
 
-- name: DEBUG - kafka_full_config
-  debug:
-    msg: "{{ kafka_full_config }}"
-  when: debug | default(false)
-
-
 - name: Get Kafka roles repartition
   uri:
     url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ kafka_service_name }}/roles"
@@ -46,12 +40,6 @@
     dest: /tmp/kafka_roles.json
   register: kafka_roles
 
-- name: DEBUG - kafka_roles
-  debug:
-    msg: "{{ kafka_roles }}"
-  when: debug | default(false)
-
-
 - name: Get Kafka Broker full config
   uri:
     url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ kafka_service_name }}/roleConfigGroups/{{ kafka_service_name }}-KAFKA_BROKER-BASE/config?view=full"
@@ -65,12 +53,6 @@
     body_format: json
     dest: /tmp/kafka_broker_full_config.json
   register: kafka_broker_full_config
-
-- name: DEBUG - kafka_broker_full_config
-  debug:
-    msg: "{{ kafka_broker_full_config }}"
-  when: debug | default(false)
-
 
 ### SET KAFKA CONFIGS ###
 
@@ -142,6 +124,10 @@
     query: "items[?name == 'port'].default | [0]"
   when: " kafka_port == '' "
 
+- name: DEBUG - kafka_port
+  debug:
+    msg: "{{ kafka_port }}"
+  when: debug | default(false)
 
 # Set Kafka Brokers
 

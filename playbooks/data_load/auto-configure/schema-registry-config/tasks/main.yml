@@ -25,12 +25,6 @@
     dest: /tmp/sr_roles.json
   register: sr_roles
 
-- name: DEBUG - sr_roles
-  debug:
-    msg: "{{ sr_roles }}"
-  when: debug | default(false)
-
-
 - name: Get SR full config
   uri:
     url: "{{ cloudera_manager_url }}/api/v31/clusters/{{ cluster_name }}/services/{{ sr_service_name }}/roleConfigGroups/{{ sr_service_name }}-SCHEMA_REGISTRY_SERVER-BASE/config?view=full"
@@ -43,11 +37,6 @@
     validate_certs: no
     body_format: json
   register: sr_full_config
-
-- name: DEBUG - sr_full_config
-  debug:
-    msg: "{{ sr_full_config }}"
-  when: debug | default(false)
  
 
 ### SET SCHEMA_REGISTRY CONFIGS ###

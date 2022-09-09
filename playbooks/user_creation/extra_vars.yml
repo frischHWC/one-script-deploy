@@ -8,7 +8,7 @@ debug: ${DEBUG}
 users:
   - name: francois
     password: ${DEFAULT_PASSWORD}
-    group: admin_user
+    group: admin_group
   - name: superman
     password: ${DEFAULT_PASSWORD}
     group: hero

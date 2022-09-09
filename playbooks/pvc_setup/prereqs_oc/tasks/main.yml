@@ -91,10 +91,6 @@
     query: 'data.".dockerconfigjson"'   
   when: oc_tar_file_path is defined
 
-- debug:
-    msg: "{{ oc_secret_decoded }}"
-  when: oc_tar_file_path is defined
-
 - name: Set decoded secret to file
   copy: 
     content: "{{ oc_secret_decoded }}" 

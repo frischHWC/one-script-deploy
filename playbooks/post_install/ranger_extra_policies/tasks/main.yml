@@ -36,11 +36,6 @@
     body_format: json
   register: cm_deployment_services
 
-- name: DEBUG - cm_deployment_services
-  debug:
-    msg: "{{ cm_deployment_services }}"
-  when: debug | default(false)
-
 - set_fact:
     ranger_server: "{{ cm_deployment_services.json | community.general.json_query(query) }}"
   vars:
@@ -66,12 +61,6 @@
     dest: ~/response.json
   register: full_ranger_config
 
-- name: DEBUG - full_ranger_config
-  debug:
-    msg: "{{ full_ranger_config }}"
-  when: debug | default(false)
-
-
 - name: Get Ranger Admin full config
   uri:
     url: "{{ cloudera_manager_url }}/api/v31/clusters/{{ cluster_name }}/services/{{ ranger_service_name }}/roleConfigGroups/{{ ranger_service_name }}-RANGER_ADMIN-BASE/config?view=full"
@@ -84,11 +73,6 @@
     validate_certs: no
     body_format: json
   register: full_ranger_admin_config
-
-- name: DEBUG - full_ranger_admin_config
-  debug:
-    msg: "{{ full_ranger_admin_config }}"
-  when: debug | default(false)
 
 
 - set_fact:

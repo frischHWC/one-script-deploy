@@ -1,0 +1,126 @@
+{
+    "id": 1,
+    "guid": "...",
+    "isEnabled": true,
+    "version": 1,
+    "service": "cm_hive",
+    "name": "Flink & SSB access to Hive",
+    "policyType": 0,
+    "policyPriority": 0,
+    "description": "Required for Flink and SSB to work with Hive",
+    "isAuditEnabled": true,
+    "resources": {
+      "hiveservice": {
+        "values": [
+          "*",
+          "flink*",
+          "ssb*"
+        ],
+        "isExcludes": false,
+        "isRecursive": false
+      }
+    },
+    "policyItems": [
+      {
+        "accesses": [
+          {
+            "type": "select",
+            "isAllowed": true
+          },
+          {
+            "type": "update",
+            "isAllowed": true
+          },
+          {
+            "type": "create",
+            "isAllowed": true
+          },
+          {
+            "type": "drop",
+            "isAllowed": true
+          },
+          {
+            "type": "alter",
+            "isAllowed": true
+          },
+          {
+            "type": "index",
+            "isAllowed": true
+          },
+          {
+            "type": "lock",
+            "isAllowed": true
+          },
+          {
+            "type": "all",
+            "isAllowed": true
+          },
+          {
+            "type": "read",
+            "isAllowed": true
+          },
+          {
+            "type": "write",
+            "isAllowed": true
+          },
+          {
+            "type": "repladmin",
+            "isAllowed": true
+          },
+          {
+            "type": "serviceadmin",
+            "isAllowed": true
+          },
+          {
+            "type": "tempudfadmin",
+            "isAllowed": true
+          },
+          {
+            "type": "refresh",
+            "isAllowed": true
+          }
+        ],
+        "users": [
+          "flink",
+          "ssb"
+        ],
+        "groups": [
+          
+        ],
+        "roles": [
+          
+        ],
+        "conditions": [
+          
+        ],
+        "delegateAdmin": true
+      }
+    ],
+    "denyPolicyItems": [
+      
+    ],
+    "allowExceptions": [
+      
+    ],
+    "denyExceptions": [
+      
+    ],
+    "dataMaskPolicyItems": [
+      
+    ],
+    "rowFilterPolicyItems": [
+      
+    ],
+    "serviceType": "hive",
+    "options": {
+      
+    },
+    "validitySchedules": [
+      
+    ],
+    "policyLabels": [
+      
+    ],
+    "zoneName": "",
+    "isDenyAllElse": false
+  }

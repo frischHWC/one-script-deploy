@@ -26,11 +26,6 @@
     dest: /tmp/ozone_full_config.json
   register: ozone_full_config
 
-- name: DEBUG - ozone_full_config
-  debug:
-    msg: "{{ ozone_full_config }}"
-  when: debug | default(false)
-
 
 ### SET OZONE CONFIGS ###
 

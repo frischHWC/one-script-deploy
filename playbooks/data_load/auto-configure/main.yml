@@ -1,6 +1,6 @@
 ---
 - name: Auto-Configure
-  hosts: main
+  hosts: edge
   gather_facts: false
   roles: 
     - cm-config

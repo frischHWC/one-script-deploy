@@ -22,11 +22,6 @@
     follow_redirects: no
   register: pvc_call_for_accountid_user
 
-- name: DEBUG - pvc_call_for_accountid_user
-  debug:
-    msg: "{{ pvc_call_for_accountid_user }}"
-  when: debug | default(false)
-
 - set_fact:
     account_id_user: "{{ pvc_call_for_accountid_user.location.split('accountId=')[1].split('&')[0] }}" 
 
@@ -56,11 +51,6 @@
     follow_redirects: no
   register: pvc_call_for_authcookie_user
 
-- name: DEBUG - pvc_call_for_authcookie_user
-  debug:
-    msg: "{{ pvc_call_for_authcookie_user }}"
-  when: debug | default(false)
-
 # Get user CRN
 
 - name: List all users
@@ -75,11 +65,6 @@
     return_content: yes
     validate_certs: no
   register: list_users
-
-- name: DEBUG - list_users
-  debug:
-    msg: "{{ list_users }}"
-  when: debug | default(false)
 
 - set_fact:
     user_crn: "{{ list_users.json | community.general.json_query(query) }}"

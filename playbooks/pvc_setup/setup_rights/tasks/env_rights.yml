@@ -14,11 +14,6 @@
     validate_certs: no
   register: env_describe_response
 
-- name: DEBUG - env_describe_response
-  debug:
-    msg: "{{ env_describe_response }}"
-  when: debug | default(false)
-
 - set_fact:
     env_crn: "{{ env_describe_response.json | community.general.json_query(query) }}"
   vars:

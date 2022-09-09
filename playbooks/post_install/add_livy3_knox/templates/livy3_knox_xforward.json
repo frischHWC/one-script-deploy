@@ -1,0 +1,8 @@
+{
+    "items": [
+      {
+        "name": "gateway_xforwarded_header_context_append_servicename",
+        "value": "LIVYSERVER,LIVY_FOR_SPARK3"
+      }
+    ]
+  }

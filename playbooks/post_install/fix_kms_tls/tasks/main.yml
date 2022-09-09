@@ -12,11 +12,6 @@
     body_format: json
   register: cloudera_manager_all_services
 
-- name: DEBUG - cloudera_manager_all_services
-  debug:
-    msg: "{{ cloudera_manager_all_services }}"
-  when: debug | default(false)
-
 - set_fact:
     kms_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
   vars:
@@ -80,25 +75,10 @@
   when: distribution == 'CDH'
 
 
-- name: Restart Cluster 
+# Restart ALL clusters & make sure they all restarted well to avoid later restart not working
+- name: List all Cluster 
   uri:
-    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/commands/restart"
-    user: "{{ cloudera_manager_user }}"
-    password: "{{ cloudera_manager_password }}"
-    method: POST
-    force_basic_auth: yes
-    status_code: 200
-    return_content: yes
-    validate_certs: no
-    body_format: json
-  
-- name: Acknowledge Restart of the cluster
-  pause:
-    minutes: 3
-
-- name: Check cluster is up again
-  uri:
-    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}"
+    url: "{{ cloudera_manager_api_url }}/clusters?clusterType=any"
     user: "{{ cloudera_manager_user }}"
     password: "{{ cloudera_manager_password }}"
     method: GET
@@ -107,45 +87,21 @@
     return_content: yes
     validate_certs: no
     body_format: json
-  register: result
-  until: result.json.entityStatus == "GOOD_HEALTH"
-  retries: 60
-  delay: 20
-  
-- name: Redeploy config
-  uri:
-    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/commands/deployClientConfig"
-    user: "{{ cloudera_manager_user }}"
-    password: "{{ cloudera_manager_password }}"
-    method: POST
-    force_basic_auth: yes
-    status_code: 200
-    return_content: yes
-    validate_certs: no
-    body_format: json
+  register: all_clusters_response
 
-- name: Restart Cluster-Stream if needed
-  uri:
-    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}-stream/commands/restart"
-    user: "{{ cloudera_manager_user }}"
-    password: "{{ cloudera_manager_password }}"
-    method: POST
-    force_basic_auth: yes
-    status_code: 200
-    return_content: yes
-    validate_certs: no
-    body_format: json
-  ignore_errors: true
+- set_fact:
+    all_clusters: "{{ all_clusters_response.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[].name"
 
-- name: Redeploy config for stream if needed
-  uri:
-    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}-stream/commands/deployClientConfig"
-    user: "{{ cloudera_manager_user }}"
-    password: "{{ cloudera_manager_password }}"
-    method: POST
-    force_basic_auth: yes
-    status_code: 200
-    return_content: yes
-    validate_certs: no
-    body_format: json
-  ignore_errors: true
+- name: DEBUG - all_clusters
+  debug:
+    msg: "{{ all_clusters }}"
+  when: debug | default(false)
+
+- name: Restart Cluster one by one
+  include_role:
+    name: restart_cluster
+  with_items: "{{ all_clusters }}"
+  vars: 
+    cluster_to_restart: "{{ item }}"

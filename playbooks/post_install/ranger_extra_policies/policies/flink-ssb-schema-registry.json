@@ -1,0 +1,78 @@
+{
+  "policyType": "0",
+  "name": "Flink & SSB access to SR",
+  "isEnabled": true,
+  "policyPriority": 0,
+  "policyLabels": [],
+  "description": "Required for Flink and SSB to work with SR",
+  "isAuditEnabled": true,
+  "resources": {
+    "schema-group": {
+      "values": [
+        "*",
+        "flink*",
+        "ssb*"
+      ],
+      "isRecursive": false,
+      "isExcludes": false
+    },
+    "schema-metadata": {
+      "values": [
+        "*"
+      ],
+      "isRecursive": false,
+      "isExcludes": false
+    },
+    "schema-branch": {
+      "values": [
+        "*"
+      ],
+      "isRecursive": false,
+      "isExcludes": false
+    },
+    "schema-version": {
+      "values": [
+        "*"
+      ],
+      "isRecursive": false,
+      "isExcludes": false
+    }
+  },
+  "isDenyAllElse": false,
+  "policyItems": [
+    {
+      "users": [
+        "flink",
+        "ssb"
+      ],
+      "accesses": [
+        {
+          "type": "create",
+          "isAllowed": true
+        },
+        {
+          "type": "read",
+          "isAllowed": true
+        },
+        {
+          "type": "update",
+          "isAllowed": true
+        },
+        {
+          "type": "delete",
+          "isAllowed": true
+        }
+      ]
+    }
+  ],
+  "allowExceptions": [
+    
+  ],
+  "denyPolicyItems": [
+    
+  ],
+  "denyExceptions": [
+    
+  ],
+  "service": "cm_schema-registry"
+}

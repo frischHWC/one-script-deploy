@@ -1,6 +1,6 @@
 ---
 - name: Ranger Policies
-  hosts: main
+  hosts: edge
   gather_facts: false
   roles: 
     - push_policies

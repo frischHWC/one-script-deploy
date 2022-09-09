@@ -1,0 +1,84 @@
+---
+# Note: Answer with an empty array: { "items": [] } is 19 characters
+- name: Check that no command is running on the cluster
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_to_restart }}/commands"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: result
+  until: result.content|length == 19
+  retries: 60
+  delay: 30
+
+- name: Restart Cluster 
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_to_restart }}/commands/restart"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    timeout: 60
+  
+- name: Pause to let CM acknowledges restart
+  pause:
+    seconds: 30
+
+# TODO: Find how to check that items is an empty array
+- name: Check that cluster command is finished
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_to_restart }}/commands"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: result
+  until: result.content|length == 19
+  retries: 60
+  delay: 30
+  
+- name: Redeploy config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_to_restart }}/commands/deployClientConfig"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    timeout: 60
+
+- name: Pause to let CM acknowledges redeploy
+  pause:
+    seconds: 15
+
+- name: Check that cluster command is finished
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_to_restart }}/commands"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: result
+  until: result.content|length == 19
+  retries: 60
+  delay: 30

@@ -60,6 +60,7 @@
     dest: /opt/cloudera/cm/bin/gen_credentials_ipa.sh
     remote_src: yes
     backup: yes
+  ignore_errors: true
 
 # Correct krb5.conf 
 
@@ -72,11 +73,6 @@
 - name: Resolve ipa_server's IP
   shell: "cat /etc/hosts | grep -m 1 {{ ipa_server }} | cut -d' ' -f1 | xargs"
   register: ipa_server_ip_resolve
-
-- name: DEBUG - ipa_server's IP
-  debug:
-    msg: "{{ ipa_server_ip_resolve }}"
-  when: debug | default(false)
 
 - name: Resolve ipa_server's IP
   set_fact: 

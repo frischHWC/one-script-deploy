@@ -42,7 +42,7 @@ delegation_username: admin
 delegation_password: "{{ ipa_bind_password }}"
 
 warehouses: 
-  - name: "Hive-1"
+  - name: "Hive-1-{{ cluster_name }}"
     database_catalog_name: "{{ cluster_name_pvc }}-env-1-datalake-default"
     env_name: "{{ cluster_name_pvc }}-env-1"
     low_resource_mode: true
@@ -54,7 +54,7 @@ warehouses:
     wait_time: 60 # default = 60
     disable_auto_suspend: false # default = false
 
-  - name: "Impala-1"
+  - name: "Impala-1-{{ cluster_name }}"
     database_catalog_name: "{{ cluster_name_pvc }}-env-1-datalake-default"
     env_name: "{{ cluster_name_pvc }}-env-1"
     low_resource_mode: true
@@ -83,11 +83,11 @@ workspaces:
 
 # CDE
 virtual_clusters:
-  - name: "VC-1"
+  - name: "Spark3-{{ cluster_name }}"
     env_name: "{{ cluster_name_pvc }}-env-1"
     cde_service_name: "CDE-Service-1"
     spark_version: "3.2.0"
-  - name: "VC-2"
+  - name: "Spark2-{{ cluster_name }}"
     env_name: "{{ cluster_name_pvc }}-env-1"
     cde_service_name: "CDE-Service-1"
     spark_version: "2.4.7"
@@ -106,10 +106,10 @@ user_rights:
       - name: "{{ cluster_name_pvc }}-workspace-1" 
         env_name: "{{ cluster_name_pvc }}-env-1"
     virtual_clusters: # Optionnal: If not defined no keytab pushed to cde
-      - name: "VC-1"
+      - name: "Spark3-{{ cluster_name }}"
         env_name: "{{ cluster_name_pvc }}-env-1"
         cde_service_name: "CDE-Service-1"
-      - name: "VC-2"
+      - name: "Spark2-{{ cluster_name }}"
         env_name: "{{ cluster_name_pvc }}-env-1"
         cde_service_name: "CDE-Service-1"
     

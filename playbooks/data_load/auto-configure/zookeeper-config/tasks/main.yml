@@ -26,12 +26,6 @@
     dest: /tmp/zk_full_config.json
   register: zk_full_config
 
-- name: DEBUG - zk_full_config
-  debug:
-    msg: "{{ zk_full_config }}"
-  when: debug | default(false)
-
-
 - name: Get ZK Server full config
   uri:
     url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ zk_service_name }}/roleConfigGroups/{{ zk_service_name }}-SERVER-BASE/config?view=full"
@@ -46,11 +40,6 @@
     dest: /tmp/zk_server_full_config.json
   register: zk_server_full_config
 
-- name: DEBUG - zk_server_full_config
-  debug:
-    msg: "{{ zk_server_full_config }}"
-  when: debug | default(false)
-
 - name: Get ZK roles repartition
   uri:
     url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ zk_service_name }}/roles"
@@ -64,11 +53,6 @@
     body_format: json
     dest: /tmp/zk_roles.json
   register: zk_roles
-
-- name: DEBUG - zk_roles
-  debug:
-    msg: "{{ zk_roles }}"
-  when: debug | default(false)
 
  
 ### SET ZK CONFIGS ###

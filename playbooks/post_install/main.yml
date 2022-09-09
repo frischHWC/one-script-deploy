@@ -7,22 +7,16 @@
     - restart_cm
 
 - name: Check existing services
-  hosts: all
+  hosts: cluster
   gather_facts: false
   roles: 
     - check_existing_services
 
 - name: Fix krb5.conf with Free IPA
-  hosts: all
+  hosts: cluster
   gather_facts: false
   roles: 
-    - { role: fix_krb5_conf, when: free_ipa | default(false) }
-
-- name: Fix krb5.conf for Hue with Free IPA
-  hosts: all
-  gather_facts: false
-  roles: 
-    - { role: hue_free_ipa_krb5conf, when: free_ipa and hue_service_exists | default(false) }
+    - { role: fix_krb5_conf_freeipa, when: free_ipa | default(false) }
 
 - name: Fix Hue ticket lifetime for Free IPA
   hosts: main
@@ -36,11 +30,36 @@
   roles: 
     - { role: fix_solr_plugin, when: ranger_service_exists and solr_service_exists | default(false) }
 
+- name: Copy Knox Service Definition files
+  hosts: cluster
+  gather_facts: false
+  roles: 
+    - { role: push_knox_service_def, when: knox_service_exists | default(false) }
+
 - name: Add Solr urls to Knox
   hosts: main
   gather_facts: false
   roles: 
     - { role: add_solr_knox, when: knox_service_exists and solr_service_exists | default(false) }
+
+- name: Add SSB urls to Knox
+  hosts: main
+  gather_facts: false
+  roles: 
+    - { role: add_ssb_knox, when: knox_service_exists and ssb_service_exists | default(false) }
+
+- name: Add Livy 3 urls to Knox
+  hosts: main
+  gather_facts: false
+  roles: 
+    - { role: add_livy3_knox, when: knox_service_exists and livy3_service_exists | default(false) }
+
+- name: Restart Knox
+  hosts: main
+  gather_facts: false
+  roles: 
+    - { role: restart_knox, when: knox_service_exists | default(false) }
+
 
 - name: Add missing TLS values for KMS
   hosts: main
@@ -49,7 +68,7 @@
     - { role: fix_kms_tls, when: encryption_activated | default(false) }
 
 - name: Add missing ExtJS for Oozie
-  hosts: all
+  hosts: cluster
   gather_facts: false
   roles: 
     - { role: fix_oozie_ui, when: oozie_service_exists | default(false) }

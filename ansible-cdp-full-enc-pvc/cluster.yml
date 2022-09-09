@@ -6,13 +6,14 @@ clusters:
       - "{{ cdh_repo }}"
 
   - name: "{{ cluster_name }}"
-    services: [ATLAS, DAS, FLINK, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, LIVY, OOZIE, OZONE, PHOENIX, QUEUEMANAGER, RANGER, SPARK_ON_YARN, SOLR, SQL_STREAM_BUILDER, TEZ, YARN, ZEPPELIN, ZOOKEEPER]
+    services: [ATLAS, DAS, FLINK, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, KS_INDEXER, KUDU, LIVY, LIVY_FOR_SPARK3, OMID, OOZIE, OZONE, PHOENIX, QUEUEMANAGER, RANGER, SPARK_ON_YARN, SPARK3_ON_YARN, SOLR, SQL_STREAM_BUILDER, TEZ, YARN, ZEPPELIN, ZOOKEEPER]
     security:
       kerberos: "{{ kerberos_activated }}"
       hdfs_encryption: "{{ encryption_activated }}"
     repositories:
       - "{{ cdh_repo }}"
       - "{{ csa_repo }}"
+      - "{{ spark3_repo }}"
 
     data_contexts:
       - name: SDX
@@ -23,6 +24,7 @@ clusters:
         ATLAS_SERVER:
           atlas_admin_password: "{{ default_password }}"
           atlas_authentication_method_file: true
+          atlas_solr_replication_factor: 2
 
       DAS:
         DAS_WEBAPP:
@@ -36,7 +38,7 @@ clusters:
         SERVICEWIDE:
           hbase_restserver_security_authentication: "{{ hbase_auth }}"
           hadoop_secure_web_ui: "{{ kerberos_activated }}"
-          hbase_superuser: "dev"
+          hbase_superuser: "francois"
         REGIONSERVER:  
           hbase_regionserver_wal_codec: org.apache.hadoop.hbase.regionserver.wal.IndexedWALEditCodec
       
@@ -45,10 +47,11 @@ clusters:
           dfs_ha_fencing_methods: 'shell(true)'
           dfs_namenode_acls_enabled: true
           hdfs_verify_ec_with_topology_enabled: false
-          dfs_permissions_supergroup: administrator
+          dfs_permissions_supergroup: admin_group
           core_site_safety_valve: <property><name>hadoop.proxyuser.zeppelin.hosts</name><value>*</value></property><property><name>hadoop.proxyuser.zeppelin.groups</name><value>*</value></property>
         DATANODE:
           dfs_data_dir_list: /dfs/dn
+          dfs_datanode_failed_volumes_tolerated: 0
         NAMENODE:
           dfs_name_dir_list: /dfs/nn
           dfs_federation_namenode_nameservice: "{{ cluster_name }}"
@@ -82,20 +85,45 @@ clusters:
           knox_encryptquerystring_secret: "{{ default_password }}"
           knox_hadoop_auth_config_signature_secret: "{{ default_password }}"
         KNOX_GATEWAY:
-          gateway_knox_admin_groups: administrator
+          gateway_knox_admin_groups: admin_group
           gateway_master_secret: "{{ default_password }}"
           gateway_sso_authentication_provider: "{% if free_ipa == true %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.urls./**=authcBasic#authentication.param.main.ldapRealm=org.apache.knox.gateway.shirorealm.KnoxLdapRealm#authentication.param.main.ldapContextFactory=org.apache.knox.gateway.shirorealm.KnoxLdapContextFactory#authentication.param.main.ldapRealm.contextFactory=$ldapContextFactory#authentication.param.main.ldapRealm.contextFactory.authenticationMechanism=simple#authentication.param.main.ldapRealm.contextFactory.url={{ ipa_ldap_url }}#authentication.param.main.ldapRealm.contextFactory.systemUsername={{ ipa_ldap_user_bind_dn }}#authentication.param.main.ldapRealm.contextFactory.systemPassword={{ ipa_ldap_user_bind_password }}#authentication.param.main.ldapRealm.userDnTemplate=uid={0},{{ ipa_ldap_user_search_base }}#authentication.param.remove=main.pamRealm#authentication.param.remove=main.pamRealm.service{% else %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.main.pamRealm=org.apache.knox.gateway.shirorealm.KnoxPamRealm#authentication.param.main.pamRealm.service=login#authentication.param.urls./**=authcBasic{% endif %}"
-          conf/cdp-resources.xml_role_safety_valve: "<property><name>cdp-infra-proxy</name><value>providerConfigRef=sso#SOLR:url=http{% if auto_tls == true %}s{% endif %}://{{ node_infra_solr }}:{% if auto_tls == true %}8995{% else %}8993{% endif %}/solr/#</value><description>CDP INFRA SOLR topology</description></property><property><name>cdp-infra-proxy-api</name><value>providerConfigRef=pam#SOLR:url=http{% if auto_tls == true %}s{% endif %}://{{ node_infra_solr }}:{% if auto_tls == true %}8995{% else %}8993{% endif %}/solr/#</value><description>CDP INFRA SOLR API topology</description></property>"
+          gateway_api_authentication_provider: "{% if free_ipa == true %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.urls./**=authcBasic#authentication.param.main.ldapRealm=org.apache.knox.gateway.shirorealm.KnoxLdapRealm#authentication.param.main.ldapContextFactory=org.apache.knox.gateway.shirorealm.KnoxLdapContextFactory#authentication.param.main.ldapRealm.contextFactory=$ldapContextFactory#authentication.param.main.ldapRealm.contextFactory.authenticationMechanism=simple#authentication.param.main.ldapRealm.contextFactory.url={{ ipa_ldap_url }}#authentication.param.main.ldapRealm.contextFactory.systemUsername={{ ipa_ldap_user_bind_dn }}#authentication.param.main.ldapRealm.contextFactory.systemPassword={{ ipa_ldap_user_bind_password }}#authentication.param.main.ldapRealm.userDnTemplate=uid={0},{{ ipa_ldap_user_search_base }}#authentication.param.remove=main.pamRealm#authentication.param.remove=main.pamRealm.service{% else %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.main.pamRealm=org.apache.knox.gateway.shirorealm.KnoxPamRealm#authentication.param.main.pamRealm.service=login#authentication.param.urls./**=authcBasic{% endif %}"
+          conf/cdp-resources.xml_role_safety_valve: "<property><name>cdp-infra-proxy</name><value>providerConfigRef=sso#SOLR:url=http{% if auto_tls == true %}s{% endif %}://{{ node_infra_solr }}:{% if auto_tls == true %}8995{% else %}8993{% endif %}/solr/#</value><description>CDP INFRA SOLR topology</description></property><property><name>cdp-infra-proxy-api</name><value>providerConfigRef=pam#SOLR:url=http{% if auto_tls == true %}s{% endif %}://{{ node_infra_solr }}:{% if auto_tls == true %}8995{% else %}8993{% endif %}/solr/#</value><description>CDP INFRA SOLR API topology</description></property> "
 
+      KUDU:
+        SERVICEWIDE:
+          time_source: builtin
+          builtin_ntp_servers: pool.ntp.org
+        KUDU_MASTER:
+          fs_wal_dir: /kudu/wal
+          fs_data_dirs: /kudu/data
+        KUDU_TSERVER:  
+          fs_wal_dir: /kudu/wal
+          fs_data_dirs: /kudu/data
 
       LIVY:
         LIVY_SERVER:
-          livy_spnego_enabled: "{{ kerberos_activated }}"  
+          livy_spnego_enabled: "{{ kerberos_activated }}" 
+
+      LIVY_FOR_SPARK3:
+        LIVY_SERVER_FOR_SPARK3:
+          livy_spnego_enabled: "{{ kerberos_activated }}"
+
+      OOZIE:
+        SERVICEWIDE:
+          oozie_load_balancer_https_port: 8443
+          oozie_load_balancer_http_port: 8443
+          oozie_load_balancer: "{{  groups.cloudera_manager | first | default(omit) }}"
+        OOZIE_SERVER:
+          oozie_plugins_list: "org.apache.oozie.service.ZKLocksService,,org.apache.oozie.service.ZKUUIDService,org.apache.oozie.service.ZKJobsConcurrencyService,org.apache.oozie.service.ZKXLogStreamingService"
+ 
 
       OZONE:
         SERVICEWIDE:
           ozone.service.id: "{{ cluster_name }}"
           ozone.scm.primordial.node.id: "{{  groups.cluster_master_nodes | first | default(omit) }}"
+          ozone.administrators: francois
 
       SPARK_ON_YARN:
         SERVICEWIDE:
@@ -107,6 +135,9 @@ clusters:
           rangeradmin_user_password: "{{ default_password }}"
           rangertagsync_user_password: "{{ default_password }}"
           rangerusersync_user_password: "{{ default_password }}"
+        RANGER_ADMIN:
+          ranger.audit.solr.no.replica: 2
+          ranger.audit.solr.max.shards.per.node: 2
         RANGER_USERSYNC:
           ranger.usersync.source.impl.class: "org.apache.ranger.unixusersync.process.UnixUserGroupBuilder"
           ranger.usersync.ldap.url: "{{ ipa_ldap_url }}"
@@ -124,10 +155,10 @@ clusters:
           ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:u:administrator&ROLE_SYS_ADMIN:u:dev"
           
       SQL_STREAM_BUILDER:
-        STREAMING_SQL_CONSOLE:
-          flask.secret_key: "{{ default_password }}"
-          flask.secret_verification_key: "{{ default_password }}"
-          ssb-conf/ssb-console-conf.yaml_role_safety_valve: log_console_restapi_calls = true
+        SERVICEWIDE:
+          loadbalancer.url: "{{  groups.cloudera_manager | first | default(omit) }}"
+        LOAD_BALANCER:
+          loadbalancer.url: "{{  groups.cloudera_manager | first | default(omit) }}"
         STREAMING_SQL_ENGINE:
           default.admin.password: "{{ default_password }}" 
           ssb-conf/application.properties_role_safety_valve: log.sqlio.restapi = true
@@ -139,7 +170,7 @@ clusters:
 
       YARN:
         SERVICEWIDE:
-          yarn_admin_acl: "${yarn_user},dev"
+          yarn_admin_acl: "${yarn_user},francois"
         RESOURCEMANAGER:
           yarn_scheduler_maximum_allocation_mb: 24576
           yarn_scheduler_maximum_allocation_vcores: 12
@@ -168,12 +199,16 @@ clusters:
         HDFS: [GATEWAY]
         HIVE: [GATEWAY]
         HIVE_ON_TEZ: [GATEWAY]
+        KAFKA: [GATEWAY]
         KNOX: [KNOX_GATEWAY]
+        LIVY_FOR_SPARK3: [GATEWAY]
         LIVY: [GATEWAY]
-        OZONE: [S3_GATEWAY, OZONE_RECON, GATEWAY]
+        OZONE: [OZONE_PROMETHEUS, S3_GATEWAY, OZONE_RECON, GATEWAY]
         TEZ: [GATEWAY]
         SOLR: [GATEWAY]
         SPARK_ON_YARN: [GATEWAY]
+        SPARK3_ON_YARN: [GATEWAY]
+        SQL_STREAM_BUILDER: [LOAD_BALANCER]
         YARN: [GATEWAY]
         ZEPPELIN: [ZEPPELIN_SERVER]
 
@@ -185,12 +220,16 @@ clusters:
         HIVE: [HIVEMETASTORE, GATEWAY]
         HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
         HUE: [HUE_SERVER, HUE_LOAD_BALANCER]
+        INFRA_SOLR: [SOLR_SERVER]
         KAFKA: [KAFKA_BROKER, GATEWAY]
+        KUDU: [KUDU_MASTER]
+        LIVY_FOR_SPARK3: [GATEWAY]
         LIVY: [GATEWAY]
         OOZIE: [OOZIE_SERVER]
         OZONE: [OZONE_MANAGER, STORAGE_CONTAINER_MANAGER, GATEWAY]
         SOLR: [GATEWAY]
         SPARK_ON_YARN: [GATEWAY]
+        SPARK3_ON_YARN: [GATEWAY]
         TEZ: [GATEWAY]
         YARN: [GATEWAY]
         ZOOKEEPER: [SERVER]     
@@ -203,13 +242,17 @@ clusters:
         HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
         HIVE: [HIVEMETASTORE, GATEWAY]
         HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
+        INFRA_SOLR: [SOLR_SERVER]
         KAFKA: [KAFKA_BROKER, GATEWAY]
+        KUDU: [KUDU_MASTER]
+        LIVY_FOR_SPARK3: [GATEWAY]
         LIVY: [LIVY_SERVER, GATEWAY]
         OZONE: [OZONE_MANAGER, STORAGE_CONTAINER_MANAGER, GATEWAY]
         PHOENIX: [PHOENIX_QUERY_SERVER]
         RANGER: [RANGER_ADMIN]
         SOLR: [GATEWAY]
         SPARK_ON_YARN: [SPARK_YARN_HISTORY_SERVER, GATEWAY]
+        SPARK3_ON_YARN: [GATEWAY]
         TEZ: [GATEWAY]
         YARN: [RESOURCEMANAGER, JOBHISTORY, GATEWAY]
         ZOOKEEPER: [SERVER]
@@ -223,13 +266,18 @@ clusters:
         IMPALA: [STATESTORE, CATALOGSERVER]
         INFRA_SOLR: [SOLR_SERVER]
         KAFKA: [KAFKA_BROKER, GATEWAY]
+        KUDU: [KUDU_MASTER]
+        LIVY_FOR_SPARK3: [LIVY_SERVER_FOR_SPARK3, GATEWAY]
         LIVY: [GATEWAY]
+        OMID: [OMID_TSO]
+        OOZIE: [OOZIE_SERVER]
         OZONE: [OZONE_MANAGER, STORAGE_CONTAINER_MANAGER, GATEWAY]
         RANGER: [RANGER_TAGSYNC, RANGER_USERSYNC]
         QUEUEMANAGER: [QUEUEMANAGER_STORE, QUEUEMANAGER_WEBAPP]
         SOLR: [GATEWAY]
         SPARK_ON_YARN: [GATEWAY]
-        SQL_STREAM_BUILDER: [STREAMING_SQL_ENGINE, STREAMING_SQL_CONSOLE, MATERIALIZED_VIEW_ENGINE]
+        SPARK3_ON_YARN: [SPARK3_YARN_HISTORY_SERVER, GATEWAY]
+        SQL_STREAM_BUILDER: [STREAMING_SQL_ENGINE, MATERIALIZED_VIEW_ENGINE]
         TEZ: [GATEWAY]
         YARN: [RESOURCEMANAGER, GATEWAY]
         ZOOKEEPER: [SERVER]    
@@ -241,11 +289,15 @@ clusters:
         HIVE: [GATEWAY]
         HIVE_ON_TEZ: [GATEWAY]
         IMPALA: [IMPALAD]
+        KS_INDEXER: [HBASE_INDEXER]
+        KUDU: [KUDU_TSERVER]
+        LIVY_FOR_SPARK3: [GATEWAY]
         LIVY: [GATEWAY]
         OZONE: [OZONE_DATANODE, GATEWAY]
         TEZ: [GATEWAY]
         SOLR: [SOLR_SERVER, GATEWAY]
         SPARK_ON_YARN: [GATEWAY]
+        SPARK3_ON_YARN: [GATEWAY]
         YARN: [NODEMANAGER, GATEWAY]
 
       
@@ -280,7 +332,7 @@ clusters:
           knox_hadoop_auth_config_signature_secret: "{{ default_password }}"
           kerberos.auth.enabled: "{{ kerberos_activated }}"
         KNOX_GATEWAY:
-          gateway_knox_admin_groups: administrator
+          gateway_knox_admin_groups: admin_group
           gateway_master_secret: "{{ default_password }}"
           gateway_sso_authentication_provider: "{% if free_ipa %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.urls./**=authcBasic#authentication.param.main.ldapRealm=org.apache.knox.gateway.shirorealm.KnoxLdapRealm#authentication.param.main.ldapContextFactory=org.apache.knox.gateway.shirorealm.KnoxLdapContextFactory#authentication.param.main.ldapRealm.contextFactory=$ldapContextFactory#authentication.param.main.ldapRealm.contextFactory.authenticationMechanism=simple#authentication.param.main.ldapRealm.contextFactory.url={{ ipa_ldap_url }}#authentication.param.main.ldapRealm.contextFactory.systemUsername={{ ipa_ldap_user_bind_dn }}#authentication.param.main.ldapRealm.contextFactory.systemPassword={{ ipa_ldap_user_bind_password }}#authentication.param.main.ldapRealm.userDnTemplate=uid={0},{{ ipa_ldap_user_search_base }}#authentication.param.remove=main.pamRealm#authentication.param.remove=main.pamRealm.service{% else %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.main.pamRealm=org.apache.knox.gateway.shirorealm.KnoxPamRealm#authentication.param.main.pamRealm.service=login#authentication.param.urls./**=authcBasic{% endif %}"
 

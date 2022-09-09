@@ -1,6 +1,6 @@
 ---
 - name: Prereqs for FreeIPA
-  hosts: "{{ ipa_server }}"
+  hosts: ipa
   become: yes
   gather_facts: no
   roles:

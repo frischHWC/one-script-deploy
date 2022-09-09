@@ -5,11 +5,6 @@
     pvc_kube_config: "{{ lookup('file', kube_config_path ) | replace('\n', '\\n') | replace('\"', '\\\"' ) }}"
   when: pvc_type == 'OC'
 
-- name: DEBUG - pvc_kube_config
-  debug:
-    msg: "{{ pvc_kube_config }}"
-  when: pvc_type == 'OC' and debug | default(false)
-
 # Get domain from kubeconfig file
 - set_fact: 
     env_domain: "{{ (lookup('template', kube_config_path ) | from_yaml).clusters[0].cluster.server.split('//')[1].split(':')[0].replace('api.','') }}"
@@ -34,11 +29,6 @@
     validate_certs: no
   register: list_all_users
 
-- name: DEBUG - list_all_users
-  debug:
-    msg: "{{ list_all_users }}"
-  when: debug | default(false)
-
 - set_fact:
     admin_crn: "{{ list_all_users.json | community.general.json_query(query) }}"
   vars:
@@ -57,16 +47,6 @@
 - name: Decode ca 
   set_fact:
     ipa_crt: "{{ slurped_ca_crt.content | b64decode }}"
-
-- name: DEBUG - ipa_crt
-  debug:
-    msg: "{{ ipa_crt }}"
-  when: debug | default(false)
-
-- name: DEBUG - call to update ldap
-  debug:
-    msg: "{{ lookup('template', 'ldap.json') }}"
-  when: debug | default(false)
 
 - name: Set LDAP provider
   uri:
@@ -110,11 +90,6 @@
     return_content: yes
     validate_certs: no
   register: gen_access_key_answer
-
-- name: DEBUG - gen_access_key_answer
-  debug:
-    msg: "{{ gen_access_key_answer }}"
-  when: debug | default(false)
 
 - set_fact:
     admin_access_key_id: "{{ gen_access_key_answer.json | community.general.json_query(query) }}"

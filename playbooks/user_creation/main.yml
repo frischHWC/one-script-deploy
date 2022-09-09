@@ -1,6 +1,6 @@
 ---
 - name: Create Unix users on all machines
-  hosts: all
+  hosts: cluster
   gather_facts: false
   strategy: free
   tasks: 
@@ -25,7 +25,7 @@
       when: free_ipa
 
 - name: Create User's directories on all machines
-  hosts: all
+  hosts: cluster
   gather_facts: false
   strategy: free
   tasks: 
@@ -48,7 +48,7 @@
         user: "{{ item }}"
 
 - name: Push created keytabs to all machines
-  hosts: all
+  hosts: cluster
   gather_facts: false
   strategy: free
   tasks: 
@@ -60,7 +60,7 @@
         user: "{{ item }}"
 
 - name: Create users environment
-  hosts: main
+  hosts: edge
   gather_facts: false
   tasks: 
     - name: create User's env

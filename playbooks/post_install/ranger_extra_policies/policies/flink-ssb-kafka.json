@@ -1,0 +1,106 @@
+{
+    "id": 1,
+    "guid": "...",
+    "isEnabled": true,
+    "version": 1,
+    "service": "cm_kafka",
+    "name": "Flink & SSB access to Kafka",
+    "policyType": 0,
+    "policyPriority": 0,
+    "description": "Required for Flink and SSB to work with Kafka",
+    "isAuditEnabled": true,
+    "resources": {
+      "topic": {
+        "values": [
+          "*",
+          "flink*",
+          "ssb*"
+        ],
+        "isExcludes": false,
+        "isRecursive": false
+      }
+    },
+    "policyItems": [
+      {
+        "accesses": [
+          {
+            "type": "publish",
+            "isAllowed": true
+          },
+          {
+            "type": "consume",
+            "isAllowed": true
+          },
+          {
+            "type": "configure",
+            "isAllowed": true
+          },
+          {
+            "type": "describe",
+            "isAllowed": true
+          },
+          {
+            "type": "create",
+            "isAllowed": true
+          },
+          {
+            "type": "delete",
+            "isAllowed": true
+          },
+          {
+            "type": "describe_configs",
+            "isAllowed": true
+          },
+          {
+            "type": "alter_configs",
+            "isAllowed": true
+          },
+          {
+            "type": "alter",
+            "isAllowed": true
+          }
+        ],
+        "users": [
+          "flink",
+          "ssb"
+        ],
+        "groups": [
+          
+        ],
+        "roles": [
+          
+        ],
+        "conditions": [
+          
+        ],
+        "delegateAdmin": true
+      }
+    ],
+    "denyPolicyItems": [
+      
+    ],
+    "allowExceptions": [
+      
+    ],
+    "denyExceptions": [
+      
+    ],
+    "dataMaskPolicyItems": [
+      
+    ],
+    "rowFilterPolicyItems": [
+      
+    ],
+    "serviceType": "kafka",
+    "options": {
+      
+    },
+    "validitySchedules": [
+      
+    ],
+    "policyLabels": [
+      
+    ],
+    "zoneName": "",
+    "isDenyAllElse": false
+  }

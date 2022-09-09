@@ -20,9 +20,10 @@ clusters:
           dfs_ha_fencing_methods: 'shell(true)'
           dfs_namenode_acls_enabled: true
           hdfs_verify_ec_with_topology_enabled: false
-          dfs_permissions_supergroup: admin_user
+          dfs_permissions_supergroup: admin_group
         DATANODE:
           dfs_data_dir_list: /dfs/dn
+          dfs_datanode_failed_volumes_tolerated: 0
         NAMENODE:
           dfs_name_dir_list: /dfs/nn
           dfs_federation_namenode_nameservice: "{{ cluster_name }}"
@@ -119,6 +120,8 @@ mgmt:
   name: Cloudera Management Service
   services: [ALERTPUBLISHER, EVENTSERVER, HOSTMONITOR, REPORTSMANAGER, SERVICEMONITOR]
   configs:
+    SERVICEWIDE:
+      ldap_monitoring_enabled: "{{ free_ipa }}"
     SERVICEMONITOR:
       firehose_heapsize: 2147483648
 

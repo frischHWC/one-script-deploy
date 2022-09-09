@@ -30,6 +30,11 @@
 
 - set_fact:
     cloudera_manager_api_url: "{{ cloudera_manager_url }}/api/{{ cloudera_manager_api_version }}"
+
+- name: DEBUG - cloudera_manager_api_url
+  debug:
+    msg: "{{ cloudera_manager_api_url }}"
+  when: debug | default(false)
     
 - name: Get All services from CM
   uri:
@@ -44,15 +49,10 @@
     body_format: json
   register: cloudera_manager_all_services
 
-- name: DEBUG - cloudera_manager_all_services
-  debug:
-    msg: "{{ cloudera_manager_all_services }}"
-  when: debug | default(false)
-
 - set_fact:
     solr_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
   vars:
-    query: "items[?type == 'SOLR'].name | [1]"
+    query: "items[?type == 'SOLR' && name != 'infra_solr'].name | [0]"
 
 - name: DEBUG - solr_service_name
   debug:
@@ -141,4 +141,42 @@
 - name: DEBUG - oozie_service_exists
   debug:
     msg: "{{ oozie_service_exists }}"
+  when: debug | default(false)
+
+
+- set_fact:
+    ssb_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'SQL_STREAM_BUILDER'].name | [0]"
+
+- name: DEBUG - ssb_service_name
+  debug:
+    msg: "{{ ssb_service_name }}"
+  when: debug | default(false)
+
+- set_fact: 
+    ssb_service_exists: "{{ true if ssb_service_name != '' else false }}"
+
+- name: DEBUG - ssb_service_exists
+  debug:
+    msg: "{{ ssb_service_exists }}"
+  when: debug | default(false)
+
+
+- set_fact:
+    livy3_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'LIVY_FOR_SPARK3'].name | [0]"
+
+- name: DEBUG - livy3_service_name
+  debug:
+    msg: "{{ livy3_service_name }}"
+  when: debug | default(false)
+
+- set_fact: 
+    livy3_service_exists: "{{ true if livy3_service_name != '' else false }}"
+
+- name: DEBUG - livy3_service_exists
+  debug:
+    msg: "{{ livy3_service_exists }}"
   when: debug | default(false)

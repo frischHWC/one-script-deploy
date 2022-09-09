@@ -27,14 +27,14 @@
   register: cloudera_manager_truststore_password_api
   when: configure_wxm_with_base
 
-- name: DEBUG - API truststore password
-  debug:
-    msg: "{{ cloudera_manager_truststore_password_api }}"
-  when: debug | default(false) and configure_wxm_with_base
-
 - set_fact:
     cloudera_manager_base_truststore_password: "{{ cloudera_manager_truststore_password_api.content }}"
   when: configure_wxm_with_base
+
+- name: DEBUG - cloudera_manager_base_truststore_password
+  debug:
+    msg: "{{ cloudera_manager_base_truststore_password }}"
+  when: debug | default(false) and configure_wxm_with_base
 
 # Import CA from WXM cluster and import it into base truststore
 - name: Import truststore into Base truststore

@@ -26,12 +26,6 @@
     dest: /tmp/hdfs_full_config.json
   register: hdfs_full_config
 
-- name: DEBUG - hdfs_full_config
-  debug:
-    msg: "{{ hdfs_full_config }}"
-  when: debug | default(false)
-
-
 - name: Get HDFS Namenode full config
   uri:
     url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ hdfs_service_name }}/roleConfigGroups/{{ hdfs_service_name }}-NAMENODE-BASE/config?view=full"
@@ -45,12 +39,6 @@
     body_format: json
     dest: /tmp/hdfs_namenode_full_config.json
   register: hdfs_namenode_full_config
-
-- name: DEBUG - hdfs_namenode_full_config
-  debug:
-    msg: "{{ hdfs_namenode_full_config }}"
-  when: debug | default(false)
-
 
 ### SET HDFS CONFIGS ###
 

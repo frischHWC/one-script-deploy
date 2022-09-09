@@ -6,15 +6,11 @@
     password: "{{ cloudera_manager_password }}"
     method: GET
     force_basic_auth: yes
-    status_code: 200, -1
+    status_code: 200, -1, 304
     return_content: yes
     validate_certs: no
+    dest: /tmp/cloudera_deployment.json
   register: cluster_deployment
-
-- name: DEBUG - API Call
-  debug:
-    msg: "{{ cluster_deployment }}"
-  when: debug | default(false)
 
 - set_fact:
     cloudera_manager_protocol: http
@@ -29,24 +25,23 @@
     password: "{{ cloudera_manager_password }}"
     method: GET
     force_basic_auth: yes
-    status_code: 200, -1
+    status_code: 200, -1, 304
     return_content: yes
     validate_certs: no
   register: cluster_deployment
-
-- name: DEBUG - API Call
-  debug:
-    msg: "{{ cluster_deployment }}"
-  when: debug | default(false)
 
 - set_fact:
     cloudera_manager_protocol: https
     cloudera_manager_port: 7183
   when: cluster_deployment.status == 200
 
-
 - set_fact:
     cloudera_manager_url: "{{ cloudera_manager_protocol }}://{{ cloudera_manager_host }}:{{ cloudera_manager_port }}"
+
+- name: DEBUG - cloudera_manager_url
+  debug:
+    msg: "{{ cloudera_manager_url }}"
+  when: debug | default(false)
 
 - name: Get CM API Version
   uri:
@@ -66,3 +61,9 @@
 
 - set_fact:
     cloudera_manager_api_url: "{{ cloudera_manager_url }}/api/{{ cloudera_manager_api_version }}"
+
+
+- name: DEBUG - cloudera_manager_api_url
+  debug:
+    msg: "{{ cloudera_manager_api_url }}"
+  when: debug | default(false)

@@ -4,7 +4,7 @@
 - set_fact:
     solr_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
   vars:
-    query: "items[?type == 'SOLR'].name | [1]"
+    query: "items[?type == 'SOLR' && name != 'infra_solr'].name | [0]"
 
 - name: DEBUG - solr_service_name
   debug:
@@ -26,12 +26,6 @@
     dest: /tmp/solr_full_config.json
   register: solr_full_config
 
-- name: DEBUG - solr_full_config
-  debug:
-    msg: "{{ solr_full_config }}"
-  when: debug | default(false)
-
-
 - name: Get SolR roles repartition
   uri:
     url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ solr_service_name }}/roles"
@@ -45,11 +39,6 @@
     body_format: json
     dest: /tmp/solr_roles.json
   register: solr_roles
-
-- name: DEBUG - solr_roles
-  debug:
-    msg: "{{ solr_roles }}"
-  when: debug | default(false)
 
 
 ### SET SolR CONFIGS ###

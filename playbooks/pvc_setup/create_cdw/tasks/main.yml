@@ -3,6 +3,10 @@
 - set_fact:
     dwx_endpoint_api: "{{ cdp_endpoint_url }}/dwx/api/v2"
 
+- name: DEBUG - dwx_endpoint_api
+  debug:
+    msg: "{{ dwx_endpoint_api }}"
+
 - name: Get Environment CRN
   uri:
     url: "{{ dwx_endpoint_api }}/environments"
@@ -63,11 +67,6 @@
     return_content: yes
     validate_certs: no
   register: answer_to_activate_env
-  when: dwx_env_status != 'Running'
-
-- name: DEBUG - answer_to_activate_env
-  debug:
-    msg: "{{ answer_to_activate_env }}"
   when: dwx_env_status != 'Running'
 
 - name: Get new environment ID (once environment has been activated) 
@@ -219,11 +218,6 @@
   register: answer_to_hive_activation
   when: warehouse.type == 'hive' | default(false)
 
-- name: DEBUG - answer_to_hive_activation
-  debug:
-    msg: "{{ answer_to_hive_activation }}"
-  when: warehouse.type == 'hive' | default(false)
-
 # Create Impala VW
 - name: Create Impala Virtual Warehouse
   uri:
@@ -239,10 +233,5 @@
     return_content: yes
     validate_certs: no
   register: answer_to_impala_activation
-  when: warehouse.type == 'impala' | default(false)
-
-- name: DEBUG - answer_to_impala_activation
-  debug:
-    msg: "{{ answer_to_impala_activation }}"
   when: warehouse.type == 'impala' | default(false)
 

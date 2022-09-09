@@ -99,6 +99,9 @@
     msg: "{{ impala_service_name }}"
   when: debug | default(false) and configure_wxm_with_base
 
+
+# Restart all base services
+
 - name: Restart Hive service
   uri:
     url: "{{ cloudera_manager_base_api_url }}/clusters/{{ cluster_base_name }}/services/{{ hive_service_name }}/commands/restart"
@@ -111,9 +114,26 @@
     body_format: json
   when: configure_wxm_with_base
 
-- name: Sleep for 30 seconds to acknowledge restart
-  wait_for:
-    timeout: 30
+- name: Pause to let CM acknowledges restart
+  pause:
+    seconds: 5
+  when: configure_wxm_with_base
+
+- name: Check Hive is up and running
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/clusters/{{ cluster_base_name }}/services/{{ hive_service_name }}"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: result
+  until: result.json.serviceState == "STARTED"
+  retries: 60
+  delay: 10
   when: configure_wxm_with_base
 
 - name: Restart Hive on Tez service
@@ -128,9 +148,26 @@
     body_format: json
   when: configure_wxm_with_base
 
-- name: Sleep for 30 seconds to acknowledge restart
-  wait_for:
-    timeout: 30
+- name: Pause to let CM acknowledges restart
+  pause:
+    seconds: 5
+  when: configure_wxm_with_base
+
+- name: Check Hive On Tez is up and running
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/clusters/{{ cluster_base_name }}/services/{{ hive_on_tez_service_name }}"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: result
+  until: result.json.serviceState == "STARTED"
+  retries: 60
+  delay: 10
   when: configure_wxm_with_base
 
 - name: Restart Spark service
@@ -145,9 +182,26 @@
     body_format: json
   when: configure_wxm_with_base
 
-- name: Sleep for 30 seconds to acknowledge restart
-  wait_for:
-    timeout: 30
+- name: Pause to let CM acknowledges restart
+  pause:
+    seconds: 5
+  when: configure_wxm_with_base
+
+- name: Check Spark is up and running
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/clusters/{{ cluster_base_name }}/services/{{ spark_service_name }}"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: result
+  until: result.json.serviceState == "STARTED"
+  retries: 60
+  delay: 10
   when: configure_wxm_with_base
 
 - name: Restart Impala service
@@ -160,6 +214,28 @@
     status_code: 200
     validate_certs: no
     body_format: json
+  when: configure_wxm_with_base
+
+- name: Pause to let CM acknowledges restart
+  pause:
+    seconds: 5
+  when: configure_wxm_with_base
+
+- name: Check Impala is up and running
+  uri:
+    url: "{{ cloudera_manager_base_api_url }}/clusters/{{ cluster_base_name }}/services/{{ impala_service_name }}"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: result
+  until: result.json.serviceState == "STARTED"
+  retries: 60
+  delay: 10
   when: configure_wxm_with_base
 
 
@@ -175,3 +251,26 @@
     status_code: 200
     validate_certs: no
     body_format: json
+
+- name: Pause to let CM acknowledges restart
+  pause:
+    seconds: 5
+  when: configure_wxm_with_base
+
+- name: Check WXM is up and running
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ wxm_service_name }}"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: result
+  until: result.json.serviceState == "STARTED"
+  retries: 60
+  delay: 10
+  when: configure_wxm_with_base
+

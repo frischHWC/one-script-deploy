@@ -3,6 +3,10 @@
 - set_fact:
     cml_endpoint_api: "{{ cdp_endpoint_url }}/api/v1/ml"
 
+- name: DEBUG - cml_endpoint_api
+  debug:
+    msg: "{{ cml_endpoint_api }}"
+
 # Create Workspace
 - name: Create CML Workspace
   uri:
@@ -18,10 +22,6 @@
     return_content: yes
     validate_certs: no
   register: answer_to_create_cml
-
-- name: DEBUG - answer_to_create_cml
-  debug:
-    msg: "{{ answer_to_create_cml }}"
 
 - name: Check CML creation
   uri:

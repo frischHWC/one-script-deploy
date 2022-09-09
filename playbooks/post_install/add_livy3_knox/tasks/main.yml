@@ -1,0 +1,179 @@
+---
+- name: Get livy3 full config
+  uri:
+    url: "{{ cloudera_manager_url }}/api/v41/clusters/{{ cluster_name }}/services/{{ livy3_service_name }}/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: full_livy3_config
+
+- name: Get livy3 LB full config
+  uri:
+    url: "{{ cloudera_manager_url }}/api/v31/clusters/{{ cluster_name }}/services/{{ livy3_service_name }}/roleConfigGroups/{{ livy3_service_name }}-LIVY_SERVER_FOR_SPARK3-BASE/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: full_livy3_server_config
+
+
+
+- set_fact:
+    livy3_ssl: "{{ full_livy3_server_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ssl_enabled'].value | [0]"
+
+- set_fact:
+    livy3_ssl: "{{ full_livy3_server_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ssl_enabled'].default | [0]"
+  when: livy3_ssl == ""
+
+- name: DEBUG - livy3_ssl
+  debug:
+    msg: "{{ livy3_ssl }}"
+  when: debug | default(false)
+
+- set_fact:
+    livy3_protocol: "{{ 'https' if livy3_ssl else 'http' }}"
+
+- name: DEBUG - livy3_protocol
+  debug:
+    msg: "{{ livy3_protocol }}"
+  when: debug | default(false)
+
+- set_fact:
+    livy3_port: "{{ full_livy3_server_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'livy_server_port'].value | [0]"
+
+- set_fact:
+    livy3_port: "{{ full_livy3_server_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'livy_server_port'].default | [0]"
+  when: livy3_port == ""
+
+
+- name: Get Livy 3 roles repartition
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ livy3_service_name }}/roles"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/livy3_roles.json
+  register: livy3_roles
+
+- set_fact:
+    livy3_host: "{{ livy3_roles.json | community.general.json_query(query) | first }}"
+  vars:
+    query: "items[?type == 'LIVY_SERVER_FOR_SPARK3'].hostRef.hostname"
+
+- name: DEBUG - livy3_host
+  debug:
+    msg: "{{ livy3_host }}"
+  when: debug | default(false)
+
+- name: Get Knox Gateway full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ knox_service_name }}/roleConfigGroups/{{ knox_service_name }}-KNOX_GATEWAY-BASE/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: knox_full_config
+
+- set_fact:
+    gateway_descriptor_cdp_proxy: "{{ knox_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'gateway_descriptor_cdp_proxy'].value | [0]"
+
+- set_fact:
+    gateway_descriptor_cdp_proxy: "{{ knox_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'gateway_descriptor_cdp_proxy'].default | [0]"
+  when: gateway_descriptor_cdp_proxy == ""
+
+- name: DEBUG - gateway_descriptor_cdp_proxy
+  debug:
+    msg: "{{ gateway_descriptor_cdp_proxy }}"
+  when: debug | default(false)
+
+- set_fact:
+    new_gateway_descriptor_cdp_proxy: "{{ gateway_descriptor_cdp_proxy }}#LIVY_FOR_SPARK3:url={{ livy3_protocol }}://{{ livy3_host }}:{{ livy3_port }}#LIVY_FOR_SPARK3:version=0.6.0"
+
+
+- set_fact:
+    gateway_descriptor_cdp_proxy_api: "{{ knox_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'gateway_descriptor_cdp_proxy_api'].value | [0]"
+
+- set_fact:
+    gateway_descriptor_cdp_proxy_api: "{{ knox_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'gateway_descriptor_cdp_proxy_api'].default | [0]"
+  when: gateway_descriptor_cdp_proxy_api == ""
+
+- name: DEBUG - gateway_descriptor_cdp_proxy_api
+  debug:
+    msg: "{{ gateway_descriptor_cdp_proxy_api }}"
+  when: debug | default(false)
+
+- set_fact:
+    new_gateway_descriptor_cdp_proxy_api: "{{ gateway_descriptor_cdp_proxy_api }}#LIVY_FOR_SPARK3:url={{ livy3_protocol }}://{{ livy3_host }}:{{ livy3_port }}#LIVY_FOR_SPARK3:version=0.6.0"
+
+- name: Push new Knox config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ knox_service_name }}/roleConfigGroups/{{ knox_service_name }}-KNOX_GATEWAY-BASE/config"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: PUT
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    body: "{{ lookup('template', 'livy3_knox_url.json' ) }}"
+
+- name: Push new Knox API config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ knox_service_name }}/roleConfigGroups/{{ knox_service_name }}-KNOX_GATEWAY-BASE/config"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: PUT
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    body: "{{ lookup('template', 'livy3_knox_url_api.json' ) }}"
+
+- name: Push Knox config for X-Forward
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ knox_service_name }}/roleConfigGroups/{{ knox_service_name }}-KNOX_GATEWAY-BASE/config"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: PUT
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    body: "{{ lookup('template', 'livy3_knox_xforward.json' ) }}"

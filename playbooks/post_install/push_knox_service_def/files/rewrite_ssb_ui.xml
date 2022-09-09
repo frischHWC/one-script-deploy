@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+       http://www.apache.org/licenses/LICENSE-2.0
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<rules>
+    <rule name="SSB-SSE-UI/ssb-sse-ui/inbound/root" pattern="*://*:*/**/ssb-sse-ui/">
+       <rewrite template="{$serviceUrl[SSB-SSE-UI]}/"/>
+    </rule>
+    <rule name="SSB-SSE-UI/ssb-sse-ui/inbound/path" pattern="*://*:*/**/ssb-sse-ui/{**}">
+       <rewrite template="{$serviceUrl[SSB-SSE-UI]}/{**}"/>
+    </rule>
+    <rule name="SSB-SSE-UI/ssb-sse-ui/inbound/query" pattern="*://*:*/**/ssb-sse-ui/{**}?{**}">
+       <rewrite template="{$serviceUrl[SSB-SSE-UI]}/{**}?{**}"/>
+    </rule>
+    <rule dir="OUT" name="SSB-SSE-UI/rule/outbound/html/api" pattern="/api/{**}/">
+       <rewrite template="{$frontend[url]}/ssb-sse-ui/api/{**}/"/>
+    </rule>
+    <rule dir="OUT" name="SSB-SSE-UI/rule/outbound/html/ui" pattern="*://*:*/ui/{**}">
+       <rewrite template="{$frontend[url]}/ssb-sse-ui/ui/{**}"/>
+    </rule>
+    <rule dir="OUT" name="SSB-SSE-UI/rule/outbound/html/frontend-ui" pattern="/ui/">
+       <rewrite template="{$frontend[url]}/ssb-sse-ui/ui/"/>
+    </rule>
+    <rule dir="OUT" name="SSB-SSE-UI/rule/outbound/html/internal" pattern="/internal/">
+       <rewrite template="{$frontend[url]}/ssb-sse-ui/internal/"/>
+    </rule>
+    <rule dir="OUT" name="SSB-SSE-UI/rule/outbound/html/swagger-url" pattern="/swagger/{**}">
+       <rewrite template="{$frontend[path]}/ssb-sse-ui/swagger/{**}"/>
+    </rule>
+    <rule dir="OUT" name="SSB-SSE-UI/rule/outbound/html/swagger-config-url" pattern="/swagger-ui/{**}">
+       <rewrite template="{$frontend[url]}/ssb-sse-ui/swagger-ui/{**}"/>
+    </rule>
+    <rule dir="OUT" name="SSB-SSE-UI/rule/outbound/html/websocket" pattern="/websocket/">
+       <rewrite template="{$frontend[url]}/ssb-sse-ws/websocket/"/>
+    </rule>
+    <rule dir="OUT" name="SSB-SSE-UI/rule/outbound/json/root">
+       <rewrite template="{$frontend[url]}/ssb-sse-ui/"/>
+    </rule>
+    <rule dir="OUT" name="SSB-SSE-UI/rule/outbound/json/path">
+       <rewrite template="{$frontend[url]}/ssb-sse-ui/{**}"/>
+    </rule>
+    <filter name="SSB-SSE-UI/filter/outbound/swagger/body">
+       <content type="*/json">
+          <apply path="$.servers[0].url" rule="SSB-SSE-UI/rule/outbound/json/root"/>
+          <apply path="$.oauth2RedirectUrl" rule="SSB-SSE-UI/rule/outbound/json/path"/>
+       </content>
+    </filter>
+ </rules>

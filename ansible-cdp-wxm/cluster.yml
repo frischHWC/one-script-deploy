@@ -23,6 +23,7 @@ clusters:
           dfs_permissions_supergroup: wxm
         DATANODE:
           dfs_data_dir_list: /dfs/dn
+          dfs_datanode_failed_volumes_tolerated: 0
         NAMENODE:
           dfs_name_dir_list: /dfs/nn
           dfs_federation_namenode_nameservice: "{{ cluster_name }}"
@@ -104,6 +105,8 @@ mgmt:
   name: Cloudera Management Service
   services: [ALERTPUBLISHER, EVENTSERVER, HOSTMONITOR, REPORTSMANAGER, SERVICEMONITOR]
   configs:
+    SERVICEWIDE:
+      ldap_monitoring_enabled: "{{ free_ipa }}"
     SERVICEMONITOR:
       firehose_heapsize: 2147483648
 

@@ -58,7 +58,7 @@ Many more configurations are available, see them all with:
             --license-file=${LICENSE_FILE} \
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
-            --cluster-type=basic \
+            --cluster-type=basic-enc \
             --nodes-kts=<Dedicated Node(s) for KTS> \
             --nodes="${NODES}"
 
@@ -105,7 +105,7 @@ Many more configurations are available, see them all with:
             --cluster-type=streaming \
             --nodes="${NODES}"
 
-#### CDP 7 - Streaming cluster encrypted (6 nodes basic with Spark 3 and Flink + a VPC of 3 nodes of Kafka/Nifi + Associated with an Openshift PVC) (Kerberos / TLS)
+#### CDP 7 - Full of Full cluster (6 nodes basic with Spark 3 and Flink + a VPC of 3 nodes of Kafka/Nifi + 2 Nodes for KTS + Associated with an Openshift PVC) (Kerberos / TLS / FreeIPA)
 
         ./setup-cluster.sh --cluster-name=${CLUSTER_NAME} \
             --license-file=${LICENSE_FILE} \
@@ -116,15 +116,6 @@ Many more configurations are available, see them all with:
             --node-ipa=<Dedicated Node for IPA> \
             --kubeconfig-path=<Path to your kubeconfig file> \
             --oc-tar-file-path=<Path to your oc.tar file downloaded from RedHat> \
-            --nodes="${NODES}"
-
-#### CDP 7 - Double Streaming cluster (6 nodes basic + a VPC of 1 nodes of Nifi + a VPC of 2 nodes for SolR) (Kerberos / TLS)
-
-        ./setup-cluster.sh --cluster-name=${CLUSTER_NAME} \
-            --license-file=${LICENSE_FILE} \
-            --paywall-username=${PAYWALL_USER} \
-            --paywall-password=${PAYWALL_PASSWORD} \
-            --cluster-type=solr-nifi \
             --nodes="${NODES}"
 
 #### CDP 7 - Workload XM cluster (1 WXM cluster of 5 nodes associated with a base cluster (provided in command line) ) (Kerberos / TLS)

@@ -13,11 +13,6 @@
     dest: /tmp/solr_full_config.json
   register: solr_full_config
 
-- name: DEBUG - solr_full_config
-  debug:
-    msg: "{{ solr_full_config }}"
-  when: debug | default(false)
-
 - name: Get SolR full config for SOLR_SERVER-BASE
   uri:
     url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ solr_service_name }}/roleConfigGroups/{{ solr_service_name }}-SOLR_SERVER-BASE/config?view=full"
@@ -30,11 +25,6 @@
     validate_certs: no
     body_format: json
   register: solr_full_config_base
-
-- name: DEBUG - solr_full_config_base
-  debug:
-    msg: "{{ solr_full_config_base }}"
-  when: debug | default(false)
 
 
 - name: Get SolR roles repartition
@@ -50,11 +40,6 @@
     body_format: json
     dest: /tmp/solr_roles.json
   register: solr_roles
-
-- name: DEBUG - solr_roles
-  debug:
-    msg: "{{ solr_roles }}"
-  when: debug | default(false)
 
 
 ### SET SolR CONFIGS ###
@@ -112,6 +97,10 @@
     query: "items[?name == 'solr_http_port'].default | [0]"
   when: not solr_ssl and solr_port == ''
 
+- name: DEBUG - solr_port
+  debug:
+    msg: "{{ solr_port }}"
+  when: debug | default(false)
 
 # Set SolR Servers
 
@@ -148,11 +137,6 @@
     body_format: json
   register: all_services
 
-- name: DEBUG - all_services
-  debug:
-    msg: "{{ all_services }}"
-  when: debug | default(false)
-
 - set_fact:
     ranger_service_name: "{{ all_services.json | community.general.json_query(query) }}"
   vars:
@@ -176,11 +160,6 @@
     validate_certs: no
     body_format: json
   register: cm_deployment_services
-
-- name: DEBUG - cm_deployment_services
-  debug:
-    msg: "{{ cm_deployment_services }}"
-  when: debug | default(false)
 
 - set_fact:
     ranger_server: "{{ cm_deployment_services.json | community.general.json_query(query) }}"
@@ -207,12 +186,6 @@
     dest: ~/response.json
   register: full_ranger_config
 
-- name: DEBUG - full_ranger_config
-  debug:
-    msg: "{{ full_ranger_config }}"
-  when: debug | default(false)
-
-
 - name: Get Ranger Admin full config
   uri:
     url: "{{ cloudera_manager_url }}/api/v31/clusters/{{ cluster_name }}/services/{{ ranger_service_name }}/roleConfigGroups/{{ ranger_service_name }}-RANGER_ADMIN-BASE/config?view=full"
@@ -225,12 +198,6 @@
     validate_certs: no
     body_format: json
   register: full_ranger_admin_config
-
-- name: DEBUG - full_ranger_admin_config
-  debug:
-    msg: "{{ full_ranger_admin_config }}"
-  when: debug | default(false)
-
 
 - set_fact:
     ranger_ssl: "{{ full_ranger_admin_config.json | community.general.json_query(query) }}"
@@ -325,4 +292,24 @@
     return_content: yes
     validate_certs: no
     body_format: json
+
+- name: Pause to let CM acknowledges restart
+  pause:
+    seconds: 5
+
+- name: Check SolR is up and running
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ solr_service_name }}"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: result
+  until: result.json.serviceState == "STARTED"
+  retries: 60
+  delay: 10
 

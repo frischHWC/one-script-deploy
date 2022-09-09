@@ -15,11 +15,6 @@
     dest: /tmp/controlplanes.json
   register: controlplanes
 
-- name: DEBUG - controlplanes
-  debug:
-    msg: "{{ controlplanes }}"
-  when: debug | default(false)
-
 - set_fact:
     cp_dns_suffix: "{{ controlplanes.json | community.general.json_query(query) }}"
   vars:
@@ -67,11 +62,6 @@
   register: pvc_first_call_for_account_id
   when: pvc_type == 'ECS'
 
-- name: DEBUG - pvc_first_call_for_account_id (ECS)
-  debug:
-    msg: "{{ pvc_first_call_for_account_id }}"
-  when: pvc_type == 'ECS' and debug | default(false)
-
 - set_fact:
     local_account_id: "{{ pvc_first_call_for_account_id.location.split('accountId=')[1].split('&')[0] }}" 
   when: pvc_type == 'ECS'
@@ -100,11 +90,6 @@
   register: pvc_first_call
   when: pvc_type == 'OC'
 
-- name: DEBUG - pvc_first_call
-  debug:
-    msg: "{{ pvc_first_call }}"
-  when: pvc_type == 'OC' and debug | default(false)
-
 - set_fact:
     first_cookie: "{{ pvc_first_call.set_cookie.split(';')[0] }};"
   when: pvc_type == 'OC'
@@ -127,11 +112,6 @@
     follow_redirects: no
   register: pvc_call_for_accountid
   when: pvc_type == 'OC'
-
-- name: DEBUG - pvc_call_for_accountid
-  debug:
-    msg: "{{ pvc_call_for_accountid }}"
-  when: pvc_type == 'OC' and debug | default(false)
 
 - set_fact:
     local_account_id: "{{ pvc_call_for_accountid.location.split('accountId=')[1].split('&')[0] }}" 
@@ -157,11 +137,6 @@
     validate_certs: no
     follow_redirects: no
   register: pvc_call_for_authcookie
-
-- name: DEBUG - pvc_call_for_authcookie
-  debug:
-    msg: "{{ pvc_call_for_authcookie }}"
-  when: debug | default(false)
 
 - set_fact:
     auth_cookie: "{{ pvc_call_for_authcookie.set_cookie.split('cdp-pvt-session-token=')[1].split(';')[0] }};"

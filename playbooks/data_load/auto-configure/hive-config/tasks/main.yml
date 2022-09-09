@@ -26,12 +26,6 @@
     dest: /tmp/hive_full_config.json
   register: hive_full_config
 
-- name: DEBUG - hive_full_config
-  debug:
-    msg: "{{ hive_full_config }}"
-  when: debug | default(false)
-
-
 ### SET Hive CONFIGS ###
     
 - set_fact:

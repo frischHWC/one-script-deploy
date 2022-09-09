@@ -9,9 +9,11 @@
       "mount.SSD": "false",
       "loadbalancer.allowList": "",
       "kubernetes.api.proxyCIDRList": "",
-      "subnets": ""
+      "subnets": "",
+      "tls.enabled": "false", 
+      "yunikorn.disabled": "true"
     },
     "tags": {}
   },
-  "skipValidation": false
+  "skipValidation": true
 }

@@ -1,6 +1,6 @@
 ---
 - name: Data Generation
-  hosts: main
+  hosts: edge
   gather_facts: false
   roles: 
     - prepare_directories

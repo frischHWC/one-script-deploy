@@ -2,6 +2,10 @@
 - set_fact:
     dex_endpoint_api: "{{ cdp_endpoint_url }}/dex/api/v1"
 
+- name: DEBUG - dex_endpoint_api
+  debug:
+    msg: "{{ dex_endpoint_api }}"
+
 # List environments
 - name: List Environments and get its crn
   uri:

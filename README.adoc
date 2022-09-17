@@ -41,7 +41,7 @@ Many more configurations are available, see them all with:
             --license-file=${LICENSE_FILE} \
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
-            --nodes="${NODES}"
+            --nodes-base="${NODES}"
 
 #### CDP 7 - Basic 6 nodes (Kerberos / TLS)
 
@@ -50,7 +50,7 @@ Many more configurations are available, see them all with:
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
             --cluster-type=basic \
-            --nodes="${NODES}"
+            --nodes-base="${NODES}"
 
 #### CDP 7 - Basic encrypted 6 nodes (Kerberos / TLS) (You can specify 1 or 2 nodes for KTS)
 
@@ -60,7 +60,7 @@ Many more configurations are available, see them all with:
             --paywall-password=${PAYWALL_PASSWORD} \
             --cluster-type=basic-enc \
             --nodes-kts=<Dedicated Node(s) for KTS> \
-            --nodes="${NODES}"
+            --nodes-base="${NODES}"
 
 #### CDP 7 - Basic 6 nodes with Free IPA on a dedicated node (All CDP clusters can have free-ipa just by adding --free-ipa=true and provide a node with --node-ipa=) (Kerberos / TLS)
  
@@ -71,7 +71,7 @@ Many more configurations are available, see them all with:
             --cluster-type=basic \
             --free-ipa=true \
             --node-ipa=<One node dedicated to IPA> \
-            --nodes="${NODES}"
+            --nodes-base="${NODES}"
 
 #### CDP 7 - 9 nodes with 3 dedicated for PvC with ECS (Kerberos / TLS / FreeIPA)
 
@@ -82,7 +82,7 @@ Many more configurations are available, see them all with:
             --cluster-type=pvc \
             --nodes-ecs=<Space separated list of 3 nodes> \
             --node-ipa=<One node dedicated to IPA> \
-            --nodes="${NODES}"
+            --nodes-base="${NODES}"
 
 #### CDP 7 - 6 nodes basic for PVC with Openshift (Experiences installed on a provided OCP cluster) (Kerberos / TLS / FreeIPA)
 
@@ -94,7 +94,7 @@ Many more configurations are available, see them all with:
             --kubeconfig-path=<Path to your kubeconfig file> \
             --oc-tar-file-path=<Path to your oc.tar file downloaded from RedHat> \
             --node-ipa=<One node dedicated to IPA> \
-            --nodes="${NODES}"
+            --nodes-base="${NODES}"
 
 #### CDP 7 - Streaming cluster (6 nodes basic with Spark 3 and Flink + a VPC of 3 nodes of Kafka/Nifi) (Kerberos / TLS)
 
@@ -103,7 +103,7 @@ Many more configurations are available, see them all with:
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
             --cluster-type=streaming \
-            --nodes="${NODES}"
+            --nodes-base="${NODES}"
 
 #### CDP 7 - Full of Full cluster (6 nodes basic with Spark 3 and Flink + a VPC of 3 nodes of Kafka/Nifi + 2 Nodes for KTS + Associated with an Openshift PVC) (Kerberos / TLS / FreeIPA)
 
@@ -116,7 +116,7 @@ Many more configurations are available, see them all with:
             --node-ipa=<Dedicated Node for IPA> \
             --kubeconfig-path=<Path to your kubeconfig file> \
             --oc-tar-file-path=<Path to your oc.tar file downloaded from RedHat> \
-            --nodes="${NODES}"
+            --nodes-base="${NODES}"
 
 #### CDP 7 - Workload XM cluster (1 WXM cluster of 5 nodes associated with a base cluster (provided in command line) ) (Kerberos / TLS)
 
@@ -129,7 +129,7 @@ Many more configurations are available, see them all with:
             --altus-private-key=<path to ALTUS private key provided by Cloudera> \
             --cm-base-url=<http://<CM host to connect to WXM>:<Port> \
             --tp-host=<Host in base cluster that will have Telemetry Publisher installed> \
-            --nodes="${NODES}"
+            --nodes-base="${NODES}"
 
 
 #### CDP 7 - Unsecure
@@ -140,7 +140,7 @@ Many more configurations are available, see them all with:
             --paywall-password=${PAYWALL_PASSWORD} \
             --kerberos=false \
             --tls=false \
-            --nodes="${NODES}"
+            --nodes-base="${NODES}"
 
 #### CDH 6 (Kerberos)
 
@@ -149,7 +149,7 @@ Many more configurations are available, see them all with:
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
             --cluster-type=cdh6 \
-            --nodes="${NODES}"
+            --nodes-base="${NODES}"
 
 
 #### CDH 5 (Kerberos)
@@ -159,7 +159,7 @@ Many more configurations are available, see them all with:
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
             --cluster-type=cdh5 \
-            --nodes="${NODES}"
+            --nodes-base="${NODES}"
 
 
 
@@ -170,7 +170,7 @@ Many more configurations are available, see them all with:
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
             --cluster-type=hdp3 \
-            --nodes="${NODES}"
+            --nodes-base="${NODES}"
 
 
 #### HDP 2 (Kerberos)
@@ -180,7 +180,7 @@ Many more configurations are available, see them all with:
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
             --cluster-type=hdp2 \
-            --nodes="${NODES}"
+            --nodes-base="${NODES}"
         
 
 

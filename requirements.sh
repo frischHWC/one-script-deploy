@@ -25,3 +25,4 @@ ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''
 echo "Install ansible required collections"
 ansible-galaxy collection install community.general
 ansible-galaxy collection install freeipa.ansible_freeipa
+ansible-galaxy collection install community.crypto

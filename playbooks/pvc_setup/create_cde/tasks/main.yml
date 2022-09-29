@@ -115,7 +115,7 @@
     validate_certs: no
   register: cde_service_activation
   until: " cde_service_activation.json.status == 'ClusterCreationCompleted' "
-  retries: 20
+  retries: 50
   delay: 30
 
 # Create VC for created cde service
@@ -180,7 +180,7 @@
     validate_certs: no
   register: cde_vc_activation
   until: " cde_vc_activation.json.status == 'AppInstalled' "
-  retries: 20
+  retries: 50
   delay: 30
   when: not dex_vc_is_existing
 

@@ -180,3 +180,23 @@
   debug:
     msg: "{{ livy3_service_exists }}"
   when: debug | default(false)
+
+
+
+- set_fact:
+    sr_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'SCHEMAREGISTRY'].name | [0]"
+
+- name: DEBUG - sr_service_name
+  debug:
+    msg: "{{ sr_service_name }}"
+  when: debug | default(false)
+
+- set_fact: 
+    sr_service_exists: "{{ true if sr_service_name != '' else false }}"
+
+- name: DEBUG - sr_service_exists
+  debug:
+    msg: "{{ sr_service_exists }}"
+  when: debug | default(false)

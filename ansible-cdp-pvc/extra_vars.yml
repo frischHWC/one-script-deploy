@@ -71,3 +71,5 @@ nfs_provisioned: 150
 # ecs_longhorn_storage: /ecs/longhorn-storage
 # ecs_local_storage: /ecs/local-storage
 
+# DATAGEN
+datagen_as_a_service: ${DATAGEN_AS_A_SERVICE}

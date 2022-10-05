@@ -1,0 +1,6 @@
+---
+- name: Data Generation as a Service
+  hosts: localhost
+  gather_facts: false
+  roles: 
+    - clone_project

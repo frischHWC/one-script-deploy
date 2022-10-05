@@ -1,6 +1,14 @@
 ---
 debug: ${DEBUG}
 
+# Use Datagen as a Service or not
+datagen_as_a_service: ${DATAGEN_AS_A_SERVICE}
+datagen_repo_url: ${DATAGEN_REPO_URL}
+datagen_repo_branch: ${DATAGEN_REPO_BRANCH}
+
+# Minimum settings 
+cluster_name: ${CLUSTER_NAME}
+
 # CM info required
 cloudera_manager_host: ${NODE_0}
 cloudera_manager_user: admin 
@@ -9,6 +17,33 @@ cloudera_manager_password: admin
 # Ranger info required
 ranger_user: admin
 ranger_password: ${DEFAULT_PASSWORD}
+
+# Versioning
+cdp_version: ${CDH_VERSION}
+datagen_version: 1.0.0
+dg_full_version: 1.0.0.${CDH_VERSION}
+dg_name: DATAGEN-1.0.0.${CDH_VERSION}
+distro_suffix: el${OS_VERSION_LAST_DIGIT}
+parcel_name: DATAGEN-1.0.0.${CDH_VERSION}-el${OS_VERSION_LAST_DIGIT}
+
+# Cluster Name streaming
+cluster_name_streaming: ${CLUSTER_NAME_STREAMING}
+
+# Edge Node for data gen
+edge_host: ${EDGE_HOST}
+
+# Not required as they have default settings but can be overrided
+launch_generation: true
+
+# Directory where Datagen will be cloned and compiled
+target_dir: /root/datagen
+
+# Data Gen Settings
+data_gen_git_url: ${DATAGEN_REPO_URL}
+data_gen_git_branch: ${DATAGEN_REPO_BRANCH}
+
+
+##### Old way #####
 
 # Credentials required
 kerb_auth: ${KERBEROS}

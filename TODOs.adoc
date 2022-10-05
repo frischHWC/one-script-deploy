@@ -18,15 +18,3 @@ List of TODOs for this project
 
 - Add more checks on command line
 
-## User Creation
-
-- Add Ranger rights for users
-
-## Data Loading
-
-- Add more models
-- Work on RD to make more possibilities
-
-## PvC
-
-- Test & Make it work for ECS

@@ -283,6 +283,7 @@ clusters:
           database_host: "{{ groups.db_server | first | default(omit) }}"
           database_type: "{{ database_type }}"
           database_port: "{{ database_type | default_database_port }}" 
+          kerberos.auth.enable: true
 
       STREAMS_MESSAGING_MANAGER:
         SERVICEWIDE:

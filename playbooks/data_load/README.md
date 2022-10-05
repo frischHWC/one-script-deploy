@@ -30,9 +30,3 @@ Run the below command:
 
     ansible-playbook -i <PATH_TO_HOSTS_FILE> main.yml --extra-vars "@extra_vars.yml"
 
-
-## TODOs :
-
-- Make more easy to configure random data that will be generated
-- Get releases from github using cdp-version 
-- Add more models 

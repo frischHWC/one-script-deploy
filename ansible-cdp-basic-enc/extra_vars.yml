@@ -62,3 +62,6 @@ kube_config_path: "/tmp/kubeconfig"
 install_python3: ${INSTALL_PYTHON3}
 oc_tar_file_path: ${OC_TAR_FILE_PATH}
 pvc_ecs_server_host: ${PVC_ECS_SERVER_HOST}
+
+# DATAGEN
+datagen_as_a_service: ${DATAGEN_AS_A_SERVICE}

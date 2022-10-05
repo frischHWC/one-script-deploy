@@ -1,0 +1,18 @@
+---
+- name: Clean old potential existing repo
+  file:
+    path: "/tmp/datagen-repo/"
+    state: absent
+
+- name: Clone Datagen Repository
+  git:
+    repo: "{{ datagen_repo_url }}"
+    dest: "/tmp/datagen-repo/"
+    version: "{{ datagen_repo_branch }}"  
+
+- name: Extract Playbooks
+  copy:
+    src: "{{ item }}"
+    dest: /tmp/datagen-repo/dev-support/deployment/
+  with_fileglob:
+    - /tmp/datagen-repo/dev-support/deployment/playbooks/*

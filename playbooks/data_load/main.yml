@@ -1,4 +1,9 @@
 ---
-- import_playbook: auto-configure/main.yml
-- import_playbook: ranger_policies/main.yml
-- import_playbook: generate_data/main.yml
+- import_playbook: '/tmp/datagen-repo/dev-support/deployment/create_datagen.yml'
+  when: datagen_as_a_service
+
+- import_playbook: '/tmp/datagen-repo/dev-support/deployment/install_datagen.yml'
+  when: datagen_as_a_service
+
+- import_playbook: '/tmp/datagen-repo/dev-support/deployment/launch_datagen.yml'
+  when: datagen_as_a_service

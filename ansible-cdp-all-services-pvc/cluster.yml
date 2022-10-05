@@ -6,7 +6,7 @@ clusters:
       - "{{ cdh_repo }}"
 
   - name: "{{ cluster_name }}"
-    services: [ATLAS, DAS, FLINK, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, KS_INDEXER, KUDU, LIVY, LIVY_FOR_SPARK3, OMID, OOZIE, OZONE, PHOENIX, QUEUEMANAGER, RANGER, SPARK_ON_YARN, SPARK3_ON_YARN, SOLR, SQL_STREAM_BUILDER, TEZ, YARN, ZEPPELIN, ZOOKEEPER]
+    services: [ATLAS, CRUISE_CONTROL, DAS, FLINK, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, KS_INDEXER, KUDU, LIVY, LIVY_FOR_SPARK3, NIFI, NIFIREGISTRY, OMID, OOZIE, OZONE, PHOENIX, QUEUEMANAGER, RANGER, SCHEMAREGISTRY, SPARK_ON_YARN, SPARK3_ON_YARN, SOLR, SQL_STREAM_BUILDER, STREAMS_MESSAGING_MANAGER, TEZ, YARN, ZEPPELIN, ZOOKEEPER]
     security:
       kerberos: "{{ kerberos_activated }}"
       hdfs_encryption: "{{ encryption_activated }}"
@@ -14,6 +14,7 @@ clusters:
       - "{{ cdh_repo }}"
       - "{{ csa_repo }}"
       - "{{ spark3_repo }}"
+      - "{{ cfm_repo }}"
 
     data_contexts:
       - name: SDX
@@ -80,6 +81,10 @@ clusters:
           scratch_dirs: /tmp/impala
           enable_audit_event_log: true   
 
+      KAFKA:
+        KAFKA_CONNECT:  
+          bootstrap.servers: "{{ bootstrap_servers }}"
+
       KNOX:
         SERVICEWIDE:
           knox_encryptquerystring_secret: "{{ default_password }}"
@@ -109,6 +114,14 @@ clusters:
       LIVY_FOR_SPARK3:
         LIVY_SERVER_FOR_SPARK3:
           livy_spnego_enabled: "{{ kerberos_activated }}"
+
+      NIFI:
+        NIFI_NODE:
+          nifi.security.identity.mapping.pattern.kerb: "^(.*?)@(.*?)$"
+          nifi.security.identity.mapping.value.kerb: "$1"
+          nifi.autogen.node.identities.dn.suffix: " , ST=CA, C=US"
+          nifi.security.identity.mapping.value.dn: $1
+          nifi.web.https.port: 8080
 
       OOZIE:
         SERVICEWIDE:
@@ -153,6 +166,25 @@ clusters:
           ranger.usersync.group.nameattribute: "cn"
           ranger.usersync.group.memberattributename: "member"
           ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:u:administrator&ROLE_SYS_ADMIN:u:dev"
+      
+      SCHEMAREGISTRY:
+        SERVICEWIDE:
+          database_password: "{{ database_default_password }}"
+          database_host: "{{ groups.db_server | first | default(omit) }}"
+          database_type: "{{ database_type }}"
+          database_port: "{{ database_type | default_database_port }}" 
+          kerberos.auth.enable: true
+
+      STREAMS_MESSAGING_MANAGER:
+        SERVICEWIDE:
+          smm_database_password: "{{ database_default_password }}"
+          smm_database_type: "{{ database_type }}"
+          smm_database_host: "{{ groups.db_server | first | default(omit) }}"
+          smm_database_port: "{{ database_type | default_database_port }}"
+        STREAMS_MESSAGING_MANAGER_SERVER:  
+          kafka.connect.host: "{{  groups.cluster_worker_no_hadoop | first | default(omit) }}"
+          kafka.connect.protocol: "{{ kafka_connect_protocol }}"
+          kafka.connect.port: "{{ kafka_connect_port }}"
           
       SQL_STREAM_BUILDER:
         SERVICEWIDE:
@@ -214,6 +246,7 @@ clusters:
 
       Master1:
         ATLAS: [ATLAS_SERVER]
+        CRUISE_CONTROL: [CRUISE_CONTROL_SERVER]
         FLINK: [FLINK_HISTORY_SERVER, GATEWAY]
         HBASE: [GATEWAY, HBASETHRIFTSERVER, HBASERESTSERVER]
         HDFS: [JOURNALNODE, GATEWAY, HTTPFS]
@@ -221,7 +254,7 @@ clusters:
         HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
         HUE: [HUE_SERVER, HUE_LOAD_BALANCER]
         INFRA_SOLR: [SOLR_SERVER]
-        KAFKA: [KAFKA_BROKER, GATEWAY]
+        KAFKA: [GATEWAY]
         KUDU: [KUDU_MASTER]
         LIVY_FOR_SPARK3: [GATEWAY]
         LIVY: [GATEWAY]
@@ -243,10 +276,11 @@ clusters:
         HIVE: [HIVEMETASTORE, GATEWAY]
         HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
         INFRA_SOLR: [SOLR_SERVER]
-        KAFKA: [KAFKA_BROKER, GATEWAY]
+        KAFKA: [GATEWAY]
         KUDU: [KUDU_MASTER]
         LIVY_FOR_SPARK3: [GATEWAY]
         LIVY: [LIVY_SERVER, GATEWAY]
+        NIFIREGISTRY: [NIFI_REGISTRY_SERVER]
         OZONE: [OZONE_MANAGER, STORAGE_CONTAINER_MANAGER, GATEWAY]
         PHOENIX: [PHOENIX_QUERY_SERVER]
         RANGER: [RANGER_ADMIN]
@@ -265,7 +299,7 @@ clusters:
         HIVE_ON_TEZ: [GATEWAY]
         IMPALA: [STATESTORE, CATALOGSERVER]
         INFRA_SOLR: [SOLR_SERVER]
-        KAFKA: [KAFKA_BROKER, GATEWAY]
+        KAFKA: [GATEWAY]
         KUDU: [KUDU_MASTER]
         LIVY_FOR_SPARK3: [LIVY_SERVER_FOR_SPARK3, GATEWAY]
         LIVY: [GATEWAY]
@@ -275,6 +309,8 @@ clusters:
         RANGER: [RANGER_TAGSYNC, RANGER_USERSYNC]
         QUEUEMANAGER: [QUEUEMANAGER_STORE, QUEUEMANAGER_WEBAPP]
         SOLR: [GATEWAY]
+        SCHEMAREGISTRY: [SCHEMA_REGISTRY_SERVER]
+        STREAMS_MESSAGING_MANAGER: [STREAMS_MESSAGING_MANAGER_UI, STREAMS_MESSAGING_MANAGER_SERVER]
         SPARK_ON_YARN: [GATEWAY]
         SPARK3_ON_YARN: [SPARK3_YARN_HISTORY_SERVER, GATEWAY]
         SQL_STREAM_BUILDER: [STREAMING_SQL_ENGINE, MATERIALIZED_VIEW_ENGINE]
@@ -300,92 +336,24 @@ clusters:
         SPARK3_ON_YARN: [GATEWAY]
         YARN: [NODEMANAGER, GATEWAY]
 
-      
-  - name: "{{ cluster_name }}-stream"
-    type: compute
-    services: [CORE_SETTINGS, CRUISE_CONTROL, KAFKA, KNOX, NIFI, NIFIREGISTRY, SCHEMAREGISTRY, STREAMS_MESSAGING_MANAGER, ZOOKEEPER]
-    security:
-      kerberos: "{{ kerberos_activated }}"
-      hdfs_encryption: "{{ encryption_activated }}"
-    repositories:
-      - "{{ cdh_repo }}"
-      - "{{ cfm_repo }}"
-
-    baseCluster:
-      name: "{{ cluster_name }}"
-      dataContext: SDX
-
-    configs:
-      CORE_SETTINGS: 
-        SERVICEWIDE:
-          hadoop_rpc_protection: "authentication"
-
-      KAFKA:
-        KAFKA_CONNECT:  
-          bootstrap.servers: "{{ bootstrap_servers }}"
-        SERVICEWIDE: 
-          ranger_plugin_kafka_service_name: "cm_kafka_stream"
-
-      KNOX:
-        SERVICEWIDE:
-          knox_encryptquerystring_secret: "{{ default_password }}"
-          knox_hadoop_auth_config_signature_secret: "{{ default_password }}"
-          kerberos.auth.enabled: "{{ kerberos_activated }}"
-        KNOX_GATEWAY:
-          gateway_knox_admin_groups: admin_group
-          gateway_master_secret: "{{ default_password }}"
-          gateway_sso_authentication_provider: "{% if free_ipa %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.urls./**=authcBasic#authentication.param.main.ldapRealm=org.apache.knox.gateway.shirorealm.KnoxLdapRealm#authentication.param.main.ldapContextFactory=org.apache.knox.gateway.shirorealm.KnoxLdapContextFactory#authentication.param.main.ldapRealm.contextFactory=$ldapContextFactory#authentication.param.main.ldapRealm.contextFactory.authenticationMechanism=simple#authentication.param.main.ldapRealm.contextFactory.url={{ ipa_ldap_url }}#authentication.param.main.ldapRealm.contextFactory.systemUsername={{ ipa_ldap_user_bind_dn }}#authentication.param.main.ldapRealm.contextFactory.systemPassword={{ ipa_ldap_user_bind_password }}#authentication.param.main.ldapRealm.userDnTemplate=uid={0},{{ ipa_ldap_user_search_base }}#authentication.param.remove=main.pamRealm#authentication.param.remove=main.pamRealm.service{% else %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.main.pamRealm=org.apache.knox.gateway.shirorealm.KnoxPamRealm#authentication.param.main.pamRealm.service=login#authentication.param.urls./**=authcBasic{% endif %}"
-
-      NIFI:
-        NIFI_NODE:
-          nifi.security.identity.mapping.pattern.kerb: "^(.*?)@(.*?)$"
-          nifi.security.identity.mapping.value.kerb: "$1"
-          nifi.autogen.node.identities.dn.suffix: " , ST=CA, C=US"
-          nifi.security.identity.mapping.value.dn: $1
-          nifi.web.https.port: 8080
-      
-      SCHEMAREGISTRY:
-        SERVICEWIDE:
-          database_password: "{{ database_default_password }}"
-          database_host: "{{ groups.db_server | first | default(omit) }}"
-          database_type: "{{ database_type }}"
-          database_port: "{{ database_type | default_database_port }}" 
-          kerberos.auth.enable: true
-
-      STREAMS_MESSAGING_MANAGER:
-        SERVICEWIDE:
-          smm_database_password: "{{ database_default_password }}"
-          smm_database_type: "{{ database_type }}"
-          smm_database_host: "{{ groups.db_server | first | default(omit) }}"
-          smm_database_port: "{{ database_type | default_database_port }}"
-        STREAMS_MESSAGING_MANAGER_SERVER:  
-          kafka.connect.host: "{{  groups.cluster_worker_no_hadoop | first | default(omit) }}"
-          kafka.connect.protocol: "{{ kafka_connect_protocol }}"
-          kafka.connect.port: "{{ kafka_connect_port }}"
-
-      ZOOKEEPER:
-        SERVICEWIDE:
-          zookeeper_datadir_autocreate: true
-    
-    host_templates:
-      StreamMaster:
-        CORE_SETTINGS: [GATEWAY, STORAGEOPERATIONS]
-        CRUISE_CONTROL: [CRUISE_CONTROL_SERVER]
+      StreamWorkers:
+        FLINK: [GATEWAY]
+        HBASE: [GATEWAY]
+        HDFS: [GATEWAY]
+        HIVE: [GATEWAY]
+        HIVE_ON_TEZ: [GATEWAY]
         KAFKA: [KAFKA_BROKER, KAFKA_CONNECT, GATEWAY]
-        NIFIREGISTRY: [NIFI_REGISTRY_SERVER]
+        LIVY_FOR_SPARK3: [GATEWAY]
+        LIVY: [GATEWAY]
         NIFI: [NIFI_NODE]
-        SCHEMAREGISTRY: [SCHEMA_REGISTRY_SERVER]
-        STREAMS_MESSAGING_MANAGER: [STREAMS_MESSAGING_MANAGER_UI, STREAMS_MESSAGING_MANAGER_SERVER]
-        KNOX: [KNOX_GATEWAY]
-        ZOOKEEPER: [SERVER]
-
-      StreamWorker:
-        CORE_SETTINGS: [GATEWAY]
-        KAFKA: [KAFKA_BROKER, KAFKA_CONNECT, GATEWAY]
-        NIFI: [NIFI_NODE]
-        ZOOKEEPER: [SERVER]
- 
-
+        OZONE: [GATEWAY]
+        TEZ: [GATEWAY]
+        SOLR: [GATEWAY]
+        SPARK_ON_YARN: [GATEWAY]
+        SPARK3_ON_YARN: [GATEWAY]
+        YARN: [GATEWAY]
+        
+        
 mgmt:
   name: Cloudera Management Service
   services: [ALERTPUBLISHER, EVENTSERVER, HOSTMONITOR, REPORTSMANAGER, SERVICEMONITOR]

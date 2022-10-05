@@ -27,6 +27,7 @@ export INSTALL="true"
 export POST_INSTALL="true"
 export USER_CREATION="true"
 export DATA_LOAD="true"
+export DEMO="false"
 
 # Auth & Log
 export DEFAULT_PASSWORD="Cloudera1234"
@@ -111,10 +112,14 @@ export ANSIBLE_REPO_DIR="cldr-playbook-main"
 
 # Data Load
 export DATA_LOAD_REPO_URL=""
+export DATAGEN_AS_A_SERVICE="false"
+export DATAGEN_REPO_URL="https://github.com/frischHWC/random-datagen"
+export DATAGEN_REPO_BRANCH="main"
 export EDGE_HOST=""
 
 # Demo
-export DEMO_REPO_URL=""
+export DEMO_REPO_URL="https://github.com/frischHWC/cdp-demo"
+export DEMO_REPO_BRANCH="main"
 
 # CDH 6 - KTS 
 export CDH6_KTS_PATH="~/Downloads/keytrustee-server-6.1.0-parcels.tar.gz"
@@ -132,6 +137,7 @@ export KMS_SERVERS=""
 export ANSIBLE_PYTHON_3_PARAMS=""
 export USE_ANSIBLE_PYTHON_3="false"
 export PVC_ECS_SERVER_HOST=""
+export CLUSTER_NAME_STREAMING=""
 
 function usage()
 {
@@ -169,7 +175,8 @@ function usage()
     echo "  --install=$INSTALL : (Optional) To do the installation, it is only for debugging purpose (Default) true "
     echo "  --post-install=$POST_INSTALL : (Optional) To do post install tasks (such as CM no unlogin) (Default) true"
     echo "  --user-creation=$USER_CREATION : (Optional) Creates two users with their keytabs and home directory on all nodes (Required if loading data) (Default) true " 
-    echo "  --data-load=$DATA_LOAD : (Optional) Whether to initiate post deployment tasks including data loading (Default) false "
+    echo "  --data-load=$DATA_LOAD : (Optional) Whether to initiate post deployment tasks including data loading (Default) true "
+    echo "  --demo=$DEMO : (Optional) Whether to setup or not demo data, users and jobs on the cluster (Default) false "
     echo "  --prepare-ansible-deployment=$PREPARE_ANSIBLE_DEPLOYMENT : (Optional) To prepare deployment by copying and setting all files for deployment on node 1 (Default) true"
     echo "  --install-pvc=$INSTALL_PVC : (Optional) To launch installation of PVC (Default) true"
     echo "  --configure-pvc=$CONFIGURE_PVC : (Optional) To launch configuration of PVC (Default) true"
@@ -235,7 +242,11 @@ function usage()
     echo "  --install-repo-url=$INSTALL_REPO_URL : (Optional) Install repo URL (Default)  "
     echo "  --ansible-repo-dir=$ANSIBLE_REPO_DIR : (Optional) Directory where install repo will be deployed (Default) cldr-playbook-master "
     echo "  --data-load-repo-url=$DATA_LOAD_REPO_URL : (Optional) Data Load repo URL (Default) "
-    echo "  --demo-repo-url=$DEMO_REPO_URL : (Optional) Demo repo URL (Default)"
+    echo "  --datagen-as-a-service=$DATAGEN_AS_A_SERVICE : To deploy DATAGEN as a Service on CDP (Default) false "
+    echo "  --datagen-repo-url=$DATAGEN_REPO_URL : (Optional) Git URL of DATAGEN repository to use (Default) https://github.com/frischHWC/random-datagen"
+    echo "  --datagen-repo-branch=$DATAGEN_REPO_BRANCH : (Optional) Branch of DATAGEN repository to use (Default) main "
+    echo "  --demo-repo-url=$DEMO_REPO_URL : (Optional) Demo repo URL (Default) https://github.com/frischHWC/cdp-demo"
+    echo "  --demo-repo-branch=$DEMO_REPO_BRANCH : (Optional) Demo repo URL (Default) main"
     echo ""
     echo "  --use-csa=$USE_CSA : (Optional) Use of CSA (Default) false "
     echo "  --use-cfm=$USE_CFM : (Optional) Use of CFM (Default) false "
@@ -313,6 +324,9 @@ while [ "$1" != "" ]; do
         --data-load)
             DATA_LOAD=$VALUE
             ;;
+        --demo)
+            DEMO=$VALUE
+            ;;    
         --prepare-ansible-deployment)
             PREPARE_ANSIBLE_DEPLOYMENT=$VALUE
             ;;
@@ -472,9 +486,21 @@ while [ "$1" != "" ]; do
         --data-load-repo-url)
             DATA_LOAD_REPO_URL=$VALUE
             ;;
+        --datagen-as-a-service)
+            DATAGEN_AS_A_SERVICE=$VALUE
+            ;;
+        --datagen-repo-url)
+            DATAGEN_REPO_URL=$VALUE
+            ;;
+        --datagen-repo-branch)
+            DATAGEN_REPO_BRANCH=$VALUE
+            ;;    
         --demo-repo-url)
             DEMO_REPO_URL=$VALUE
             ;;
+        --demo-repo-branch)
+            DEMO_REPO_BRANCH=$VALUE
+            ;;    
         --use-csa)
             USE_CSA=$VALUE
             ;;
@@ -574,6 +600,19 @@ then
         export ANSIBLE_ALL_FILE="ansible-cdp/all"
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp/extra_vars.yml"
+    elif [ "${CLUSTER_TYPE}" = "all-services-pvc" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-all-services-pvc/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-all-services-pvc/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-all-services-pvc/extra_vars.yml"
+        export USE_CSA="true"
+        export USE_CFM="true"
+        export USE_SPARK3="true"
+        export PVC="true"
+        export FREE_IPA="true"
+        export PVC_TYPE="OC"
+        export ENCRYPTION_ACTIVATED="true"  
     elif [ "${CLUSTER_TYPE}" = "pvc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-pvc/hosts"
@@ -600,6 +639,7 @@ then
         export USE_SPARK3="true"
         export USE_CSA="true"
         export USE_CFM="true"
+        export CLUSTER_NAME_STREAMING="${CLUSTER_NAME}-stream"
     elif [ "${CLUSTER_TYPE}" = "full-enc-pvc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-full-enc-pvc/hosts"
@@ -614,6 +654,7 @@ then
         export PVC_TYPE="OC"
         export ENCRYPTION_ACTIVATED="true"
         export ENCRYPTION_HA="true"
+        export CLUSTER_NAME_STREAMING="${CLUSTER_NAME}-stream"
     elif [ "${CLUSTER_TYPE}" = "wxm" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-wxm/hosts"
@@ -847,6 +888,7 @@ export TO_DEPLOY_FOLDER=$(mktemp -d)
 
 echo "############ Setup connections to all nodes  ############"
 touch ~/.ssh/known_hosts
+touch ~/.ssh/authorized_keys
 
 echo "[base]" >> ${HOSTS_FILE} 
 for i in ${!NODES[@]}
@@ -1108,10 +1150,19 @@ else
     export KRB_SERVER_TYPE="MIT KDC"
 fi
 
+if [ "${CLUSTER_NAME_STREAMING}" == "" ]
+then
+    export CLUSTER_NAME_STREAMING=${CLUSTER_NAME}
+fi
+
+export OS_VERSION_LAST_DIGIT=${OS_VERSION:0:1}
+
 if [ "${DISTRIBUTION_TO_DEPLOY}" != "HDP" ]
 then
     envsubst < ${TO_DEPLOY_FOLDER}/extra_vars.yml > ${TO_DEPLOY_FOLDER}/extra_vars.yml.tmp && mv ${TO_DEPLOY_FOLDER}/extra_vars.yml.tmp ${TO_DEPLOY_FOLDER}/extra_vars.yml
 fi
+
+
 envsubst < ${TO_DEPLOY_FOLDER}/hosts > ${TO_DEPLOY_FOLDER}/hosts.tmp && mv ${TO_DEPLOY_FOLDER}/hosts.tmp ${TO_DEPLOY_FOLDER}/hosts
 envsubst < ${TO_DEPLOY_FOLDER}/all > ${TO_DEPLOY_FOLDER}/all.tmp && mv ${TO_DEPLOY_FOLDER}/all.tmp ${TO_DEPLOY_FOLDER}/all
 
@@ -1514,23 +1565,64 @@ then
     then
         export DATA_LOAD_REPO_URL="https://github.com/frischHWC/random-datagen/releases/download/${DISTRIBUTION_TO_DEPLOY}-${RD_VERSION}/random-datagen-${DISTRIBUTION_TO_DEPLOY}-${RD_VERSION}.tar.gz"
     fi
-    if [ "${DEBUG}" = "true" ]
+
+    if [ "${DATAGEN_AS_A_SERVICE}" == "true" ]
     then
-        echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/data_load/main.yml --extra-vars \"@/tmp/data_load_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
-        echo " Follow advancement at: ${LOG_DIR}/data_load.log "
-    fi
-    cp playbooks/data_load/extra_vars.yml /tmp/data_load_extra_vars.yml
-    envsubst < /tmp/data_load_extra_vars.yml > /tmp/data_load_extra_vars.yml.tmp && mv /tmp/data_load_extra_vars.yml.tmp /tmp/data_load_extra_vars.yml
-    ansible-playbook -i ${HOSTS_FILE} playbooks/data_load/main.yml --extra-vars "@/tmp/data_load_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} 2>&1 > ${LOG_DIR}/data_load.log
-    OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/data_load.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-    if [ "${OUTPUT}" == "2" ]
-    then
-      echo " SUCCESS: Data loaded "
+        if [ "${DEBUG}" = "true" ]
+        then
+            echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/data_load/main_install.yml --extra-vars \"@/tmp/data_load_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
+            echo " Follow advancement at: ${LOG_DIR}/data_load.log "
+        fi
+        cp playbooks/data_load/extra_vars.yml /tmp/data_load_extra_vars.yml
+        envsubst < /tmp/data_load_extra_vars.yml > /tmp/data_load_extra_vars.yml.tmp && mv /tmp/data_load_extra_vars.yml.tmp /tmp/data_load_extra_vars.yml
+        ansible-playbook -i ${HOSTS_FILE} playbooks/data_load/main_install.yml --extra-vars "@/tmp/data_load_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} 2>&1 > ${LOG_DIR}/data_load.log
+        OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/data_load.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
+        if [ "${OUTPUT}" == "2" ]
+        then
+          echo " SUCCESS: Datagen cloned "
+        else
+          echo " FAILURE: Could not load data " 
+          echo " See details in file: ${LOG_DIR}/data_load.log "
+          exit 1
+        fi
+
+        if [ "${DEBUG}" = "true" ]
+        then
+            echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/data_load/main.yml --extra-vars \"@/tmp/data_load_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
+            echo " Follow advancement at: ${LOG_DIR}/data_load.log "
+        fi
+        cp playbooks/data_load/extra_vars.yml /tmp/data_load_extra_vars.yml
+        envsubst < /tmp/data_load_extra_vars.yml > /tmp/data_load_extra_vars.yml.tmp && mv /tmp/data_load_extra_vars.yml.tmp /tmp/data_load_extra_vars.yml
+        ansible-playbook -i ${HOSTS_FILE} playbooks/data_load/main.yml --extra-vars "@/tmp/data_load_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} 2>&1 >> ${LOG_DIR}/data_load.log
+        OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/data_load.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
+        if [ "${OUTPUT}" == "2" ]
+        then
+          echo " SUCCESS: Datagen installed and Data loaded "
+        else
+          echo " FAILURE: Could not load data " 
+          echo " See details in file: ${LOG_DIR}/data_load.log "
+          exit 1
+        fi
+
     else
-      echo " FAILURE: Could not load data " 
-      echo " See details in file: ${LOG_DIR}/data_load.log "
-      exit 1
-    fi
+        if [ "${DEBUG}" = "true" ]
+        then
+            echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/data_load/main_old.yml --extra-vars \"@/tmp/data_load_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
+            echo " Follow advancement at: ${LOG_DIR}/data_load.log "
+        fi
+        cp playbooks/data_load/extra_vars.yml /tmp/data_load_extra_vars.yml
+        envsubst < /tmp/data_load_extra_vars.yml > /tmp/data_load_extra_vars.yml.tmp && mv /tmp/data_load_extra_vars.yml.tmp /tmp/data_load_extra_vars.yml
+        ansible-playbook -i ${HOSTS_FILE} playbooks/data_load/main_old.yml --extra-vars "@/tmp/data_load_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} 2>&1 > ${LOG_DIR}/data_load.log
+        OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/data_load.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
+        if [ "${OUTPUT}" == "2" ]
+        then
+          echo " SUCCESS: Data loaded "
+        else
+          echo " FAILURE: Could not load data " 
+          echo " See details in file: ${LOG_DIR}/data_load.log "
+          exit 1
+        fi
+    fi    
 fi
 
 ###############################

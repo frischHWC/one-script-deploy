@@ -1,0 +1,6 @@
+---
+
+### NEW RECOMMENDED WAY ###
+
+- import_playbook: install_as_a_service/main.yml
+  when: datagen_as_a_service

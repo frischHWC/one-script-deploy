@@ -1,0 +1,16 @@
+---
+
+### OLD DEPRECATED WAY ###
+# To keep compatibility, old way of data loading is setup here
+
+- import_playbook: auto-configure/main.yml
+  when: not datagen_as_a_service
+
+- import_playbook: ranger_policies/main.yml
+  when: not datagen_as_a_service
+
+- import_playbook: generate_data_old/main.yml
+  when: not datagen_as_a_service
+
+###################
+###################

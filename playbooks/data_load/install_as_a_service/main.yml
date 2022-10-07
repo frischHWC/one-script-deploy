@@ -1,6 +1,6 @@
 ---
-- name: Data Generation as a Service
-  hosts: localhost
+- name: Install CSD & Parcel
+  hosts: cloudera_manager
   gather_facts: false
   roles: 
-    - clone_project
+    - install_csd_and_parcel

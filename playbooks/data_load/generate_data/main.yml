@@ -1,0 +1,8 @@
+---
+- name: Add service & Generate Data
+  hosts: cloudera_manager
+  gather_facts: false
+  roles: 
+    - remove_service
+    - add_service
+    - { role: launch_command, when: launch_generation }

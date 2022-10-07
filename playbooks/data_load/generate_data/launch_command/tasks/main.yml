@@ -1,0 +1,168 @@
+---
+- name: Check DATAGEN is running
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/datagen"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    method: GET
+  register: dg_status
+  until: dg_status.json.serviceState == "STARTED"
+  retries: 100
+  delay: 5
+
+- name: Generate customer Data
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/datagen/commands/gen_customer"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+
+- name: Check that no command is currently running on the service
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/datagen/commands"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: result
+  until: result.content|length == 19
+  retries: 60
+  delay: 30
+
+
+- name: Generate Local Data
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/datagen/commands/gen_local"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+
+
+- name: Check that no command is currently running on the service
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/datagen/commands"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: result
+  until: result.content|length == 19
+  retries: 60
+  delay: 30
+
+
+- name: Generate Sensor Data
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/datagen/commands/gen_sensor"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+
+
+- name: Check that no command is currently running on the service
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/datagen/commands"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: result
+  until: result.content|length == 19
+  retries: 60
+  delay: 30
+
+
+- name: Generate Transaction Data
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/datagen/commands/gen_transaction"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+
+- name: Check that no command is currently running on the service
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/datagen/commands"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: result
+  until: result.content|length == 19
+  retries: 60
+  delay: 30
+
+
+- name: Generate Public Service Data
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/datagen/commands/gen_public_service_kudu"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+
+- name: Check that no command is currently running on the service
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/datagen/commands"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: result
+  until: result.content|length == 19
+  retries: 60
+  delay: 30
+
+
+- name: Generate Weather Data
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/datagen/commands/gen_weather_kafka"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no

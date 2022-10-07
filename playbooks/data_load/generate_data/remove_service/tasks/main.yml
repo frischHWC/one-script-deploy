@@ -1,0 +1,51 @@
+---
+- set_fact:
+    datagen_service_exists: "{{ cloudera_manager_all_services.json | community.general.json_query(query) | length > 0 }}"
+  vars:
+    query: "items[?type == 'DATAGEN'].name"
+
+- name: DEBUG - Datagen exists
+  debug:
+    msg: "{{ datagen_service_exists }}"
+  when: debug | default(false)
+
+
+- name: Stop Datagen Service
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/datagen/commands/stop"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  when: datagen_service_exists
+
+- name: Check DATAGEN is stopped
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/datagen"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    method: GET
+  register: dg_status
+  until: dg_status.json.serviceState == "STOPPED"
+  retries: 100
+  delay: 1
+  when: datagen_service_exists
+
+- name: Delete Services if it exists
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/datagen"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: DELETE
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  when: datagen_service_exists

@@ -1,0 +1,9 @@
+{
+    "items":
+    [
+      {
+        "name": "remote_parcel_repo_urls",
+        "value" :"{{ repos_url }},{{ datagen_parcel_repo }}"
+      }
+    ]
+  }

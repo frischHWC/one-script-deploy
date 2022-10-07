@@ -115,6 +115,8 @@ export DATA_LOAD_REPO_URL=""
 export DATAGEN_AS_A_SERVICE="false"
 export DATAGEN_REPO_URL="https://github.com/frischHWC/datagen"
 export DATAGEN_REPO_BRANCH="main"
+export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/parcels/"
+export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/csd/DATAGEN-0.2.1.7.1.7.1000.jar"
 export EDGE_HOST=""
 
 # Demo
@@ -245,6 +247,8 @@ function usage()
     echo "  --datagen-as-a-service=$DATAGEN_AS_A_SERVICE : To deploy DATAGEN as a Service on CDP (Default) $DATAGEN_AS_A_SERVICE "
     echo "  --datagen-repo-url=$DATAGEN_REPO_URL : (Optional) Git URL of DATAGEN repository to use (Default) $DATAGEN_REPO_URL"
     echo "  --datagen-repo-branch=$DATAGEN_REPO_BRANCH : (Optional) Branch of DATAGEN repository to use (Default) $DATAGEN_REPO_BRANCH "
+    echo "  --datagen-repo-parcel=$DATAGEN_REPO_PARCEL : (Optional) Parcel Repository of Datagen (should contains parcel, sha and manifest.json) (Default) $DATAGEN_REPO_PARCEL "
+    echo "  --datagen-csd-url=$DATAGEN_CSD_URL : (Optional) URL to the CSD of DATAGEN (Default) $DATAGEN_CSD_URL "
     echo "  --demo-repo-url=$DEMO_REPO_URL : (Optional) Demo repo URL (Default) $DEMO_REPO_URL"
     echo "  --demo-repo-branch=$DEMO_REPO_BRANCH : (Optional) Demo repo URL (Default) $DEMO_REPO_BRANCH"
     echo ""
@@ -494,7 +498,13 @@ while [ "$1" != "" ]; do
             ;;
         --datagen-repo-branch)
             DATAGEN_REPO_BRANCH=$VALUE
-            ;;    
+            ;;  
+        --datagen-repo-parcel)
+            DATAGEN_REPO_PARCEL=$VALUE
+            ;;  
+        --datagen-csd-url)
+            DATAGEN_CSD_URL=$VALUE
+            ;;        
         --demo-repo-url)
             DEMO_REPO_URL=$VALUE
             ;;
@@ -1579,24 +1589,7 @@ then
 
     if [ "${DATAGEN_AS_A_SERVICE}" == "true" ]
     then
-        if [ "${DEBUG}" = "true" ]
-        then
-            echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/data_load/main_install.yml --extra-vars \"@/tmp/data_load_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
-            echo " Follow advancement at: ${LOG_DIR}/data_load.log "
-        fi
-        cp playbooks/data_load/extra_vars.yml /tmp/data_load_extra_vars.yml
-        envsubst < /tmp/data_load_extra_vars.yml > /tmp/data_load_extra_vars.yml.tmp && mv /tmp/data_load_extra_vars.yml.tmp /tmp/data_load_extra_vars.yml
-        ansible-playbook -i ${HOSTS_FILE} playbooks/data_load/main_install.yml --extra-vars "@/tmp/data_load_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} 2>&1 > ${LOG_DIR}/data_load.log
-        OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/data_load.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-        if [ "${OUTPUT}" == "2" ]
-        then
-          echo " SUCCESS: Datagen cloned "
-        else
-          echo " FAILURE: Could not load data " 
-          echo " See details in file: ${LOG_DIR}/data_load.log "
-          exit 1
-        fi
-
+    # New way to deploy DATA using DATAGEN as a Service
         if [ "${DEBUG}" = "true" ]
         then
             echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/data_load/main.yml --extra-vars \"@/tmp/data_load_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
@@ -1616,6 +1609,7 @@ then
         fi
 
     else
+    # Old way to deploy data using old releases of random-datagen
         if [ "${DEBUG}" = "true" ]
         then
             echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/data_load/main_old.yml --extra-vars \"@/tmp/data_load_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
@@ -1652,9 +1646,9 @@ then
     if [ "${DEBUG}" = "true" ]
     then
         echo "Launching this command in a bash way: "
-        echo "./cdp_demo.sh --cluster-name=${CLUSTER_NAME} --cm-host=${NODE_0} --edge-host=${EDGE_HOST} --ipa-server=${NODE_IPA} --ssh-key=${NODE_KEY} --ssh-password=${NODE_PASSWORD} --debug=${DEBUG}"
+        echo "./cdp_demo.sh --cluster-name=${CLUSTER_NAME} --cm-host=${NODE_0} --edge-host=${EDGE_HOST} --ipa-server=${NODE_IPA} --ssh-key=${NODE_KEY} --ssh-password=${NODE_PASSWORD} --debug=${DEBUG} --use-ipa=${FREE_IPA} --ipa-password=${DEFAULT_PASSWORD}"
     fi
-    ./cdp_demo.sh --cluster-name=${CLUSTER_NAME} --cm-host=${NODE_0} --edge-host=${EDGE_HOST} --ipa-server=${NODE_IPA} --ssh-key=${NODE_KEY} --ssh-password=${NODE_PASSWORD} --debug=${DEBUG}
+    ./cdp_demo.sh --cluster-name=${CLUSTER_NAME} --cm-host=${NODE_0} --edge-host=${EDGE_HOST} --ipa-server=${NODE_IPA} --ssh-key=${NODE_KEY} --ssh-password=${NODE_PASSWORD} --debug=${DEBUG} --use-ipa=${FREE_IPA} --ipa-password=${DEFAULT_PASSWORD}
     cd $CURRENT_DIR
 fi
 

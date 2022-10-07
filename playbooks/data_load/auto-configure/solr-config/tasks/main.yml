@@ -116,3 +116,161 @@
   debug:
     msg: "{{ solr_url }}"
   when: debug | default(false)
+
+
+# Set SolR Znode
+- set_fact:
+    solr_znode: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'zookeeper_znode'].value | [0]"
+  when: gen_solr
+
+- set_fact:
+    solr_znode: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'zookeeper_znode'].default | [0]"
+  when: gen_solr and solr_znode == ''
+
+# Get ZK service
+- set_fact:
+    solr_zk_name: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'zookeeper_service'].value | [0]"
+  when: gen_solr
+
+- set_fact:
+    solr_zk_name: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'zookeeper_service'].default | [0]"
+  when: gen_solr and solr_zk_name == ''
+
+
+# Set solr ZK Quorum
+- name: Get ZK full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ solr_zk_name }}/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: zk_full_config
+  when: gen_solr
+
+- name: Get ZK Server full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ solr_zk_name }}/roleConfigGroups/{{ solr_zk_name }}-SERVER-BASE/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: zk_server_full_config
+  when: gen_solr
+
+- name: Get ZK roles repartition
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ solr_zk_name }}/roles"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: zk_roles
+  when: gen_solr
+
+
+### SET ZK CONFIGS ###
+
+# Set ZK port
+
+- set_fact:
+    zk_port: "{{ zk_server_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'clientPort'].value | [0]"
+  when: gen_solr
+
+- set_fact:
+    zk_port: "{{ zk_server_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'clientPort'].default | [0]"
+  when: gen_solr and zk_port == ""
+
+- name: DEBUG - zk_port
+  debug:
+    msg: "{{ zk_port }}"
+  when: gen_solr and debug | default(false)
+
+
+# Set ZK Quorum
+
+- set_fact:
+    zk_hosts: "{{ zk_roles.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'SERVER'].hostRef.hostname"
+  when: gen_solr
+
+- name: DEBUG - zk_hosts
+  debug:
+    msg: "{{ zk_hosts }}"
+  when: gen_solr and debug | default(false)
+
+- set_fact:
+    solr_zk_quorum: "{% for host in zk_hosts %}{{ host }}:{{ zk_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+  when: gen_solr
+
+- name: DEBUG - solr_zk_quorum
+  debug:
+    msg: "{{ solr_zk_quorum }}"
+  when: gen_solr and debug | default(false)
+
+
+# Kerberos
+- set_fact:
+    solr_auth: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'solr_security_authentication'].value | [0]"
+  when: gen_solr
+
+- set_fact:
+    solr_auth: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'solr_security_authentication' ].default | [0]"
+  when: gen_solr and solr_auth == ''
+
+- set_fact:
+    solr_kerberos: "{{ true if solr_auth == 'kerberos' else false }}"
+  when: gen_solr
+
+- name: DEBUG - solr_kerberos
+  debug:
+    msg: "{{ solr_kerberos }}"
+  when: gen_solr and debug | default(false)
+
+
+# TLS
+- set_fact:
+    solr_tls: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'solr_use_ssl'].value | [0]"
+  when: gen_solr
+
+- set_fact:
+    solr_tls: "{{ solr_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'solr_use_ssl'].default | [0]"
+  when: gen_solr and solr_tls == ''
+
+- name: DEBUG - solr_tls
+  debug:
+    msg: "{{ solr_tls }}"
+  when: gen_solr and debug | default(false)

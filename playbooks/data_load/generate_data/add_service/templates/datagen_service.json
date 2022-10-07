@@ -1,0 +1,39 @@
+{
+    "items": 
+    [
+            {
+                "tags" : [ ],
+                "name" : "datagen",
+                "type" : "DATAGEN",
+                "serviceVersion" : "CDH 7.1.7",
+                "displayName" : "Datagen",
+                "roles": [
+                    {
+                        "name" : "DATAGEN_SERVER",
+                        "type" : "DATAGEN_SERVER",
+                        "hostRef" : {
+                          "hostId" : "{{ edge_host_id }}",
+                          "hostname" : "{{ edge_host }}"
+                        },
+                        "config" : {
+                            "items" :
+                            [
+                                {
+                                    "name" : "threads",
+                                    "value" : 10
+                                },
+                                {
+                                    "name" : "ranger_url",
+                                    "value" : "{{ ranger_url }}"
+                                },
+                                {
+                                    "name" : "ranger_password",
+                                    "value" : "{{ ranger_password }}"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+    ]
+}

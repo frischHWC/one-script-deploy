@@ -5,9 +5,14 @@ debug: ${DEBUG}
 datagen_as_a_service: ${DATAGEN_AS_A_SERVICE}
 datagen_repo_url: ${DATAGEN_REPO_URL}
 datagen_repo_branch: ${DATAGEN_REPO_BRANCH}
+datagen_csd_url: ${DATAGEN_CSD_URL}
+datagen_parcel_repo: ${DATAGEN_REPO_PARCEL}
 
 # Minimum settings 
 cluster_name: ${CLUSTER_NAME}
+
+# Cluster Name streaming
+cluster_name_streaming: ${CLUSTER_NAME_STREAMING}
 
 # CM info required
 cloudera_manager_host: ${NODE_0}
@@ -17,17 +22,6 @@ cloudera_manager_password: admin
 # Ranger info required
 ranger_user: admin
 ranger_password: ${DEFAULT_PASSWORD}
-
-# Versioning
-cdp_version: ${CDH_VERSION}
-datagen_version: 1.0.0
-dg_full_version: 1.0.0.${CDH_VERSION}
-dg_name: DATAGEN-1.0.0.${CDH_VERSION}
-distro_suffix: el${OS_VERSION_LAST_DIGIT}
-parcel_name: DATAGEN-1.0.0.${CDH_VERSION}-el${OS_VERSION_LAST_DIGIT}
-
-# Cluster Name streaming
-cluster_name_streaming: ${CLUSTER_NAME_STREAMING}
 
 # Edge Node for data gen
 edge_host: ${EDGE_HOST}

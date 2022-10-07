@@ -1,0 +1,17 @@
+{
+  "items" :
+  [
+    {
+      "name": "solr_zk_quorum",
+      "value": "{{ solr_zk_quorum }}"
+    },
+    {
+      "name": "solr_znode",
+      "value": "{{ solr_znode }}"
+    },
+    {
+      "name": "solr_tls_enabled",
+      "value": {{ solr_tls }}
+    }
+  ]
+}

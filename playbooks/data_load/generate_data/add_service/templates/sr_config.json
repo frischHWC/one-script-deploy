@@ -1,0 +1,13 @@
+{
+  "items" :
+  [
+    {
+      "name": "schema_registry_url",
+      "value": "{{ sr_url }}"
+    },
+    {
+      "name": "schema_registry_tls_enabled",
+      "value": {{ sr_tls }}
+    }
+  ]
+}

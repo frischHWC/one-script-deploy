@@ -1,9 +1,10 @@
 ---
-- import_playbook: '/tmp/datagen-repo/dev-support/deployment/create_datagen.yml'
+### NEW RECOMMENDED WAY ###
+- import_playbook: auto-configure/main.yml
   when: datagen_as_a_service
 
-- import_playbook: '/tmp/datagen-repo/dev-support/deployment/install_datagen.yml'
+- import_playbook: install_as_a_service/main.yml
   when: datagen_as_a_service
 
-- import_playbook: '/tmp/datagen-repo/dev-support/deployment/launch_datagen.yml'
-  when: datagen_as_a_service
+- import_playbook: generate_data/main.yml
+  when: datagen_as_a_service  

@@ -1,0 +1,13 @@
+{
+  "items" :
+  [
+    {
+      "name": "kafka_url",
+      "value": "{{ kafka_url }}"
+    },
+    {
+      "name": "kafka_protocol",
+      "value": "{{ kafka_protocol }}"
+    }
+  ]
+}

@@ -42,19 +42,19 @@
 ### SET SCHEMA_REGISTRY CONFIGS ###
 
 - set_fact:
-    sr_ssl: "{{ sr_full_config.json | community.general.json_query(query) }}"
+    sr_tls: "{{ sr_full_config.json | community.general.json_query(query) }}"
   vars:
     query: "items[?name == 'ssl_enabled'].value | [0]"
 
 - set_fact:
-    sr_ssl: "{{ sr_full_config.json | community.general.json_query(query) }}"
+    sr_tls: "{{ sr_full_config.json | community.general.json_query(query) }}"
   vars:
     query: "items[?name == 'ssl_enabled'].default | [0]"
-  when: sr_ssl == ""
+  when: sr_tls == ""
 
-- name: DEBUG - sr_ssl
+- name: DEBUG - sr_tls
   debug:
-    msg: "{{ sr_ssl }}"
+    msg: "{{ sr_tls }}"
   when: debug | default(false)
 
 
@@ -62,25 +62,25 @@
     sr_port: "{{ sr_full_config.json | community.general.json_query(query) }}"
   vars:
     query: "items[?name == 'schema.registry.ssl.port'].value | [0]"
-  when: sr_ssl
+  when: sr_tls
 
 - set_fact:
     sr_port: "{{ sr_full_config.json | community.general.json_query(query) }}"
   vars:
     query: "items[?name == 'schema.registry.ssl.port'].default | [0]"
-  when: sr_ssl and sr_port == ""
+  when: sr_tls and sr_port == ""
 
 - set_fact:
     sr_port: "{{ sr_full_config.json | community.general.json_query(query) }}"
   vars:
     query: "items[?name == 'schema.registry.port'].value | [0]"
-  when: not sr_ssl
+  when: not sr_tls
 
 - set_fact:
     sr_port: "{{ sr_full_config.json | community.general.json_query(query) }}"
   vars:
     query: "items[?name == 'rschema.registry.port'].default | [0]"
-  when: not sr_ssl and sr_port == ""
+  when: not sr_tls and sr_port == ""
 
 - name: DEBUG - sr_port
   debug:

@@ -1,0 +1,9 @@
+{
+  "items" :
+  [
+    {
+      "name": "{{ dependency_service }}",
+      "value": "{{ dependency_name }}"
+    }
+  ]
+}

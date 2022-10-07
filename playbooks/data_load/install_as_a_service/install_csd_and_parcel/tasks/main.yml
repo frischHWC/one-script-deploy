@@ -1,0 +1,177 @@
+---
+
+# CSD
+
+- name: Download CSD 
+  ansible.builtin.get_url:
+    url: "{{ datagen_csd_url }}"
+    dest: /opt/cloudera/csd/
+    mode: '0644'
+
+- name: Restart CM 
+  systemd:
+    state: restarted
+    name: cloudera-scm-server
+
+- name: wait cloudera-scm-server
+  wait_for:
+    host: "{{ cloudera_manager_host }}"
+    port: "{{ cloudera_manager_port }}"
+    delay: 20
+    state: started
+    timeout: 300
+
+
+# PARCEL
+
+- name: Get CM full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/cm/config"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cm_full_config
+
+- set_fact:
+    repos_url: "{{ cm_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'REMOTE_PARCEL_REPO_URLS'].value | [0]"
+
+- name: DEBUG - repos_url
+  debug:
+    msg: "{{ repos_url }}"
+  when: debug | default(false)  
+
+
+- name: Push repo of new Repo
+  uri:
+    url: "{{ cloudera_manager_api_url }}/cm/config"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: PUT
+    body_format: json
+    body:  "{{ lookup('template', 'repos_url.json' ) }}"
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+
+- name: Pause to acknowledge parcels
+  pause:
+    seconds: 5
+
+
+- name: Get DATAGEN production name
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/parcels/"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: parcels_answer
+  
+- name: DEBUG - parcels_answer url
+  debug:
+    msg: "{{ parcels_answer }}"
+  when: debug | default(false)
+
+- name: set Datagen full version
+  set_fact:
+    dg_full_version: "{{ parcels_answer.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?product == 'DATAGEN'].version | [0]"
+  
+- name: DEBUG - dg_full_version 
+  debug:
+    msg: "{{ dg_full_version }}"
+  when: debug | default(false)
+
+
+
+### Download and activate DATAGEN ###
+- name: Start Download
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/parcels/products/DATAGEN/versions/{{ dg_full_version }}/commands/startDownload"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: download_answer
+
+- name: Check DATAGEN is downloaded
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/parcels/products/DATAGEN/versions/{{ dg_full_version }}"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    method: GET
+  register: dg_download
+  until: dg_download.json.stage == "DOWNLOADED" or dg_download.json.stage == "DISTRIBUTED" or dg_download.json.stage == "ACTIVATED"
+  retries: 100
+  delay: 30
+
+- name: Start distribution
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/parcels/products/DATAGEN/versions/{{ dg_full_version }}/commands/startDistribution"
+    method: POST
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+
+- name: Check DATAGEN is distributed
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/parcels/products/DATAGEN/versions/{{ dg_full_version }}"
+    method: GET
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: dg_download
+  until: dg_download.json.stage == "DISTRIBUTED" or dg_download.json.stage == "ACTIVATED"
+  retries: 100
+  delay: 30
+
+- name: Activate DATAGEN parcel
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/parcels/products/DATAGEN/versions/{{ dg_full_version }}/commands/activate"
+    method: POST
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+
+- name: Check DATAGEN is activated
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/parcels/products/DATAGEN/versions/{{ dg_full_version }}"
+    method: GET
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: dg_download
+  until: dg_download.json.stage == "ACTIVATED"
+  retries: 100
+  delay: 30

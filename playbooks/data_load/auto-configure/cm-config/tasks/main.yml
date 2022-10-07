@@ -152,6 +152,124 @@
     msg: "{{ cdp_version }}"
   when: debug | default(false)
 
+- set_fact:
+    cdp_patch_full_version: "{{ cloudera_manager_deployment.json | community.general.json_query(query) }}"
+  vars:
+    query: "clusters[?name == '{{ cluster_name }}' ] | [0] | parcels[?product == 'CDH' ].version | [0]"
+
+- name: DEBUG - cdp_patch_full_version
+  debug:
+    msg: "{{ cdp_patch_full_version }}"
+  when: debug | default(false)
+
+- set_fact:
+    cdp_patch_version: "{{ cdp_patch_full_version.split('cdh')[1].split('p')[1].split('.')[0] }}"
+
+- name: DEBUG - cdp_patch_version
+  debug:
+    msg: "{{ cdp_patch_version }}"
+  when: debug | default(false)
+
+- set_fact:
+    cdp_patch_version_exists: "{{ false if cdp_patch_version == '' else true }}"
+
+- set_fact:
+    cdp_version: "{{ cdp_version }}.{{ cdp_patch_version }}"
+  when: cdp_patch_version_exists | default(false)
+
+- name: Get CM Kerberos Info
+  uri:
+    url: "{{ cloudera_manager_api_url }}/cm/kerberosInfo"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_krb_info
+
+- set_fact: 
+    kerberos_activated: "{{ cloudera_manager_krb_info.json | community.general.json_query(query) }}"
+  vars:
+    query: "kerberized"
+
+- name: DEBUG - kerberos_activated
+  debug:
+    msg: "{{ kerberos_activated }}"
+  when: debug | default(false)
+
+- set_fact: 
+    krb_realm: "{{ cloudera_manager_krb_info.json | community.general.json_query(query) }}"
+  vars:
+    query: "kerberosRealm"
+  when: kerberos_activated
+
+- name: DEBUG - krb_realm
+  debug:
+    msg: "{{ krb_realm }}"
+  when: debug | default(false) and kerberos_activated
+
+# Set Keystore
+
+- set_fact:
+    keystore: "/var/lib/cloudera-scm-agent/agent-cert/cm-auto-host_keystore.jks"
+  when: keystore is not defined
+
+- name: DEBUG - keystore
+  debug:
+    msg: "{{ keystore }}"
+  when: debug | default(false)
+
+- name: Get keystore password if not defined
+  slurp:
+    src: /var/lib/cloudera-scm-agent/agent-cert/cm-auto-host_key.pw
+  register: keystore_password
+
+- name: DEBUG - keystore_password
+  debug:
+    msg: "{{ keystore_password['content'] | b64decode }}"
+  when: debug | default(false)  
+
+- set_fact:
+    keystore_pass: "{{ keystore_password['content'] | b64decode }}"
+  when: keystore_pass is not defined
+
+- name: DEBUG - keystore_pass
+  debug:
+    msg: "{{ keystore_pass }}"
+  when: debug | default(false)
+
+- set_fact:
+    keystore_key_pass: "{{ keystore_password['content'] | b64decode }}"
+  when: keystore_key_pass is not defined
+
+- name: DEBUG - keystore_key_pass
+  debug:
+    msg: "{{ keystore_key_pass }}"
+  when: debug | default(false)
+
+- name: Get Cluster TLS Info
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/isTlsEnabled"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: tls_cluster_info
+
+- set_fact:
+    tls_activated: "{{ tls_cluster_info.content }}"
+
+- name: DEBUG - tls_activated
+  debug:
+    msg: "{{ tls_activated }}"
+  when: debug | default(false)
+
 
 - name: Get All services from CM
   uri:
@@ -166,4 +284,22 @@
     body_format: json
     dest: /tmp/cloudera_manager_all_services.json
   register: cloudera_manager_all_services
+
+- name: DEBUG - cluster_name_streaming
+  debug:
+    msg: "{{ cluster_name_streaming }}"
+  when: debug | default(false)
+
+- name: Get All services from CM for streaming cluster (Kafka + SR)
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name_streaming }}/services/"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_all_services_streaming
 

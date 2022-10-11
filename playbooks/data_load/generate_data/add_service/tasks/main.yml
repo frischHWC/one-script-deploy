@@ -50,6 +50,19 @@
   retries: 100
   delay: 1
 
+- name: Set Thresholds for heahlth tests
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/datagen/roleConfigGroups/datagen-DATAGEN_SERVER-BASE/config"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: PUT
+    body_format: json
+    body:  "{{ lookup('file', 'thresholds.json' ) }}"
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+
 - name: Set TLS properties if needed
   uri:
     url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/datagen/roleConfigGroups/datagen-DATAGEN_SERVER-BASE/config"

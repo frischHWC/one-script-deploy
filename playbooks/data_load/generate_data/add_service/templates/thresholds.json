@@ -1,0 +1,20 @@
+{
+    "items": [
+      {
+        "name": "unexpected_exits_thresholds",
+        "value": "{\"warning\":\"any\",\"critical\":\"any\"}"
+      },
+      {
+        "name": "log_directory_free_space_percentage_thresholds",
+        "value": "{\"warning\":80,\"critical\":80}"
+      },
+      {
+        "name": "process_swap_memory_thresholds",
+        "value": "{\"warning\":\"any\",\"critical\":\"never\"}"
+      },
+      {
+        "name": "process_swap_memory_rate_thresholds",
+        "value": "{\"warning\":\"any\",\"critical\":\"never\"}"
+      }
+    ]
+  }

@@ -1,0 +1,36 @@
+---
+# TODO: Patch CM agent if CM version is < 7.7.1
+- name: Template Patch to all ECS nodes
+  template:
+    src: filesystem_map.py.p
+    dest: /tmp/filesystem_map.py.p
+  when: cm_version.split('.')[1] == '4' or cm_version.split('.')[1] == '5' or cm_version.split('.')[1] == '6'
+
+- name: Template Patch to all ECS nodes
+  template:
+    src: test_host.py.p
+    dest: /tmp/test_host.py.p
+  when: cm_version.split('.')[1] == '4' or cm_version.split('.')[1] == '5' or cm_version.split('.')[1] == '6'
+
+
+- name: Apply patch remotely
+  patch:
+    src: /tmp/filesystem_map.py.p
+    dest: /opt/cloudera/cm-agent/lib/python2.7/site-packages/cmf/monitor/host/filesystem_map.py
+    remote_src: yes
+    backup: yes
+  ignore_errors: true
+
+- name: Apply patch remotely
+  patch:
+    src: /tmp/test_host.py.p
+    dest: /opt/cloudera/cm-agent/lib/python2.7/site-packages/cmf_test/monitor/test_host.py
+    remote_src: yes
+    backup: yes
+  ignore_errors: true
+
+
+- name: Restart CM agent
+  service:
+    name: "cloudera-scm-agent"
+    state: restarted

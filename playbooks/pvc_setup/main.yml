@@ -33,6 +33,13 @@
     - role: prereqs_ecs
       when: pvc_type == "ECS"
 
+- name: Patches for ECS agent
+  hosts: pvc
+  gather_facts: false
+  roles: 
+    - role: patch_ecs_agent
+      when: pvc_type == "ECS"
+
 - name: Pre-requisites and fixes for PvC 
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false

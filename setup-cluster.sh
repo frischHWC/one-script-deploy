@@ -115,8 +115,8 @@ export DATA_LOAD_REPO_URL=""
 export DATAGEN_AS_A_SERVICE="false"
 export DATAGEN_REPO_URL="https://github.com/frischHWC/datagen"
 export DATAGEN_REPO_BRANCH="main"
-export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/parcels/"
-export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/csd/DATAGEN-0.2.1.7.1.7.1000.jar"
+export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/parcels/7.1.7.1000/"
+export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/csd/7.1.7.1000/DATAGEN-0.2.2.7.1.7.1000.jar"
 export EDGE_HOST=""
 
 # Demo

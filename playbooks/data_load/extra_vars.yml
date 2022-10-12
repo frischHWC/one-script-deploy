@@ -27,7 +27,7 @@ ranger_password: ${DEFAULT_PASSWORD}
 edge_host: ${EDGE_HOST}
 
 # Not required as they have default settings but can be overrided
-launch_generation: true
+launch_generation: false
 
 # Directory where Datagen will be cloned and compiled
 target_dir: /root/datagen

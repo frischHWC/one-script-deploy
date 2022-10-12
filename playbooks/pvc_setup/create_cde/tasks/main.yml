@@ -238,13 +238,13 @@
 - name: Generates rootCA if needed
   shell: |
     openssl genrsa -out ~/rootCA.key 4096
-    openssl req -x509 -new -nodes -key ~/rootCA.key -sha256 -days 1024 -out ~/rootCA.crt -subj "/C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/CN=CDE_FRISCH"
+    openssl req -x509 -new -nodes -key ~/rootCA.key -sha256 -days 1024 -out ~/rootCA.crt -subj "/C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/CN=CDE-{{ virtual_cluster.env_name }}"
   when: not rootca_key_stat.stat.exists and not rootca_crt_stat.stat.exists
 
 - name: Fetch rootCA locally to add it to your browser
   fetch: 
     src: ~/rootCA.crt
-    dest: /tmp/rootCA-{{ virtual_cluster.env_name }}.pem
+    dest: /tmp/rootCA-cde-{{ virtual_cluster.env_name }}.pem
 
 - name: Generate key and csr for endpoint
   shell: "openssl req -nodes -newkey rsa:2048 -keyout endpoint-{{ cde_vc_endpoint_hostname }}.key -out endpoint-{{ cde_vc_endpoint_hostname }}.csr -subj \"/C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/CN={{ cde_vc_endpoint_hostname_wildcard }}\" "

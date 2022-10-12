@@ -61,13 +61,13 @@
 - name: Generates rootCA if needed
   shell: |
     openssl genrsa -out ~/rootCA.key 4096
-    openssl req -x509 -new -nodes -key ~/rootCA.key -sha256 -days 1024 -out ~/rootCA.crt -subj "/C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/CN=FRISCH"
+    openssl req -x509 -new -nodes -key ~/rootCA.key -sha256 -days 1024 -out ~/rootCA.crt -subj "/C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/CN=CML-{{ workspace.env_name }}"
   when: not rootca_key_stat.stat.exists and not rootca_crt_stat.stat.exists and not workspace.disable_tls
 
 - name: Fetch rootCA locally to add it to your browser
   fetch: 
     src: ~/rootCA.crt
-    dest: /tmp/rootCA-{{ workspace.env_name }}.pem
+    dest: /tmp/rootCA-cml-{{ workspace.env_name }}.pem
   when: not workspace.disable_tls
 
 - name: Template openssl-ext.conf

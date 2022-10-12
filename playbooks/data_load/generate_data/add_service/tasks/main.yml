@@ -57,7 +57,7 @@
     password: "{{ cloudera_manager_password }}"
     method: PUT
     body_format: json
-    body:  "{{ lookup('file', 'thresholds.json' ) }}"
+    body:  "{{ lookup('template', 'thresholds.json' ) }}"
     force_basic_auth: yes
     status_code: 200
     return_content: yes

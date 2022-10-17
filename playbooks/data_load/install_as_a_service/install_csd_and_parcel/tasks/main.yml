@@ -21,6 +21,17 @@
     state: started
     timeout: 300
 
+- name: Restart of CMS to acknowledge new CSD 
+  uri:
+    url: "{{ cloudera_manager_api_url }}/cm/service/commands/restart"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+
 
 # PARCEL
 
@@ -175,3 +186,4 @@
   until: dg_download.json.stage == "ACTIVATED"
   retries: 100
   delay: 30
+

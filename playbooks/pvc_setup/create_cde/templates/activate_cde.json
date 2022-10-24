@@ -11,7 +11,7 @@
       "kubernetes.api.proxyCIDRList": "",
       "subnets": "",
       "tls.enabled": "false", 
-      "yunikorn.disabled": "true"
+      "yunikorn.disabled": "false"
     },
     "tags": {}
   },

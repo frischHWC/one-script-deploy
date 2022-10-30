@@ -49,7 +49,7 @@ clusters:
           dfs_namenode_acls_enabled: true
           hdfs_verify_ec_with_topology_enabled: false
           dfs_permissions_supergroup: admin_group
-          core_site_safety_valve: <property><name>hadoop.proxyuser.zeppelin.hosts</name><value>*</value></property><property><name>hadoop.proxyuser.zeppelin.groups</name><value>*</value></property>
+          core_site_safety_valve: <property><name>hadoop.proxyuser.zeppelin.hosts</name><value>*</value></property><property><name>hadoop.proxyuser.zeppelin.groups</name><value>*</value></property><property><name>dfs.namenode.kerberos.principal.pattern</name><value>*</value></property>
         DATANODE:
           dfs_data_dir_list: /dfs/dn
           dfs_datanode_failed_volumes_tolerated: 0

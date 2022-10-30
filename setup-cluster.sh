@@ -109,6 +109,7 @@ export TP_HOST=
 # Installation
 export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/heads/main.zip"
 export ANSIBLE_REPO_DIR="cldr-playbook-main"
+export CM_COLOR="RANDOM"
 
 # Data Load
 export DATA_LOAD_REPO_URL=""
@@ -196,6 +197,7 @@ function usage()
     echo "  --ansible-cluster-file=$ANSIBLE_CLUSTER_YML_FILE : (Optional) The path to ansible yaml cluster file (Default) $ANSIBLE_CLUSTER_YML_FILE"
     echo "  --ansible-extravars-file=$ANSIBLE_EXTRA_VARS_YML_FILE : (Optional) The path to ansible extra_vars file  (Default) $ANSIBLE_EXTRA_VARS_YML_FILE"
     echo "  --distribution-to-deploy=$DISTRIBUTION_TO_DEPLOY : (Optional) Choose between CDP, CDH, HDP (Default) $DISTRIBUTION_TO_DEPLOY"
+    echo "  --cm-color=$CM_COLOR : (Optional) Only for CDP: Choose between BROWN, RED, BLACK, GREEN, TEAL, PINK, YELLOW, GRAY, PURPLE, BLUE, DARKBLUE or RANDOM (Default) RANDOM"
     echo ""
     echo "  --cm-version=$CM_VERSION : (Optional) Version of CM (Default) $ $CM_VERSION "
     echo "  --cdh-version=$CDH_VERSION : (Optional) Version of CDH (Default) $ $CDH_VERSION "
@@ -364,6 +366,9 @@ while [ "$1" != "" ]; do
         --distribution-to-deploy)
             DISTRIBUTION_TO_DEPLOY=$VALUE
             ;;
+        --cm-color)
+            CM_COLOR=$VALUE
+            ;;    
         --cm-version)
             CM_VERSION=$VALUE
             ;;
@@ -576,6 +581,16 @@ then
         exit 1
     fi
 fi
+fi
+
+if [ "${DISTRIBUTION_TO_DEPLOY}" = "CDP" ] && [ "${CM_COLOR}" = "RANDOM" ]
+then
+    RANDOM=$$$(date +%s)
+    colors=("PURPLE" "RED" "YELLOW" "GREEN" "TEAL" "PINK" "BLACK" "GRAY" "BROWN" "BLUE" "DARKBLUE")
+    export CUSTOM_HEADER_COLOR="${colors[ $RANDOM % ${#colors[@]} ]}"
+    echo " Will use color for CM : ${CUSTOM_HEADER_COLOR}"
+else
+    export CUSTOM_HEADER_COLOR=${CM_COLOR}
 fi
 
 # TODO: add check on pvc if no nodes are set or no kubeconfig file

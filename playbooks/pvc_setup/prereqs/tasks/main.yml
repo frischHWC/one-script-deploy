@@ -83,12 +83,22 @@
     msg: "{{ ipa_server_ip }}"
   when: debug | default(false)
 
-- name: Replace IPA's server hostname with IP
-  replace:
-    path: /etc/krb5.conf
-    regexp: "{{ ipa_server }}"
-    replace: "{{ ipa_server_ip }}"
+# - name: Replace IPA's server hostname with IP
+#   replace:
+#     path: /etc/krb5.conf
+#     regexp: "{{ ipa_server }}"
+#     replace: "{{ ipa_server_ip }}"
 
+- name: Insert KDC with IPs after
+  blockinfile:
+    path: /etc/krb5.conf
+    insertafter: 'kpasswd_server.*'
+    marker: "# ip_block"
+    block: |
+          kdc = {{ ipa_server_ip }}:88
+          master_kdc = {{ ipa_server_ip }}:88
+          admin_server = {{ ipa_server_ip }}:749
+          kpasswd_server = {{ ipa_server_ip }}:464
 
 # Download and set up cdp-cde-utils.tgz
 

@@ -1,0 +1,6 @@
+{
+    "vizName":"{{ viz.name }}",
+    "tags":[],
+    "template":"{{ viz.size }}-viz",
+    "config":{}
+}

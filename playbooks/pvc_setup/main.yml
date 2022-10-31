@@ -80,6 +80,19 @@
       when: cdw | default(false)
       ignore_errors: yes
 
+- name: Create Cloudera Data Vizs
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: false
+  tasks: 
+    - name: create Data Vizs
+      include_role:
+        name: create_dataviz
+      with_items: "{{ vizs }}"
+      vars: 
+        viz: "{{ item }}"
+      when: dataviz | default(false)
+      ignore_errors: yes
+
 - name: Create Cloudera Data Engineering
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false

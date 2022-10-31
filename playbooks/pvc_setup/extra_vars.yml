@@ -22,6 +22,7 @@ docker_registry_password: ${PAYWALL_PASSWORD}
 cdw: ${CREATE_CDW}
 cde: ${CREATE_CDE}
 cml: ${CREATE_CML}
+dataviz: ${CREATE_VIZ}
 pvc_type: ${PVC_TYPE}
 pvc_ecs_server_host: ${PVC_ECS_SERVER_HOST}
 auto_tls: ${TLS}
@@ -70,6 +71,12 @@ warehouses:
     disable_auto_suspend: false # default = false
     legacy_multithreading: false # default = false
 
+# Data Viz
+vizs:
+  - name: "Viz-1-{{ cluster_name }}"
+    env_name: "{{ cluster_name_pvc }}-env-1"
+    size: "small" # default = small 
+    admin_group: "admin_group" # Group that will be added to be admin and access data viz
 
 # CML
 workspaces:

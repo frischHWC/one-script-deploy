@@ -1,0 +1,8 @@
+{
+    "items": [
+      {
+        "name": "ranger_service",
+        "value": "{{ ranger_service_name }}"
+      }
+    ]
+  }

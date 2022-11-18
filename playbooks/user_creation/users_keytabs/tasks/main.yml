@@ -23,11 +23,11 @@
 - name: Get keytab locally
   fetch:
     src: /home/{{ user.name }}/{{ user.name }}.keytab
-    dest: "/tmp/{{ user.name }}-{{ cluster_name }}.keytab"
+    dest: "~/cluster-{{ cluster_name }}/{{ user.name }}.keytab"
     flat: yes
     
 - name: Get krb5.conf locally
   fetch:
     src: /etc/krb5.conf
-    dest: "/tmp/krb5-{{ cluster_name }}.conf"
+    dest: "~/cluster-{{ cluster_name }}/krb5.conf"
     flat: yes

@@ -3,6 +3,16 @@
   copy:
     src: ~/.ssh/id_rsa.pub
     dest: ~/local-key
+
+- name: Create .ssh directory if not existing
+  file:
+    name: ~/.ssh/
+    state: directory
+
+- name: Touch authorized_keys
+  file:
+    path: ~/.ssh/authorized_keys
+    state: touch
   
 - name: Add local key to hosts
   shell: cat ~/local-key >> ~/.ssh/authorized_keys 

@@ -15,6 +15,9 @@ realm_user: ${REALM}
 free_ipa: ${FREE_IPA}
 krb5_server_type: ${KRB_SERVER_TYPE}
 
+node_password: "${NODE_PASSWORD}"
+node_key: ${NODE_KEY}
+
 kafka_protocol: ${KAFKA_PROTOCOL}
 hbase_auth: ${HBASE_AUTH}
 bootstrap_servers: ${NODE_3}:${BOOTSTRAP_SERVERS_PORT},${NODE_4}:${BOOTSTRAP_SERVERS_PORT},${NODE_5}:${BOOTSTRAP_SERVERS_PORT}

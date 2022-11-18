@@ -244,7 +244,7 @@
 - name: Fetch rootCA locally to add it to your browser
   fetch: 
     src: ~/rootCA.crt
-    dest: /tmp/rootCA-cde-{{ virtual_cluster.env_name }}.pem
+    dest: "~/cluster-{{ cluster_name }}/rootCA-cde-{{ virtual_cluster.env_name }}.pem"
 
 - name: Generate key and csr for endpoint
   shell: "openssl req -nodes -newkey rsa:2048 -keyout endpoint-{{ cde_vc_endpoint_hostname }}.key -out endpoint-{{ cde_vc_endpoint_hostname }}.csr -subj \"/C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/CN={{ cde_vc_endpoint_hostname_wildcard }}\" "
@@ -256,3 +256,9 @@
 
 - name: Add certs with script to VC
   shell: "./cdp-cde-utils.sh init-virtual-cluster -h {{ cde_vc_endpoint_hostname }} -c endpoint-{{ cde_vc_endpoint_hostname }}.crt -k endpoint-{{ cde_vc_endpoint_hostname }}.key"
+
+- name: Fetch cert file locally to add it to your browser
+  fetch: 
+    src: "~/endpoint-{{ cde_vc_endpoint_hostname }}.crt"
+    dest: "~/cluster-{{ cluster_name }}/endpoint-{{ cde_vc_endpoint_hostname }}.crt"
+  when: not workspace.disable_tls

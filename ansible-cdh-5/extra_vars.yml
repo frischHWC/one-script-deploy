@@ -18,6 +18,9 @@ tls_activated: ${TLS}
 cluster_name: ${CLUSTER_NAME}
 realm_user: ${REALM}
 
+node_password: "${NODE_PASSWORD}"
+node_key: ${NODE_KEY}
+
 cdh_repo: ${CDH_REPO}
 
 auto_tls: ${TLS}

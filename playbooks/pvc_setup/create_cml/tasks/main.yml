@@ -67,7 +67,7 @@
 - name: Fetch rootCA locally to add it to your browser
   fetch: 
     src: ~/rootCA.crt
-    dest: /tmp/rootCA-cml-{{ workspace.env_name }}.pem
+    dest: "~/cluster-{{ cluster_name }}/rootCA-pvc-{{ workspace.env_name }}.pem"
   when: not workspace.disable_tls
 
 - name: Template openssl-ext.conf
@@ -89,5 +89,11 @@
 
 - name: Upload cert file
   shell: "kubectl create secret tls cml-tls-secret --cert=endpoint-{{ cml_endpoint }}.crt --key=endpoint-{{ cml_endpoint }}.key -o yaml --dry-run | kubectl -n {{ workspace.name }} create -f - "
+  when: not workspace.disable_tls
+
+- name: Fetch cert file locally to add it to your browser
+  fetch: 
+    src: "~/endpoint-{{ cml_endpoint }}.crt"
+    dest: "~/cluster-{{ cluster_name }}/endpoint-{{ cml_endpoint }}.crt"
   when: not workspace.disable_tls
   

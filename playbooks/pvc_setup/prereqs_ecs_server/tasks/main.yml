@@ -27,22 +27,6 @@
     replace: "{{ ipa_server_ip }}"
 
 
-# Set up aliases for kubeconfig
-- name: Get ECS directory name
-  find:
-    paths: /opt/cloudera/parcels/
-    recurse: no
-    file_type: directory
-    patterns: "ECS-*"
-  register: ecs_directory
-
-- name: add kubeconfig and docker alias
-  blockinfile:
-    path: ~/.bashrc
-    block: |
-      alias kubectl-ecs='/var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml'
-      alias docker-ecs={{ ecs_directory.files[0].path }}/docker/docker
-
 - name: Fetch kubeconfig file
   fetch: 
     src: /etc/rancher/rke2/rke2.yaml

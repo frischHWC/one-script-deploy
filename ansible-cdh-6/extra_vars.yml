@@ -13,6 +13,9 @@ tls_activated: ${TLS}
 cluster_name: ${CLUSTER_NAME}
 realm_user: ${REALM}
 
+node_password: "${NODE_PASSWORD}"
+node_key: ${NODE_KEY}
+
 kafka_protocol: ${KAFKA_PROTOCOL}
 hbase_auth: ${HBASE_AUTH}
 bootstrap_servers: ${NODE_3}:${BOOTSTRAP_SERVERS_PORT},${NODE_4}:${BOOTSTRAP_SERVERS_PORT},${NODE_5}:${BOOTSTRAP_SERVERS_PORT}

@@ -52,7 +52,7 @@ export ENCRYPTION_ACTIVATED="false"
 # Versions
 export CM_VERSION="7.6.5"
 export CDH_VERSION="7.1.7.1000"
-export PVC_VERSION="1.4.0"
+export PVC_VERSION="1.4.1"
 export CSA_VERSION="1.7.0.1"
 export CFM_VERSION="2.1.4.2"
 export SPARK3_VERSION="3.2.7171000.1"
@@ -117,8 +117,8 @@ export DATA_LOAD_REPO_URL=""
 export DATAGEN_AS_A_SERVICE="false"
 export DATAGEN_REPO_URL="https://github.com/frischHWC/datagen"
 export DATAGEN_REPO_BRANCH="main"
-export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/parcels/0.3.1/7.1.7.1000/"
-export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/csd/0.3.1/7.1.7.1000/DATAGEN-0.3.1.7.1.7.1000.jar"
+export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/parcels/0.4.0/7.1.7.1000/"
+export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/csd/0.4.0/7.1.7.1000/DATAGEN-0.4.0.7.1.7.1000.jar"
 export EDGE_HOST=""
 
 # Demo
@@ -167,6 +167,7 @@ function usage()
     echo "  --nodes-base=$NODES_BASE : A Space separated list of all nodes (Default) $NODES_BASE "
     echo "  --node-ipa=$NODE_IPA : Required only if using FreeIPA (Default) $NODE_IPA "
     echo "  --node-kts=$NODES_KTS : Required only if using KTS as a space separated list of maximum two nodes (Default) $NODES_KTS "
+    echo "  --nodes-ecs=$NODES_PVC_ECS : (Optional) A Space separated list of ECS nodes (external to cluster) where to install ECS (Default) $NODES_PVC_ECS  "
     echo ""
     echo "  --cluster-type=$CLUSTER_TYPE : To simplify deployment, this parameter will adjust number of nodes, security and templates to deploy.  (Default) $CLUSTER_TYPE"
     echo "       Choices: basic, basic-enc, streaming, pvc, pvc-oc, full, full-enc-pvc, wxm, cdh5, cdh6, hdp3, hdp2 (Default) $ Will install a CDP 7 with almost all services "
@@ -643,6 +644,19 @@ then
         export FREE_IPA="true"
         export PVC_TYPE="OC"
         export ENCRYPTION_ACTIVATED="true"  
+    elif [ "${CLUSTER_TYPE}" = "all-services-pvc-ecs" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc-ecs/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-all-services-pvc-ecs/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-all-services-pvc-ecs/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-all-services-pvc-ecs/extra_vars.yml"
+        export USE_CSA="true"
+        export USE_CFM="true"
+        export USE_SPARK3="true"
+        export PVC="true"
+        export FREE_IPA="true"
+        export PVC_TYPE="ECS"
+        export ENCRYPTION_ACTIVATED="true"  
     elif [ "${CLUSTER_TYPE}" = "pvc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-pvc/hosts"
@@ -922,6 +936,9 @@ export KNOWN_HOSTS=$(mktemp)
 export AUTHORIZED_KEYS=$(mktemp)
 export TO_DEPLOY_FOLDER=$(mktemp -d)
 
+# Create directory to gather all cluster files in one
+mkdir -p ~/cluster-${CLUSTER_NAME}/
+
 echo "############ Setup connections to all nodes  ############"
 touch ~/.ssh/known_hosts
 touch ~/.ssh/authorized_keys
@@ -937,7 +954,11 @@ do
         SSHKey=`ssh-keyscan ${NODES[$i]} 2> /dev/null`
         echo $SSHKey >> ~/.ssh/known_hosts
         echo $SSHKey >> ${KNOWN_HOSTS}
-        IP_ADRESS_SOLVED=$( dig +short ${NODES[$i]} )
+        IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES[$i]} | cut -d' ' -f1)
+        if [ -z ${IP_ADRESS_SOLVED} ]
+        then
+            IP_ADRESS_SOLVED=$( dig +short ${NODES[$i]} )
+        fi
         echo "${IP_ADRESS_SOLVED} ${NODES[$i]}" >> ${HOSTS_ETC}
         echo "**** Connection setup to ${NODES[$i]} ****"
     fi
@@ -954,7 +975,11 @@ then
         SSHKey=`ssh-keyscan ${NODE_IPA} 2> /dev/null`
         echo $SSHKey >> ~/.ssh/known_hosts
         echo $SSHKey >> ${KNOWN_HOSTS}
-        IP_ADRESS_SOLVED=$( dig +short ${NODE_IPA} )
+        IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODE_IPA} | cut -d' ' -f1)
+        if [ -z ${IP_ADRESS_SOLVED} ]
+        then
+            IP_ADRESS_SOLVED=$( dig +short ${NODE_IPA} )
+        fi
         echo "${IP_ADRESS_SOLVED} ${NODE_IPA}" >> ${HOSTS_ETC}
         echo "**** Connection setup to ${NODE_IPA} ****"
     fi
@@ -979,7 +1004,11 @@ then
             SSHKey=`ssh-keyscan ${NODES_KTS_SORTED[$i]} 2> /dev/null`
             echo $SSHKey >> ~/.ssh/known_hosts
             echo $SSHKey >> ${KNOWN_HOSTS}
-            IP_ADRESS_SOLVED=$( dig +short ${NODES_KTS_SORTED[$i]} )
+            IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES_KTS_SORTED[$i]} | cut -d' ' -f1)
+            if [ -z ${IP_ADRESS_SOLVED} ]
+            then
+                IP_ADRESS_SOLVED=$( dig +short ${NODES_KTS_SORTED[$i]} )
+            fi
             echo "${IP_ADRESS_SOLVED} ${NODES_KTS_SORTED[$i]}" >> ${HOSTS_ETC}
             echo "**** Connection setup to ${NODES_KTS_SORTED[$i]} ****"
         fi
@@ -989,7 +1018,7 @@ fi
 
 if [ ! -z "${NODES_PVC_ECS}" ]
 then
-    export NODES_PVC_ECS_SORTED_ARRAY=$( echo ${NODES_PVC_ECS} | sort | uniq )
+    export NODES_PVC_ECS_SORTED_ARRAY=$( echo ${NODES_PVC_ECS} | uniq )
     export NODES_PVC_ECS_SORTED=( ${NODES_PVC_ECS_SORTED_ARRAY} )
     echo "[pvc]" >> ${HOSTS_FILE}
     for i in ${!NODES_PVC_ECS_SORTED[@]}
@@ -1000,7 +1029,11 @@ then
             SSHKey=`ssh-keyscan ${NODES_PVC_ECS_SORTED[$i]} 2> /dev/null`
             echo $SSHKey >> ~/.ssh/known_hosts
             echo $SSHKey >> ${KNOWN_HOSTS}
-            IP_ADRESS_SOLVED=$( dig +short ${NODES_PVC_ECS_SORTED[$i]} )
+            IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES_PVC_ECS_SORTED[$i]} | cut -d' ' -f1)
+            if [ -z ${IP_ADRESS_SOLVED} ]
+            then
+                IP_ADRESS_SOLVED=$( dig +short ${NODES_PVC_ECS_SORTED[$i]} )
+            fi
             echo "${IP_ADRESS_SOLVED} ${NODES_PVC_ECS_SORTED[$i]}" >> ${HOSTS_ETC}
             echo "**** Connection setup to ${NODES_PVC_ECS_SORTED[$i]} ****"
         fi
@@ -1078,7 +1111,7 @@ fi
 echo "host_pattern_mismatch=ignore
 " >> ${HOSTS_FILE}
 
-cp ${HOSTS_FILE} /tmp/hosts-${CLUSTER_NAME}
+cp ${HOSTS_FILE} ~/cluster-${CLUSTER_NAME}/hosts
 
 ###############################
 # Preparation of files for ansible installation
@@ -1127,6 +1160,7 @@ if [ "${DISTRIBUTION_TO_DEPLOY}" != "HDP" ]
 then
     cp ${ANSIBLE_CLUSTER_YML_FILE} ${TO_DEPLOY_FOLDER}/cluster.yml
     cp ${ANSIBLE_EXTRA_VARS_YML_FILE} ${TO_DEPLOY_FOLDER}/extra_vars.yml
+    cp ${TO_DEPLOY_FOLDER}/cluster.yml ~/cluster-${CLUSTER_NAME}/deploy-cluster.yml
 fi
 cp ${ANSIBLE_HOST_FILE} ${TO_DEPLOY_FOLDER}/hosts
 cp ${ANSIBLE_ALL_FILE} ${TO_DEPLOY_FOLDER}/all
@@ -1201,11 +1235,15 @@ export OS_VERSION_LAST_DIGIT=${OS_VERSION:0:1}
 if [ "${DISTRIBUTION_TO_DEPLOY}" != "HDP" ]
 then
     envsubst < ${TO_DEPLOY_FOLDER}/extra_vars.yml > ${TO_DEPLOY_FOLDER}/extra_vars.yml.tmp && mv ${TO_DEPLOY_FOLDER}/extra_vars.yml.tmp ${TO_DEPLOY_FOLDER}/extra_vars.yml
+    cp ${TO_DEPLOY_FOLDER}/all ~/cluster-${CLUSTER_NAME}/deploy-extra_vars.yml
 fi
 
 
 envsubst < ${TO_DEPLOY_FOLDER}/hosts > ${TO_DEPLOY_FOLDER}/hosts.tmp && mv ${TO_DEPLOY_FOLDER}/hosts.tmp ${TO_DEPLOY_FOLDER}/hosts
 envsubst < ${TO_DEPLOY_FOLDER}/all > ${TO_DEPLOY_FOLDER}/all.tmp && mv ${TO_DEPLOY_FOLDER}/all.tmp ${TO_DEPLOY_FOLDER}/all
+
+cp ${TO_DEPLOY_FOLDER}/all ~/cluster-${CLUSTER_NAME}/deploy-all
+cp ${TO_DEPLOY_FOLDER}/all ~/cluster-${CLUSTER_NAME}/deploy-hosts
 
 # Set ANSIBLE_CONFIG FILE
 export ANSIBLE_CONFIG=$(pwd)/ansible.cfg
@@ -1711,13 +1749,13 @@ if [ "${KERBEROS}" = "true" ] && [ "${USER_CREATION}" = "true" ]
 then
     echo ""
     echo " Some Kerberos users have been created and their keytabs are on all machines in /home/<username>/, such as /home/francois/ "
-    echo " Their keytabs have been retrieved locally in /tmp/ and the krb5.conf has been copied in /tmp/ also, allowing you to directly kinit from your computer with: "
-    echo "      env KRB5_CONFIG=/tmp/krb5-${CLUSTER_NAME}.conf kinit -kt /tmp/francois-${CLUSTER_NAME}.keytab francois"
+    echo " Their keytabs have been retrieved locally in ~/cluster-${CLUSTER_NAME}/ and the krb5.conf has been copied in ~/cluster-${CLUSTER_NAME}/ also, allowing you to directly kinit from your computer with: "
+    echo "      env KRB5_CONFIG=~/cluster-${CLUSTER_NAME}/krb5.conf kinit -kt ~/cluster-${CLUSTER_NAME}/francois.keytab francois"
     echo ""
 fi
 echo ""
 echo ""
-echo " To allow easy interaction with the cluster the hosts file used to setup the cluster has been copied to /tmp/hosts-${CLUSTER_NAME} "
+echo " To allow easy interaction with the cluster the hosts file used to setup the cluster has been copied to ~/${CLUSTER_NAME}/hosts "
 echo " Examples:"
 echo ""
 echo "  ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} ansible_playbook.yml --extra-vars \"\" "

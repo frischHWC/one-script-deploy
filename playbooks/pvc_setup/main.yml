@@ -11,6 +11,12 @@
   gather_facts: false
   roles: 
     - prereqs_db
+
+- name: Pre-requisites on base DB
+  hosts: "{{ database_host }}"
+  gather_facts: false
+  roles: 
+    - prereqs_db
   
 - name: Pre-requisites on Open Shift
   hosts: "{{ cloudera_manager_host }}"
@@ -23,7 +29,7 @@
   hosts: pvc
   gather_facts: false
   roles: 
-    - role: prereqs_ecs_server
+    - role: prereqs_ecs_nodes
       when: pvc_type == "ECS"
 
 - name: Pre-requisites on ECS Server Node

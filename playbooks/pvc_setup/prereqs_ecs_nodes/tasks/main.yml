@@ -1,5 +1,4 @@
 ---
-
 # Set up aliases for kubeconfig
 - name: Get ECS directory name
   find:

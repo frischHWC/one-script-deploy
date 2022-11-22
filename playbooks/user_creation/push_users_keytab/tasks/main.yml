@@ -1,7 +1,7 @@
 ---                    
 - name: Copy user's keytab
   copy:
-    src: "/tmp/{{ user.name }}-{{ cluster_name }}.keytab"
+    src: "~/cluster-{{ cluster_name }}/{{ user.name }}.keytab"
     dest: "/home/{{ user.name }}/{{ user.name }}.keytab"
     owner: "{{ user.name }}"
     group: "{{ user.name }}"

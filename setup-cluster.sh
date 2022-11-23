@@ -820,7 +820,12 @@ fi
 
 if [ -z "${PVC_REPO}" ]
 then
-    export PVC_REPO="https://archive.cloudera.com/p/cdp-pvc-ds/latest"
+    if [ $PVC_VERSION = '1.4.0' ]
+    then
+        export PVC_REPO="https://archive.cloudera.com/p/cdp-pvc-ds/1.4.0-h1"
+    else 
+        export PVC_REPO="https://archive.cloudera.com/p/cdp-pvc-ds/${PVC_VERSION}"
+    fi
 fi
 
 

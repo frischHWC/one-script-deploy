@@ -1,3 +1,21 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
 ---
 
 # Set krb5.conf prereqs also on this node
@@ -35,20 +53,19 @@
 
 # Change core-dns to use dnsmasq set on ecs server
 
-# TODO: No longer needed if PvC is using local dns on each node ???
-# - name: Resolve CM server's IP
-#   shell: "cat /etc/hosts | grep -m 1 {{ cloudera_manager_host }} | cut -d' ' -f1 | xargs"
-#   register: cm_host_ip
+- name: Resolve CM server's IP
+  shell: "cat /etc/hosts | grep -m 1 {{ pvc_ecs_server_host }} | cut -d' ' -f1 | xargs"
+  register: cm_host_ip
 
-# - name: Get core dns to a file
-#   shell: /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml -n kube-system get cm rke2-coredns-rke2-coredns -o yaml > rke2-coredns-rke2-coredns.yaml
+- name: Get core dns to a file
+  shell: /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml -n kube-system get cm rke2-coredns-rke2-coredns -o yaml > rke2-coredns-rke2-coredns.yaml
 
-# - name: Update core dns to point directly to dnsmasq's host
-#   replace:
-#     path: rke2-coredns-rke2-coredns.yaml
-#     regexp: "forward   . /etc/resolv.conf"
-#     replace: "forward . {{ cm_host_ip.stdout }}"
-#     backup: yes
+- name: Update core dns to point directly to dnsmasq's host
+  replace:
+    path: rke2-coredns-rke2-coredns.yaml
+    regexp: "forward   . /etc/resolv.conf"
+    replace: "forward . {{ cm_host_ip.stdout }}"
+    backup: yes
 
-# - name: Update core dns
-#   shell: /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml apply -f rke2-coredns-rke2-coredns.yaml
+- name: Update core dns
+  shell: /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml apply -f rke2-coredns-rke2-coredns.yaml

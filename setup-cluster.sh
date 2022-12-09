@@ -1380,16 +1380,16 @@ then
         then
             echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_parcels.yml ${ANSIBLE_PYTHON_3_PARAMS} "
         fi
-        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_parcels.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 >> ${LOG_DIR}/deployment.log
-        OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-        if [ "${OUTPUT}" == "2" ]
-        then
-          echo " SUCCESS: Verification of Parcels"
-        else
-          echo " FAILURE: Could verify Parcels" 
-          echo " See details in file: ${LOG_DIR}/deployment.log "
-          exit 1
-        fi
+        #ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_parcels.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 >> ${LOG_DIR}/deployment.log
+        #OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
+        # if [ "${OUTPUT}" == "2" ]
+        # then
+        #   echo " SUCCESS: Verification of Parcels"
+        # else
+        #   echo " FAILURE: Could verify Parcels" 
+        #   echo " See details in file: ${LOG_DIR}/deployment.log "
+        #   exit 1
+        # fi
 
         if [ "${FREE_IPA}" = "true" ]
         then

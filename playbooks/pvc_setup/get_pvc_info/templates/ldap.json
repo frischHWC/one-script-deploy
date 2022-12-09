@@ -9,7 +9,7 @@
     "groupSearchBase": "cn=groups,cn=accounts,{% for i in realm.split('.') %}dc={{ i | lower }}{% if not loop.last %},{% endif %}{% endfor %}",
     "groupSearchFilter": "(&(|(member={0})(member={1}))(objectClass=posixgroup))",
     "syncGroupsOnLogin": true,
-    "emailMappingAttribute": "mailto",
+    "emailMappingAttribute": "mail",
     "showAdvanced": false,
     "tlsCaCertificates": [
       "{{ ipa_crt | replace('\n', '\\n') }}"

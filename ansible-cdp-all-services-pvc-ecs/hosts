@@ -10,9 +10,7 @@ ${NODE_3} host_template=Master3
 ${NODE_4} host_template=Workers
 ${NODE_5} host_template=Workers
 ${NODE_6} host_template=Workers
-${NODE_7} host_template=Workers
-${NODE_8} host_template=Workers
-${NODE_9} host_template=Workers
+
 
 [db_server]
 ${NODE_0}

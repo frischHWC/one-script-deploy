@@ -50,6 +50,9 @@ encryption_activated: ${ENCRYPTION_ACTIVATED}
 auto_tls: ${TLS}
 free_ipa: ${FREE_IPA}
 krb5_server_type: ${KRB_SERVER_TYPE}
+use_root_ca: ${USE_ROOT_CA}
+root_ca_cert: ${ROOT_CA_CERT}
+root_ca_key: ${ROOT_CA_KEY}
 
 # REPO
 cdh_repo: ${CDH_REPO}

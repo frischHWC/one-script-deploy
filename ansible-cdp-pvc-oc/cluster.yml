@@ -74,7 +74,7 @@ clusters:
           ozone.scm.primordial.node.id: "{{  groups.cluster_master_nodes | first | default(omit) }}"
           ozone.administrators: francois
         S3_GATEWAY:
-          ssl_enabled: false
+          ssl_enabled: true
       RANGER:
         SERVICEWIDE:
           keyadmin_user_password: "{{ default_password }}"

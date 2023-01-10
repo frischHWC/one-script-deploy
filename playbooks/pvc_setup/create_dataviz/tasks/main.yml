@@ -143,4 +143,3 @@
 
 - name: Delete viz-webapp-0 pod
   shell: " kubectl delete pod viz-webapp-0 -n {{ dviz_id }} "
-

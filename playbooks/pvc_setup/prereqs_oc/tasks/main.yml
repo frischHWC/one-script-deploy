@@ -63,6 +63,7 @@
   shell: |
     export KUBECONFIG=/root/kubeconfig
     kubectl -n openshift-ingress-operator patch ingresscontroller/default --patch '{"spec":{"routeAdmission":{"namespaceOwnership":"InterNamespaceAllowed"}}}' --type=merge
+  when: configure_oc
 
 - name: Copy OC tar file
   copy: 
@@ -90,35 +91,35 @@
     export KUBECONFIG=/root/kubeconfig
     rm -rf /tmp/openshift_secret_v2.json
     oc get secret/pull-secret -n openshift-config -o yaml > /tmp/openshift_secret_v2.json
-  when: oc_tar_file_path is defined
+  when: configure_oc and oc_tar_file_path is defined
 
 - name: Register existing credentials as a variable
   shell: cat /tmp/openshift_secret_v2.json
   register: oc_secret_result 
-  when: oc_tar_file_path is defined   
+  when: configure_oc and oc_tar_file_path is defined   
 
 - name: Set a variable
   set_fact:
     oc_secret: "{{ oc_secret_result.stdout | from_yaml }}"
-  when: oc_tar_file_path is defined
+  when: configure_oc and oc_tar_file_path is defined
 
 - name: Decode secret from open shift
   set_fact:
     oc_secret_decoded: "{{ oc_secret | community.general.json_query(query) | b64decode }}"
   vars:
     query: 'data.".dockerconfigjson"'   
-  when: oc_tar_file_path is defined
+  when: configure_oc and oc_tar_file_path is defined
 
 - name: Set decoded secret to file
   copy: 
     content: "{{ oc_secret_decoded }}" 
     dest: /tmp/openshift_secret_v2_decoded.json
-  when: oc_tar_file_path is defined
+  when: configure_oc and oc_tar_file_path is defined
 
 - name: Add docker registry credentials
   shell: |
     oc registry login --registry="{{ docker_registry }}" --auth-basic="{{ docker_registry_user }}:{{ docker_registry_password }}" --to="/tmp/openshift_secret_v2_decoded.json"
     oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson="/tmp/openshift_secret_v2_decoded.json"
-  when: oc_tar_file_path is defined
+  when: configure_oc and oc_tar_file_path is defined
     
 

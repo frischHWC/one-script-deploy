@@ -45,3 +45,17 @@
   strategy: free
   roles: 
     - { role: freeipa_dbus_fix , when: free_ipa }
+
+
+# Foreach host, using rootCA & root Cert, generates locally all the certs before pushing them to CM host for future auto-TLS
+- name: Create certs for all hosts
+  hosts: localhost
+  gather_facts: false
+  roles: 
+    - { role: generate_certs , when: use_root_ca }
+
+- name: Copy certs to CM host
+  hosts: cloudera_manager
+  gather_facts: false
+  roles: 
+    - { role: copy_certs , when: use_root_ca }

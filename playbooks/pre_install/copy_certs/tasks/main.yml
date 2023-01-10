@@ -17,19 +17,24 @@
 # under the License.
 #
 ---
-distribution: ${DISTRIBUTION_TO_DEPLOY} 
-debug: ${DEBUG} 
-free_ipa: ${FREE_IPA} 
-cluster_name: ${CLUSTER_NAME}
-etc_hosts_file: ${HOSTS_ETC}
-known_hosts: ${KNOWN_HOSTS}
-license_file: ${LICENSE_FILE}
-authorized_keys: ${AUTHORIZED_KEYS}
-node_key: ${NODE_KEY}
-use_root_ca: ${USE_ROOT_CA}
-root_ca_cert: ${ROOT_CA_CERT}
-root_ca_key: ${ROOT_CA_KEY}
-ca_server_attrs: /C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/
-certs_dir: "~/cluster-{{ cluster_name }}/certs/"
-keystore_password: ${DEFAULT_PASSWORD}
-truststore_password: ${DEFAULT_PASSWORD}
+- name: Delete cert directory
+  file:
+    state: absent
+    path: "~/certs/"
+
+- name: Create cert directory
+  file:
+    path: "~/certs/"
+    state: directory
+    recurse: yes
+
+- name: Copy of cert archive
+  copy:
+    src: "~/cluster-{{ cluster_name }}/cert.tgz"
+    dest: ~/cert.tgz
+
+- name: Extract certs archive
+  unarchive:
+    src: ~/cert.tgz
+    dest: ~/certs/
+    remote_src: true

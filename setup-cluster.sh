@@ -50,9 +50,9 @@ export REALM="FRISCH.COM"
 export ENCRYPTION_ACTIVATED="false"
 
 # Versions
-export CM_VERSION="7.6.5"
+export CM_VERSION="7.8.1"
 export CDH_VERSION="7.1.7.1000"
-export PVC_VERSION="1.4.0"
+export PVC_VERSION="1.4.1"
 export CSA_VERSION="1.7.0.1"
 export CFM_VERSION="2.1.4.2"
 export SPARK3_VERSION="3.2.7171000.1"
@@ -91,6 +91,8 @@ export CREATE_CDE="true"
 export CREATE_CML="true"
 export CREATE_VIZ="true"
 export OC_TAR_FILE_PATH=""
+export CONFIGURE_OC="true"
+export SETUP_DNS_ECS="true"
 export PVC_APP_DOMAIN=""
 
 # External CSD
@@ -111,6 +113,8 @@ export TP_HOST=
 export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/heads/main.zip"
 export ANSIBLE_REPO_DIR="cldr-playbook-main"
 export CM_COLOR="RANDOM"
+export ROOT_CA_CERT=
+export ROOT_CA_KEY=
 
 # Data Load
 export DATA_LOAD_REPO_URL=""
@@ -142,6 +146,7 @@ export ANSIBLE_PYTHON_3_PARAMS=""
 export USE_ANSIBLE_PYTHON_3="false"
 export PVC_ECS_SERVER_HOST=""
 export CLUSTER_NAME_STREAMING=""
+export USE_ROOT_CA="false"
 
 function usage()
 {
@@ -228,6 +233,8 @@ function usage()
     echo "  --tls=$TLS : (Optional) DEPRECATED for CDP: Use auto-tls instead, To set up TLS or not (Default) $TLS "
     echo "  --free-ipa=$FREE_IPA : (Optional) To install Free IPA and use it or not (Default) $FREE_IPA "
     echo "  --encryption-activated=$ENCRYPTION_ACTIVATED : (Optional) To setup TDE with KTS/KMS (only on CDP) (Default) $ENCRYPTION_ACTIVATED  "
+    echo "  --root-ca-cert=$ROOT_CA_CERT : (Optional) To provide your own root certificate that will sign all others for convenience use (only on CDP) (Default) $ROOT_CA_CERT  "
+    echo "  --root-ca-key=$ROOT_CA_KEY : (Optional) To provide your own root certificate that will sign all others for convenience use (only on CDP) (Default) $ROOT_CA_KEY  "
     echo ""
     echo "  --os=$OS : (Optional) OS to use (Default) $OS"
     echo "  --os-version=$OS_VERSION : (Optional) OS version to use (Default) $OS_VERSION" 
@@ -240,6 +247,8 @@ function usage()
     echo "  --pvc-app-domain=$PVC_APP_DOMAIN (Optional) To use with PVC ECS to specify the app domain (that will be suffix url for all your deployments) (Default) $PVC_APP_DOMAIN "
     echo "  --kubeconfig-path=$KUBECONFIG_PATH : (Optional) To use with CDP PvC on Open Shift, it is then required (Default) $KUBECONFIG_PATH   "
     echo "  --oc-tar-file-path=$OC_TAR_FILE_PATH Required if using OpenShift, local path to oc.tar file provided by RedHat (Default) $OC_TAR_FILE_PATH "
+    echo "  --configure-oc=$CONFIGURE_OC (Optional) Set it to false if your Open Shift is not dedicated to your cluster (Default) $CONFIGURE_OC "
+    echo "  --setup-dns-ecs=$SETUP_DNS_ECS (Optional) Set it to false if you already have DNS setup with wildcard for ECS (Default) $SETUP_DNS_ECS "
     echo "  --cluster-name-pvc=$CLUSTER_NAME_PVC Optional as it is derived from cluster-name (Default) ${CLUSTER_NAME}-pvc"
     echo "  --create-cdw=$CREATE_CDW Optional, used to auto setup a CDW if PVC is deployed (Default) $CREATE_CDW"
     echo "  --create-cde=$CREATE_CDE Optional, used to auto setup a CDE if PVC is deployed (Default) $CREATE_CDE"
@@ -447,6 +456,12 @@ while [ "$1" != "" ]; do
         --encryption-activated)
             ENCRYPTION_ACTIVATED=$VALUE
             ;;
+        --root-ca-cert)
+            ROOT_CA_CERT=$VALUE
+            ;;
+        --root-ca-key)
+            ROOT_CA_KEY=$VALUE
+            ;;
         --os)
             OS=$VALUE
             ;;
@@ -473,6 +488,12 @@ while [ "$1" != "" ]; do
             ;;
         --oc-tar-file-path)
             OC_TAR_FILE_PATH=$VALUE
+            ;;
+        --configure-oc)
+            CONFIGURE_OC=$VALUE
+            ;;
+        --setup-dns-ecs)
+            SETUP_DNS_ECS=$VALUE
             ;;
         --cluster-name-pvc)
             CLUSTER_NAME_PVC=$VALUE
@@ -597,6 +618,12 @@ then
     echo " Will use color for CM : ${CUSTOM_HEADER_COLOR}"
 else
     export CUSTOM_HEADER_COLOR=${CM_COLOR}
+fi
+
+if [ ! -z ${ROOT_CA_CERT} ] && [ ! -z ${ROOT_CA_KEY} ]
+then
+    echo "Will use root CA file cert (and key) located locally at ${ROOT_CA_CERT}"
+    export USE_ROOT_CA="true"
 fi
 
 # TODO: add check on pvc if no nodes are set or no kubeconfig file
@@ -1248,7 +1275,7 @@ envsubst < ${TO_DEPLOY_FOLDER}/hosts > ${TO_DEPLOY_FOLDER}/hosts.tmp && mv ${TO_
 envsubst < ${TO_DEPLOY_FOLDER}/all > ${TO_DEPLOY_FOLDER}/all.tmp && mv ${TO_DEPLOY_FOLDER}/all.tmp ${TO_DEPLOY_FOLDER}/all
 
 cp ${TO_DEPLOY_FOLDER}/all ~/cluster-${CLUSTER_NAME}/deploy-all
-cp ${TO_DEPLOY_FOLDER}/all ~/cluster-${CLUSTER_NAME}/deploy-hosts
+cp ${TO_DEPLOY_FOLDER}/hosts ~/cluster-${CLUSTER_NAME}/deploy-hosts
 
 # Set ANSIBLE_CONFIG FILE
 export ANSIBLE_CONFIG=$(pwd)/ansible.cfg

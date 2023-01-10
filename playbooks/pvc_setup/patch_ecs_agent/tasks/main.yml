@@ -17,7 +17,7 @@
 # under the License.
 #
 ---
-# TODO: Patch CM agent if CM version is < 7.7.1
+# Patch CM agent if CM version is < 7.7.1
 - name: Template Patch to all ECS nodes
   template:
     src: filesystem_map.py.p

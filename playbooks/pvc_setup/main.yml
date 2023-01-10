@@ -29,12 +29,6 @@
   gather_facts: false
   roles: 
     - prereqs_db
-
-- name: Pre-requisites on base DB
-  hosts: "{{ database_host }}"
-  gather_facts: false
-  roles: 
-    - prereqs_db
   
 - name: Pre-requisites on Open Shift
   hosts: "{{ cloudera_manager_host }}"
@@ -98,6 +92,7 @@
       ignore_errors: yes
 
 
+#### CDW ####
 - name: Create Cloudera Data Warehouse
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false
@@ -124,6 +119,8 @@
       when: dataviz | default(false)
       ignore_errors: yes
 
+
+#### CDE ####
 - name: Create Cloudera Data Engineering
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false
@@ -137,6 +134,34 @@
       when: cde | default(false)
       ignore_errors: yes
 
+- name: Sign CDE Certs
+  hosts: localhost
+  gather_facts: false
+  tasks: 
+    - name: sign certificates
+      include_role:
+        name: sign_cde_certs
+      with_items: "{{ virtual_clusters }}"
+      vars:
+        virtual_cluster: "{{ item }}"
+      when: cde | default(false)
+      ignore_errors: yes
+
+- name: Upload CDE certs
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: false
+  tasks: 
+    - name: upload certificates
+      include_role:
+        name: upload_cde_certs
+      with_items: "{{ virtual_clusters }}"
+      vars:
+        virtual_cluster: "{{ item }}"
+      when: cde | default(false)
+      ignore_errors: yes
+
+
+#### CML ####
 - name: Create Cloudera Machine Learning
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false
@@ -149,6 +174,33 @@
         workspace: "{{ item }}"
       when: cml | default(false)
       ignore_errors: yes
+
+- name: Sign CML certificates
+  hosts: localhost
+  gather_facts: false
+  tasks: 
+    - name: sign certificates
+      include_role:
+        name: sign_cml_certs
+      with_items: "{{ workspaces }}"
+      vars: 
+        workspace: "{{ item }}"
+      when: cml | default(false)
+      ignore_errors: yes
+
+- name: Upload CML certificates
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: false
+  tasks: 
+    - name: upload certificates
+      include_role:
+        name: upload_cml_certs
+      with_items: "{{ workspaces }}"
+      vars: 
+        workspace: "{{ item }}"
+      when: cml | default(false)
+      ignore_errors: yes
+
 
 
 - name: Setting up users' rights

@@ -74,7 +74,7 @@ clusters:
           ozone.scm.primordial.node.id: "{{  groups.cluster_master_nodes | first | default(omit) }}"
           ozone.administrators: francois
         S3_GATEWAY:
-          ssl_enabled: false
+          ssl_enabled: true
       SPARK_ON_YARN:
         SERVICEWIDE:
           atlas_service: "atlas"

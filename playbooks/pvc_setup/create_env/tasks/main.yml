@@ -178,3 +178,32 @@
   debug:
     msg: "{{ answer_to_register_cluster }}"
   when: pvc_type == "OC" and ((is_env_existing and env.to_delete) or not is_env_existing)
+
+# TODO: Need to get the namespace of the environment and create the log-router namespace based on its name before creating it.
+- name: Get monitoring platform namespace name
+  shell: "kubectl get ns | grep monitoring-platform | cut -d' ' -f 1"
+  register: monitoring_platform_full_name
+  when: pvc_version == '1.4.1'
+
+- name: DEBUG - monitoring_platform_full_name
+  debug:
+    msg: "{{ monitoring_platform_full_name }}"
+  when:  pvc_version == '1.4.1' and debug | default(false)
+
+- set_fact:
+    log_router_namespace_name: "{{ monitoring_platform_full_name.stdout | replace('monitoring-platform', 'log-router') }}"
+  when: pvc_version == '1.4.1'
+
+- name: DEBUG - log_router_namespace_name
+  debug:
+    msg: "{{ log_router_namespace_name }}"
+  when:  pvc_version == '1.4.1' and debug | default(false)
+
+- name: Create empty log-router namespace
+  shell: "kubectl create ns {{ log_router_namespace_name }}"
+  when: pvc_version == '1.4.1'
+  ignore_errors: true
+
+
+# Creation of env maybe different ?
+

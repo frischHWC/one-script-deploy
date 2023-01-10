@@ -53,19 +53,23 @@
 
 # Change core-dns to use dnsmasq set on ecs server
 
-- name: Resolve CM server's IP
+- name: Resolve ECS server's IP
   shell: "cat /etc/hosts | grep -m 1 {{ pvc_ecs_server_host }} | cut -d' ' -f1 | xargs"
-  register: cm_host_ip
+  register: pvc_ecs_host_ip
+  when: setup_dns_ecs
 
 - name: Get core dns to a file
   shell: /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml -n kube-system get cm rke2-coredns-rke2-coredns -o yaml > rke2-coredns-rke2-coredns.yaml
+  when: setup_dns_ecs
 
 - name: Update core dns to point directly to dnsmasq's host
   replace:
     path: rke2-coredns-rke2-coredns.yaml
     regexp: "forward   . /etc/resolv.conf"
-    replace: "forward . {{ cm_host_ip.stdout }}"
+    replace: "forward . {{ pvc_ecs_host_ip.stdout }}"
     backup: yes
+  when: setup_dns_ecs
 
 - name: Update core dns
   shell: /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml apply -f rke2-coredns-rke2-coredns.yaml
+  when: setup_dns_ecs

@@ -1,0 +1,91 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Get Environment details
+- set_fact:
+    cml_endpoint_api: "{{ cdp_endpoint_url }}/api/v1/ml"
+
+- name: DEBUG - cml_endpoint_api
+  debug:
+    msg: "{{ cml_endpoint_api }}"
+
+- name: Check CML creation
+  uri:
+    url: "{{ cml_endpoint_api }}/describeWorkspace"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', 'check_cml_activation.json') }}"
+    status_code: [200, 202]
+    return_content: yes
+    validate_certs: no
+  register: cml_activation
+  until: " cml_activation.json.workspace.instanceStatus == 'installation:finished' "
+  retries: 3
+  delay: 10
+
+- set_fact: 
+    cml_endpoint: "{{ cml_activation.json.workspace.instanceUrl.split('//')[1] }}"
+
+- set_fact:
+    cml_certs_dir: "~/cluster-{{ cluster_name }}/pvc-certs"
+
+# Prepare root cert if not use_root_ca
+
+- name: Check rootCA.crt
+  stat: 
+    path: "{{ cml_certs_dir }}/rootCA.crt"
+  register: rootca_crt_stat
+  when: not use_root_ca and not workspace.disable_tls
+
+- name: Check rootCA.key
+  stat: 
+    path: "{{ cml_certs_dir }}/rootCA.key"
+  register: rootca_key_stat
+  when: not use_root_ca and not workspace.disable_tls
+
+- name: Generates rootCA if needed
+  shell: |
+    "openssl genrsa -out {{ cml_certs_dir }}/rootCA.key 4096"
+    "openssl req -x509 -new -nodes -key {{ cml_certs_dir }}/rootCA.key -sha256 -days 1024 -out {{ cml_certs_dir }}/rootCA.crt -subj \"/C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/CN=CML-{{ workspace.env_name }}\" "
+  when: not use_root_ca and not rootca_key_stat.stat.exists and not rootca_crt_stat.stat.exists and not workspace.disable_tls
+
+
+# Prepare cert for endpoint
+
+- name: Template openssl-ext.conf
+  template: 
+    src: openssl-ext.conf
+    dest: "{{ cml_certs_dir }}/openssl-ext-{{ cml_endpoint }}.conf"
+  when: not workspace.disable_tls
+
+- name: Generate key and csr for endpoint
+  shell: "openssl req -nodes -newkey rsa:2048 -keyout {{ cml_certs_dir }}/endpoint-{{ cml_endpoint }}.key -out {{ cml_certs_dir }}/endpoint-{{ cml_endpoint }}.csr -subj \"/C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/CN={{ cml_endpoint }}\" "
+  when: not workspace.disable_tls
+
+- name: Sign it using rootCA
+  shell: "openssl x509 -req -extfile {{ cml_certs_dir }}/openssl-ext-{{ cml_endpoint }}.conf -CA {{ cml_certs_dir }}/rootCA.crt -CAkey {{ cml_certs_dir }}/rootCA.key -CAcreateserial -days 365 -sha256 -in {{ cml_certs_dir }}/endpoint-{{ cml_endpoint }}.csr -out {{ cml_certs_dir }}/endpoint-{{ cml_endpoint }}.crt"
+  when: not use_root_ca and not workspace.disable_tls
+
+- name: Sign it using rootCA provided
+  shell: "openssl x509 -req -extfile {{ cml_certs_dir }}/openssl-ext-{{ cml_endpoint }}.conf -CA {{ root_ca_cert }} -CAkey {{ root_ca_key }} -CAcreateserial -days 365 -sha256 -in {{ cml_certs_dir }}/endpoint-{{ cml_endpoint }}.csr -out {{ cml_certs_dir }}/endpoint-{{ cml_endpoint }}.crt"
+  when: use_root_ca and not workspace.disable_tls

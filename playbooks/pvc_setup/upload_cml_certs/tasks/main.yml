@@ -25,22 +25,6 @@
   debug:
     msg: "{{ cml_endpoint_api }}"
 
-# Create Workspace
-- name: Create CML Workspace
-  uri:
-    url: "{{ cml_endpoint_api }}/createWorkspace"
-    method: POST
-    headers: 
-      Content-Type: application/json
-      Accept: application/json
-      Cookie: "{{ all_cookies }}"
-    body_format: json
-    body: "{{ lookup('template', 'create_cml.json') }}"
-    status_code: [200, 202]
-    return_content: yes
-    validate_certs: no
-  register: answer_to_create_cml
-
 - name: Check CML creation
   uri:
     url: "{{ cml_endpoint_api }}/describeWorkspace"
@@ -56,5 +40,28 @@
     validate_certs: no
   register: cml_activation
   until: " cml_activation.json.workspace.instanceStatus == 'installation:finished' "
-  retries: 30
-  delay: 60
+  retries: 3
+  delay: 10
+
+- set_fact: 
+    cml_endpoint: "{{ cml_activation.json.workspace.instanceUrl.split('//')[1] }}"
+
+- set_fact:
+    cml_certs_dir: "~/cluster-{{ cluster_name }}/pvc-certs"
+
+# Copy files
+- name: Copy cert file 
+  copy:
+    src: "{{ cml_certs_dir }}/endpoint-{{ cml_endpoint }}.crt"
+    dest: "~/"
+
+- name: Copy key file 
+  copy:
+    src: "{{ cml_certs_dir }}/endpoint-{{ cml_endpoint }}.key"
+    dest: "~/"
+
+# Upload files
+- name: Upload cert file
+  shell: "kubectl create secret tls cml-tls-secret --cert=endpoint-{{ cml_endpoint }}.crt --key=endpoint-{{ cml_endpoint }}.key -o yaml --dry-run | kubectl -n {{ workspace.name }} create -f - "
+  when: not workspace.disable_tls
+

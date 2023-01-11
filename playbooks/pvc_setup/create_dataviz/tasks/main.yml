@@ -118,9 +118,11 @@
   file:
     path: "/tmp/cf-{{ dviz_id }}"
     state: touch
+  when: pvc_version is version('1.4.0', '<=')
 
 - name: Get configmap into a file 
   shell: " kubectl get configmap viz-saml-conf -n {{ dviz_id }} -o yaml >> /tmp/cf-{{ dviz_id }} "
+  when: pvc_version is version('1.4.0', '<=')
 
 - name: Add configmap line for required_admin_groups
   lineinfile:
@@ -128,6 +130,7 @@
     insertbefore: '.*ConfigMap.*'
     line: "    required_admin_groups=[\"{{ viz.admin_group }}\"]"
     state: present
+  when: pvc_version is version('1.4.0', '<=')
 
 - name: Add configmap line for required_groups
   lineinfile:
@@ -135,11 +138,14 @@
     insertbefore: '.*ConfigMap.*'
     line: "    required_groups=[\"{{ viz.admin_group }}\"]"
     state: present
+  when: pvc_version is version('1.4.0', '<=')
 
 - name: Apply new settings added 
   shell: " kubectl apply -f /tmp/cf-{{ dviz_id }} -n {{ dviz_id }} "
+  when: pvc_version is version('1.4.0', '<=')
 
 # Delete web app pod
 
 - name: Delete viz-webapp-0 pod
   shell: " kubectl delete pod viz-webapp-0 -n {{ dviz_id }} "
+  when: pvc_version is version('1.4.0', '<=')

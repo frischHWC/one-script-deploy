@@ -20,21 +20,21 @@
 - name: Delete cert directory
   file:
     state: absent
-    path: "~/certs/"
+    path: "/root/certs/"
 
 - name: Create cert directory
   file:
-    path: "~/certs/"
+    path: "/root/certs/"
     state: directory
     recurse: yes
 
 - name: Copy of cert archive
   copy:
     src: "~/cluster-{{ cluster_name }}/cert.tgz"
-    dest: ~/cert.tgz
+    dest: /root/cert.tgz
 
 - name: Extract certs archive
   unarchive:
-    src: ~/cert.tgz
-    dest: ~/certs/
+    src: /root/cert.tgz
+    dest: /root/certs/
     remote_src: true

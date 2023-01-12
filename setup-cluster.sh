@@ -50,7 +50,7 @@ export REALM="FRISCH.COM"
 export ENCRYPTION_ACTIVATED="false"
 
 # Versions
-export CM_VERSION="7.8.1"
+export CM_VERSION="7.6.5"
 export CDH_VERSION="7.1.7.1000"
 export PVC_VERSION="1.4.1"
 export CSA_VERSION="1.7.0.1"
@@ -671,6 +671,7 @@ then
         export FREE_IPA="true"
         export PVC_TYPE="OC"
         export ENCRYPTION_ACTIVATED="true"  
+        export CM_VERSION="7.8.1"
     elif [ "${CLUSTER_TYPE}" = "all-services-pvc-ecs" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc-ecs/hosts"
@@ -683,7 +684,8 @@ then
         export PVC="true"
         export FREE_IPA="true"
         export PVC_TYPE="ECS"
-        export ENCRYPTION_ACTIVATED="true"  
+        export ENCRYPTION_ACTIVATED="true"
+        export CM_VERSION="7.8.1" 
     elif [ "${CLUSTER_TYPE}" = "pvc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-pvc/hosts"
@@ -692,6 +694,7 @@ then
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-pvc/extra_vars.yml"
         export PVC="true"
         export FREE_IPA="true"
+        export CM_VERSION="7.8.1"
     elif [ "${CLUSTER_TYPE}" = "pvc-oc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-pvc-oc/hosts"
@@ -701,6 +704,7 @@ then
         export PVC="true"
         export PVC_TYPE="OC"
         export FREE_IPA="true"
+        export CM_VERSION="7.8.1"
     elif [ "${CLUSTER_TYPE}" = "streaming" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-streaming/hosts"
@@ -726,6 +730,7 @@ then
         export ENCRYPTION_ACTIVATED="true"
         export ENCRYPTION_HA="true"
         export CLUSTER_NAME_STREAMING="${CLUSTER_NAME}-stream"
+        export CM_VERSION="7.8.1"
     elif [ "${CLUSTER_TYPE}" = "wxm" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-wxm/hosts"

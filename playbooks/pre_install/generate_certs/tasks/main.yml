@@ -30,12 +30,18 @@
     recurse: yes
 
 # Generate certs foreach host
+- name: Template openssl-ext.conf
+  template: 
+    src: openssl-ext.conf
+    dest: "{{ certs_dir }}/openssl-ext-{{ item }}.conf"
+  with_items: "{{ groups['all'] }}"
+
 - name: Generate key and csr for hosts
   shell: "openssl req -nodes -newkey rsa:2048 -keyout {{ certs_dir }}{{ item }}.key -out {{ certs_dir }}{{ item }}.csr -subj \"{{ ca_server_attrs }}CN={{ item }}\" "
   with_items: "{{ groups['all'] }}"
 
 - name: Sign it using rootCA provided
-  shell: "openssl x509 -req -CA {{ root_ca_cert }} -CAkey {{ root_ca_key }} -CAcreateserial -days 365 -sha256 -in {{ certs_dir }}{{ item }}.csr -out {{ certs_dir }}{{ item }}.crt"
+  shell: "openssl x509 -req -extfile {{ certs_dir }}/openssl-ext-{{ item }}.conf -CA {{ root_ca_cert }} -CAkey {{ root_ca_key }} -CAcreateserial -days 365 -sha256 -in {{ certs_dir }}{{ item }}.csr -out {{ certs_dir }}{{ item }}.crt"
   with_items: "{{ groups['all'] }}"
 
 # Create password file for key and truststore

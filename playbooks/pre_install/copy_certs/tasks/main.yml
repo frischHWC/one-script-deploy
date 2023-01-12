@@ -20,21 +20,28 @@
 - name: Delete cert directory
   file:
     state: absent
-    path: "/root/certs/"
+    path: "/tmp/certs/"
 
 - name: Create cert directory
   file:
-    path: "/root/certs/"
+    path: "/tmp/certs/"
     state: directory
+    owner: "root"
+    group: "root"
+    mode: '0775'
     recurse: yes
 
 - name: Copy of cert archive
   copy:
     src: "~/cluster-{{ cluster_name }}/cert.tgz"
-    dest: /root/cert.tgz
+    dest: /tmp/cert.tgz
+    owner: "root"
+    group: "root"
+    mode: '0640'
 
 - name: Extract certs archive
   unarchive:
-    src: /root/cert.tgz
-    dest: /root/certs/
+    src: /tmp/cert.tgz
+    dest: /tmp/certs/
+    mode: '0640'
     remote_src: true

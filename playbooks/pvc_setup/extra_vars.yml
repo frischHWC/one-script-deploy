@@ -1,3 +1,21 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
 ---
 # General
 cloudera_manager_host: ${NODE_0}
@@ -26,11 +44,16 @@ dataviz: ${CREATE_VIZ}
 pvc_type: ${PVC_TYPE}
 pvc_ecs_server_host: ${PVC_ECS_SERVER_HOST}
 auto_tls: ${TLS}
+use_root_ca: ${USE_ROOT_CA}
+root_ca_cert: ${ROOT_CA_CERT}
+root_ca_key: ${ROOT_CA_KEY}
 oc_tar_file_path: ${OC_TAR_FILE_PATH}
+configure_oc: ${CONFIGURE_OC}
+setup_dns_ecs: ${SETUP_DNS_ECS}
 
 # Environments
 environments:
-  - name: "{{ cluster_name_pvc }}-env-1"
+  - name: "{{ cluster_name_pvc }}-env"
     cm_address: "https://{{ cloudera_manager_host }}:{{ cloudera_manager_port }}/"
     cm_user: "{{ cloudera_manager_user }}"
     cm_password: "{{ cloudera_manager_password }}"
@@ -44,8 +67,8 @@ delegation_password: "{{ ipa_bind_password }}"
 
 warehouses: 
   - name: "Hive-1-{{ cluster_name }}"
-    database_catalog_name: "{{ cluster_name_pvc }}-env-1-datalake-default"
-    env_name: "{{ cluster_name_pvc }}-env-1"
+    database_catalog_name: "{{ cluster_name_pvc }}-env-datalake-default"
+    env_name: "{{ cluster_name_pvc }}-env"
     low_resource_mode: true
     type: "hive" 
     size: "xsmall" # default = xsmall
@@ -56,8 +79,8 @@ warehouses:
     disable_auto_suspend: false # default = false
 
   - name: "Impala-1-{{ cluster_name }}"
-    database_catalog_name: "{{ cluster_name_pvc }}-env-1-datalake-default"
-    env_name: "{{ cluster_name_pvc }}-env-1"
+    database_catalog_name: "{{ cluster_name_pvc }}-env-datalake-default"
+    env_name: "{{ cluster_name_pvc }}-env"
     low_resource_mode: true
     type: "impala"
     size: "xsmall" # default = xsmall
@@ -74,14 +97,14 @@ warehouses:
 # Data Viz
 vizs:
   - name: "Viz-1-{{ cluster_name }}"
-    env_name: "{{ cluster_name_pvc }}-env-1"
+    env_name: "{{ cluster_name_pvc }}-env"
     size: "small" # default = small 
     admin_group: "admin_group" # Group that will be added to be admin and access data viz
 
 # CML
 workspaces:
   - name: "{{ cluster_name_pvc }}-workspace-1"
-    env_name: "{{ cluster_name_pvc }}-env-1"
+    env_name: "{{ cluster_name_pvc }}-env"
     disable_tls: false # default = false
     enable_monitoring: true # default = true
     enable_governance: false # default = false
@@ -91,11 +114,11 @@ workspaces:
 # CDE
 virtual_clusters:
   - name: "Spark3-{{ cluster_name }}"
-    env_name: "{{ cluster_name_pvc }}-env-1"
+    env_name: "{{ cluster_name_pvc }}-env"
     cde_service_name: "CDE-Service-1"
-    spark_version: "3.2.0"
+    spark_version: "3.2.1" # From 1.4.1, it is 3.2.1, before it is 3.2.0
   - name: "Spark2-{{ cluster_name }}"
-    env_name: "{{ cluster_name_pvc }}-env-1"
+    env_name: "{{ cluster_name_pvc }}-env"
     cde_service_name: "CDE-Service-1"
     spark_version: "2.4.7"
 
@@ -107,17 +130,17 @@ user_rights:
     password: ${DEFAULT_PASSWORD}
     roles: [ "EnvironmentAdmin", "EnvironmentUser", "IamUser", "IamViewer", "PowerUser" ] # Optionnal: Used to define "admin" roles on CP for this user
     envs: 
-      - name: "{{ cluster_name_pvc }}-env-1"
+      - name: "{{ cluster_name_pvc }}-env"
         roles: [ "DEAdmin", "DEUser", "DWAdmin", "DWUser", "MLAdmin", "MLUser" ]
     workspaces: # Optionnal: If not defined no keytab pushed to workspace
       - name: "{{ cluster_name_pvc }}-workspace-1" 
-        env_name: "{{ cluster_name_pvc }}-env-1"
+        env_name: "{{ cluster_name_pvc }}-env"
     virtual_clusters: # Optionnal: If not defined no keytab pushed to cde
       - name: "Spark3-{{ cluster_name }}"
-        env_name: "{{ cluster_name_pvc }}-env-1"
+        env_name: "{{ cluster_name_pvc }}-env"
         cde_service_name: "CDE-Service-1"
       - name: "Spark2-{{ cluster_name }}"
-        env_name: "{{ cluster_name_pvc }}-env-1"
+        env_name: "{{ cluster_name_pvc }}-env"
         cde_service_name: "CDE-Service-1"
     
     

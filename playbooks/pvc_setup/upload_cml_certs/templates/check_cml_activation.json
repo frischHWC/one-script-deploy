@@ -1,0 +1,4 @@
+{
+    "environmentName": "{{ workspace.env_name }}",
+    "workspaceName": "{{ workspace.name }}"
+}

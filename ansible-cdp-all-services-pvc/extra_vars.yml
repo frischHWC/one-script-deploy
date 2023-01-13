@@ -1,3 +1,21 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
 ---
 # CLOUDERA MANAGER
 cluster_definition: environment/
@@ -38,6 +56,9 @@ encryption_activated: ${ENCRYPTION_ACTIVATED}
 auto_tls: ${TLS}
 free_ipa: ${FREE_IPA}
 krb5_server_type: ${KRB_SERVER_TYPE}
+use_root_ca: ${USE_ROOT_CA}
+root_ca_cert: ${ROOT_CA_CERT}
+root_ca_key: ${ROOT_CA_KEY}
 
 # REPO
 cdh_repo: ${CDH_REPO}
@@ -64,6 +85,8 @@ kube_config_path: "/tmp/kubeconfig"
 install_python3: ${INSTALL_PYTHON3}
 oc_tar_file_path: ${OC_TAR_FILE_PATH}
 pvc_ecs_server_host: ${PVC_ECS_SERVER_HOST}
+configure_oc: ${CONFIGURE_OC}
+setup_dns_ecs: ${SETUP_DNS_ECS}
 
 # DATAGEN
 datagen_as_a_service: ${DATAGEN_AS_A_SERVICE}

@@ -1,3 +1,21 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
 ---
 # Set up kubectl with export KUBECONFIG & NO_PROXY
 - name: Copy kubeconfig file
@@ -45,6 +63,7 @@
   shell: |
     export KUBECONFIG=/root/kubeconfig
     kubectl -n openshift-ingress-operator patch ingresscontroller/default --patch '{"spec":{"routeAdmission":{"namespaceOwnership":"InterNamespaceAllowed"}}}' --type=merge
+  when: configure_oc
 
 - name: Copy OC tar file
   copy: 
@@ -72,35 +91,35 @@
     export KUBECONFIG=/root/kubeconfig
     rm -rf /tmp/openshift_secret_v2.json
     oc get secret/pull-secret -n openshift-config -o yaml > /tmp/openshift_secret_v2.json
-  when: oc_tar_file_path is defined
+  when: configure_oc and oc_tar_file_path is defined
 
 - name: Register existing credentials as a variable
   shell: cat /tmp/openshift_secret_v2.json
   register: oc_secret_result 
-  when: oc_tar_file_path is defined   
+  when: configure_oc and oc_tar_file_path is defined   
 
 - name: Set a variable
   set_fact:
     oc_secret: "{{ oc_secret_result.stdout | from_yaml }}"
-  when: oc_tar_file_path is defined
+  when: configure_oc and oc_tar_file_path is defined
 
 - name: Decode secret from open shift
   set_fact:
     oc_secret_decoded: "{{ oc_secret | community.general.json_query(query) | b64decode }}"
   vars:
     query: 'data.".dockerconfigjson"'   
-  when: oc_tar_file_path is defined
+  when: configure_oc and oc_tar_file_path is defined
 
 - name: Set decoded secret to file
   copy: 
     content: "{{ oc_secret_decoded }}" 
     dest: /tmp/openshift_secret_v2_decoded.json
-  when: oc_tar_file_path is defined
+  when: configure_oc and oc_tar_file_path is defined
 
 - name: Add docker registry credentials
   shell: |
     oc registry login --registry="{{ docker_registry }}" --auth-basic="{{ docker_registry_user }}:{{ docker_registry_password }}" --to="/tmp/openshift_secret_v2_decoded.json"
     oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson="/tmp/openshift_secret_v2_decoded.json"
-  when: oc_tar_file_path is defined
+  when: configure_oc and oc_tar_file_path is defined
     
 

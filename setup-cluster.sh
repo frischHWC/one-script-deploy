@@ -52,7 +52,7 @@ export ENCRYPTION_ACTIVATED="false"
 # Versions
 export CM_VERSION="7.6.5"
 export CDH_VERSION="7.1.7.1000"
-export PVC_VERSION="1.4.0"
+export PVC_VERSION="1.4.1"
 export CSA_VERSION="1.7.0.1"
 export CFM_VERSION="2.1.4.2"
 export SPARK3_VERSION="3.2.7171000.1"
@@ -91,6 +91,8 @@ export CREATE_CDE="true"
 export CREATE_CML="true"
 export CREATE_VIZ="true"
 export OC_TAR_FILE_PATH=""
+export CONFIGURE_OC="true"
+export SETUP_DNS_ECS="true"
 export PVC_APP_DOMAIN=""
 
 # External CSD
@@ -111,14 +113,16 @@ export TP_HOST=
 export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/heads/main.zip"
 export ANSIBLE_REPO_DIR="cldr-playbook-main"
 export CM_COLOR="RANDOM"
+export ROOT_CA_CERT=
+export ROOT_CA_KEY=
 
 # Data Load
 export DATA_LOAD_REPO_URL=""
 export DATAGEN_AS_A_SERVICE="false"
 export DATAGEN_REPO_URL="https://github.com/frischHWC/datagen"
 export DATAGEN_REPO_BRANCH="main"
-export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/parcels/0.3.1/7.1.7.1000/"
-export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/csd/0.3.1/7.1.7.1000/DATAGEN-0.3.1.7.1.7.1000.jar"
+export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/parcels/0.4.0/7.1.7.1000/"
+export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/csd/0.4.0/7.1.7.1000/DATAGEN-0.4.0.7.1.7.1000.jar"
 export EDGE_HOST=""
 
 # Demo
@@ -142,6 +146,7 @@ export ANSIBLE_PYTHON_3_PARAMS=""
 export USE_ANSIBLE_PYTHON_3="false"
 export PVC_ECS_SERVER_HOST=""
 export CLUSTER_NAME_STREAMING=""
+export USE_ROOT_CA="false"
 
 function usage()
 {
@@ -167,6 +172,7 @@ function usage()
     echo "  --nodes-base=$NODES_BASE : A Space separated list of all nodes (Default) $NODES_BASE "
     echo "  --node-ipa=$NODE_IPA : Required only if using FreeIPA (Default) $NODE_IPA "
     echo "  --node-kts=$NODES_KTS : Required only if using KTS as a space separated list of maximum two nodes (Default) $NODES_KTS "
+    echo "  --nodes-ecs=$NODES_PVC_ECS : (Optional) A Space separated list of ECS nodes (external to cluster) where to install ECS (Default) $NODES_PVC_ECS  "
     echo ""
     echo "  --cluster-type=$CLUSTER_TYPE : To simplify deployment, this parameter will adjust number of nodes, security and templates to deploy.  (Default) $CLUSTER_TYPE"
     echo "       Choices: basic, basic-enc, streaming, pvc, pvc-oc, full, full-enc-pvc, wxm, cdh5, cdh6, hdp3, hdp2 (Default) $ Will install a CDP 7 with almost all services "
@@ -227,6 +233,8 @@ function usage()
     echo "  --tls=$TLS : (Optional) DEPRECATED for CDP: Use auto-tls instead, To set up TLS or not (Default) $TLS "
     echo "  --free-ipa=$FREE_IPA : (Optional) To install Free IPA and use it or not (Default) $FREE_IPA "
     echo "  --encryption-activated=$ENCRYPTION_ACTIVATED : (Optional) To setup TDE with KTS/KMS (only on CDP) (Default) $ENCRYPTION_ACTIVATED  "
+    echo "  --root-ca-cert=$ROOT_CA_CERT : (Optional) To provide your own root certificate that will sign all others for convenience use (only on CDP) (Default) $ROOT_CA_CERT  "
+    echo "  --root-ca-key=$ROOT_CA_KEY : (Optional) To provide your own root certificate that will sign all others for convenience use (only on CDP) (Default) $ROOT_CA_KEY  "
     echo ""
     echo "  --os=$OS : (Optional) OS to use (Default) $OS"
     echo "  --os-version=$OS_VERSION : (Optional) OS version to use (Default) $OS_VERSION" 
@@ -239,6 +247,8 @@ function usage()
     echo "  --pvc-app-domain=$PVC_APP_DOMAIN (Optional) To use with PVC ECS to specify the app domain (that will be suffix url for all your deployments) (Default) $PVC_APP_DOMAIN "
     echo "  --kubeconfig-path=$KUBECONFIG_PATH : (Optional) To use with CDP PvC on Open Shift, it is then required (Default) $KUBECONFIG_PATH   "
     echo "  --oc-tar-file-path=$OC_TAR_FILE_PATH Required if using OpenShift, local path to oc.tar file provided by RedHat (Default) $OC_TAR_FILE_PATH "
+    echo "  --configure-oc=$CONFIGURE_OC (Optional) Set it to false if your Open Shift is not dedicated to your cluster (Default) $CONFIGURE_OC "
+    echo "  --setup-dns-ecs=$SETUP_DNS_ECS (Optional) Set it to false if you already have DNS setup with wildcard for ECS (Default) $SETUP_DNS_ECS "
     echo "  --cluster-name-pvc=$CLUSTER_NAME_PVC Optional as it is derived from cluster-name (Default) ${CLUSTER_NAME}-pvc"
     echo "  --create-cdw=$CREATE_CDW Optional, used to auto setup a CDW if PVC is deployed (Default) $CREATE_CDW"
     echo "  --create-cde=$CREATE_CDE Optional, used to auto setup a CDE if PVC is deployed (Default) $CREATE_CDE"
@@ -446,6 +456,12 @@ while [ "$1" != "" ]; do
         --encryption-activated)
             ENCRYPTION_ACTIVATED=$VALUE
             ;;
+        --root-ca-cert)
+            ROOT_CA_CERT=$VALUE
+            ;;
+        --root-ca-key)
+            ROOT_CA_KEY=$VALUE
+            ;;
         --os)
             OS=$VALUE
             ;;
@@ -472,6 +488,12 @@ while [ "$1" != "" ]; do
             ;;
         --oc-tar-file-path)
             OC_TAR_FILE_PATH=$VALUE
+            ;;
+        --configure-oc)
+            CONFIGURE_OC=$VALUE
+            ;;
+        --setup-dns-ecs)
+            SETUP_DNS_ECS=$VALUE
             ;;
         --cluster-name-pvc)
             CLUSTER_NAME_PVC=$VALUE
@@ -598,6 +620,12 @@ else
     export CUSTOM_HEADER_COLOR=${CM_COLOR}
 fi
 
+if [ ! -z ${ROOT_CA_CERT} ] && [ ! -z ${ROOT_CA_KEY} ]
+then
+    echo "Will use root CA file cert (and key) located locally at ${ROOT_CA_CERT}"
+    export USE_ROOT_CA="true"
+fi
+
 # TODO: add check on pvc if no nodes are set or no kubeconfig file
 # TODO: add checks
 
@@ -643,6 +671,21 @@ then
         export FREE_IPA="true"
         export PVC_TYPE="OC"
         export ENCRYPTION_ACTIVATED="true"  
+        export CM_VERSION="7.8.1"
+    elif [ "${CLUSTER_TYPE}" = "all-services-pvc-ecs" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc-ecs/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-all-services-pvc-ecs/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-all-services-pvc-ecs/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-all-services-pvc-ecs/extra_vars.yml"
+        export USE_CSA="true"
+        export USE_CFM="true"
+        export USE_SPARK3="true"
+        export PVC="true"
+        export FREE_IPA="true"
+        export PVC_TYPE="ECS"
+        export ENCRYPTION_ACTIVATED="true"
+        export CM_VERSION="7.8.1" 
     elif [ "${CLUSTER_TYPE}" = "pvc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-pvc/hosts"
@@ -651,6 +694,7 @@ then
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-pvc/extra_vars.yml"
         export PVC="true"
         export FREE_IPA="true"
+        export CM_VERSION="7.8.1"
     elif [ "${CLUSTER_TYPE}" = "pvc-oc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-pvc-oc/hosts"
@@ -660,6 +704,7 @@ then
         export PVC="true"
         export PVC_TYPE="OC"
         export FREE_IPA="true"
+        export CM_VERSION="7.8.1"
     elif [ "${CLUSTER_TYPE}" = "streaming" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-streaming/hosts"
@@ -685,6 +730,7 @@ then
         export ENCRYPTION_ACTIVATED="true"
         export ENCRYPTION_HA="true"
         export CLUSTER_NAME_STREAMING="${CLUSTER_NAME}-stream"
+        export CM_VERSION="7.8.1"
     elif [ "${CLUSTER_TYPE}" = "wxm" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-wxm/hosts"
@@ -806,7 +852,12 @@ fi
 
 if [ -z "${PVC_REPO}" ]
 then
-    export PVC_REPO="https://archive.cloudera.com/p/cdp-pvc-ds/latest"
+    if [ $PVC_VERSION = '1.4.0' ]
+    then
+        export PVC_REPO="https://archive.cloudera.com/p/cdp-pvc-ds/1.4.0-h1"
+    else 
+        export PVC_REPO="https://archive.cloudera.com/p/cdp-pvc-ds/${PVC_VERSION}"
+    fi
 fi
 
 
@@ -922,6 +973,9 @@ export KNOWN_HOSTS=$(mktemp)
 export AUTHORIZED_KEYS=$(mktemp)
 export TO_DEPLOY_FOLDER=$(mktemp -d)
 
+# Create directory to gather all cluster files in one
+mkdir -p ~/cluster-${CLUSTER_NAME}/
+
 echo "############ Setup connections to all nodes  ############"
 touch ~/.ssh/known_hosts
 touch ~/.ssh/authorized_keys
@@ -937,7 +991,11 @@ do
         SSHKey=`ssh-keyscan ${NODES[$i]} 2> /dev/null`
         echo $SSHKey >> ~/.ssh/known_hosts
         echo $SSHKey >> ${KNOWN_HOSTS}
-        IP_ADRESS_SOLVED=$( dig +short ${NODES[$i]} )
+        IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES[$i]} | cut -d' ' -f1)
+        if [ -z ${IP_ADRESS_SOLVED} ]
+        then
+            IP_ADRESS_SOLVED=$( dig +short ${NODES[$i]} )
+        fi
         echo "${IP_ADRESS_SOLVED} ${NODES[$i]}" >> ${HOSTS_ETC}
         echo "**** Connection setup to ${NODES[$i]} ****"
     fi
@@ -954,7 +1012,11 @@ then
         SSHKey=`ssh-keyscan ${NODE_IPA} 2> /dev/null`
         echo $SSHKey >> ~/.ssh/known_hosts
         echo $SSHKey >> ${KNOWN_HOSTS}
-        IP_ADRESS_SOLVED=$( dig +short ${NODE_IPA} )
+        IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODE_IPA} | cut -d' ' -f1)
+        if [ -z ${IP_ADRESS_SOLVED} ]
+        then
+            IP_ADRESS_SOLVED=$( dig +short ${NODE_IPA} )
+        fi
         echo "${IP_ADRESS_SOLVED} ${NODE_IPA}" >> ${HOSTS_ETC}
         echo "**** Connection setup to ${NODE_IPA} ****"
     fi
@@ -979,7 +1041,11 @@ then
             SSHKey=`ssh-keyscan ${NODES_KTS_SORTED[$i]} 2> /dev/null`
             echo $SSHKey >> ~/.ssh/known_hosts
             echo $SSHKey >> ${KNOWN_HOSTS}
-            IP_ADRESS_SOLVED=$( dig +short ${NODES_KTS_SORTED[$i]} )
+            IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES_KTS_SORTED[$i]} | cut -d' ' -f1)
+            if [ -z ${IP_ADRESS_SOLVED} ]
+            then
+                IP_ADRESS_SOLVED=$( dig +short ${NODES_KTS_SORTED[$i]} )
+            fi
             echo "${IP_ADRESS_SOLVED} ${NODES_KTS_SORTED[$i]}" >> ${HOSTS_ETC}
             echo "**** Connection setup to ${NODES_KTS_SORTED[$i]} ****"
         fi
@@ -989,7 +1055,7 @@ fi
 
 if [ ! -z "${NODES_PVC_ECS}" ]
 then
-    export NODES_PVC_ECS_SORTED_ARRAY=$( echo ${NODES_PVC_ECS} | sort | uniq )
+    export NODES_PVC_ECS_SORTED_ARRAY=$( echo ${NODES_PVC_ECS} | uniq )
     export NODES_PVC_ECS_SORTED=( ${NODES_PVC_ECS_SORTED_ARRAY} )
     echo "[pvc]" >> ${HOSTS_FILE}
     for i in ${!NODES_PVC_ECS_SORTED[@]}
@@ -1000,7 +1066,11 @@ then
             SSHKey=`ssh-keyscan ${NODES_PVC_ECS_SORTED[$i]} 2> /dev/null`
             echo $SSHKey >> ~/.ssh/known_hosts
             echo $SSHKey >> ${KNOWN_HOSTS}
-            IP_ADRESS_SOLVED=$( dig +short ${NODES_PVC_ECS_SORTED[$i]} )
+            IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES_PVC_ECS_SORTED[$i]} | cut -d' ' -f1)
+            if [ -z ${IP_ADRESS_SOLVED} ]
+            then
+                IP_ADRESS_SOLVED=$( dig +short ${NODES_PVC_ECS_SORTED[$i]} )
+            fi
             echo "${IP_ADRESS_SOLVED} ${NODES_PVC_ECS_SORTED[$i]}" >> ${HOSTS_ETC}
             echo "**** Connection setup to ${NODES_PVC_ECS_SORTED[$i]} ****"
         fi
@@ -1078,7 +1148,7 @@ fi
 echo "host_pattern_mismatch=ignore
 " >> ${HOSTS_FILE}
 
-cp ${HOSTS_FILE} /tmp/hosts-${CLUSTER_NAME}
+cp ${HOSTS_FILE} ~/cluster-${CLUSTER_NAME}/hosts
 
 ###############################
 # Preparation of files for ansible installation
@@ -1127,6 +1197,7 @@ if [ "${DISTRIBUTION_TO_DEPLOY}" != "HDP" ]
 then
     cp ${ANSIBLE_CLUSTER_YML_FILE} ${TO_DEPLOY_FOLDER}/cluster.yml
     cp ${ANSIBLE_EXTRA_VARS_YML_FILE} ${TO_DEPLOY_FOLDER}/extra_vars.yml
+    cp ${TO_DEPLOY_FOLDER}/cluster.yml ~/cluster-${CLUSTER_NAME}/deploy-cluster.yml
 fi
 cp ${ANSIBLE_HOST_FILE} ${TO_DEPLOY_FOLDER}/hosts
 cp ${ANSIBLE_ALL_FILE} ${TO_DEPLOY_FOLDER}/all
@@ -1201,11 +1272,15 @@ export OS_VERSION_LAST_DIGIT=${OS_VERSION:0:1}
 if [ "${DISTRIBUTION_TO_DEPLOY}" != "HDP" ]
 then
     envsubst < ${TO_DEPLOY_FOLDER}/extra_vars.yml > ${TO_DEPLOY_FOLDER}/extra_vars.yml.tmp && mv ${TO_DEPLOY_FOLDER}/extra_vars.yml.tmp ${TO_DEPLOY_FOLDER}/extra_vars.yml
+    cp ${TO_DEPLOY_FOLDER}/all ~/cluster-${CLUSTER_NAME}/deploy-extra_vars.yml
 fi
 
 
 envsubst < ${TO_DEPLOY_FOLDER}/hosts > ${TO_DEPLOY_FOLDER}/hosts.tmp && mv ${TO_DEPLOY_FOLDER}/hosts.tmp ${TO_DEPLOY_FOLDER}/hosts
 envsubst < ${TO_DEPLOY_FOLDER}/all > ${TO_DEPLOY_FOLDER}/all.tmp && mv ${TO_DEPLOY_FOLDER}/all.tmp ${TO_DEPLOY_FOLDER}/all
+
+cp ${TO_DEPLOY_FOLDER}/all ~/cluster-${CLUSTER_NAME}/deploy-all
+cp ${TO_DEPLOY_FOLDER}/hosts ~/cluster-${CLUSTER_NAME}/deploy-hosts
 
 # Set ANSIBLE_CONFIG FILE
 export ANSIBLE_CONFIG=$(pwd)/ansible.cfg
@@ -1711,13 +1786,13 @@ if [ "${KERBEROS}" = "true" ] && [ "${USER_CREATION}" = "true" ]
 then
     echo ""
     echo " Some Kerberos users have been created and their keytabs are on all machines in /home/<username>/, such as /home/francois/ "
-    echo " Their keytabs have been retrieved locally in /tmp/ and the krb5.conf has been copied in /tmp/ also, allowing you to directly kinit from your computer with: "
-    echo "      env KRB5_CONFIG=/tmp/krb5-${CLUSTER_NAME}.conf kinit -kt /tmp/francois-${CLUSTER_NAME}.keytab francois"
+    echo " Their keytabs have been retrieved locally in ~/cluster-${CLUSTER_NAME}/ and the krb5.conf has been copied in ~/cluster-${CLUSTER_NAME}/ also, allowing you to directly kinit from your computer with: "
+    echo "      env KRB5_CONFIG=~/cluster-${CLUSTER_NAME}/krb5.conf kinit -kt ~/cluster-${CLUSTER_NAME}/francois.keytab francois"
     echo ""
 fi
 echo ""
 echo ""
-echo " To allow easy interaction with the cluster the hosts file used to setup the cluster has been copied to /tmp/hosts-${CLUSTER_NAME} "
+echo " To allow easy interaction with the cluster the hosts file used to setup the cluster has been copied to ~/${CLUSTER_NAME}/hosts "
 echo " Examples:"
 echo ""
 echo "  ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} ansible_playbook.yml --extra-vars \"\" "

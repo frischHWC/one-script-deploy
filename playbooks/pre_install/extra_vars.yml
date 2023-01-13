@@ -1,3 +1,21 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
 ---
 distribution: ${DISTRIBUTION_TO_DEPLOY} 
 debug: ${DEBUG} 
@@ -8,4 +26,10 @@ known_hosts: ${KNOWN_HOSTS}
 license_file: ${LICENSE_FILE}
 authorized_keys: ${AUTHORIZED_KEYS}
 node_key: ${NODE_KEY}
-
+use_root_ca: ${USE_ROOT_CA}
+root_ca_cert: ${ROOT_CA_CERT}
+root_ca_key: ${ROOT_CA_KEY}
+ca_server_attrs: /C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/
+certs_dir: "~/cluster-{{ cluster_name }}/certs/"
+keystore_password: ${DEFAULT_PASSWORD}
+truststore_password: ${DEFAULT_PASSWORD}

@@ -1,0 +1,63 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Mkdir a dir for all certs
+- name: Delete cert directory
+  file:
+    state: absent
+    path: "{{ certs_dir }}"
+
+- name: Create cert directory
+  file:
+    path: "{{ certs_dir }}"
+    state: directory
+    recurse: yes
+
+# Generate certs foreach host
+- name: Template openssl-ext.conf
+  template: 
+    src: openssl-ext.conf
+    dest: "{{ certs_dir }}/openssl-ext-{{ item }}.conf"
+  with_items: "{{ groups['all'] }}"
+
+- name: Generate key and csr for hosts
+  shell: "openssl req -nodes -newkey rsa:2048 -keyout {{ certs_dir }}{{ item }}.key -out {{ certs_dir }}{{ item }}.csr -subj \"{{ ca_server_attrs }}CN={{ item }}\" "
+  with_items: "{{ groups['all'] }}"
+
+- name: Sign it using rootCA provided
+  shell: "openssl x509 -req -extfile {{ certs_dir }}/openssl-ext-{{ item }}.conf -CA {{ root_ca_cert }} -CAkey {{ root_ca_key }} -CAcreateserial -days 365 -sha256 -in {{ certs_dir }}{{ item }}.csr -out {{ certs_dir }}{{ item }}.crt"
+  with_items: "{{ groups['all'] }}"
+
+# Create password file for key and truststore
+- name: Create key password file
+  shell: "echo {{ keystore_password }} > {{ certs_dir }}key.pwd"
+
+- name: Create truststore password file
+  shell: "echo {{ truststore_password }} > {{ certs_dir }}truststore.pwd"
+
+# Copy root cert to certs dir
+- name: Copy root cert
+  copy:
+    src: "{{ root_ca_cert }}"
+    dest: "{{ certs_dir }}rootca.crt"
+
+- name: Archive certs directory
+  archive:
+    path: "{{ certs_dir }}"
+    dest: "~/cluster-{{ cluster_name }}/cert.tgz"

@@ -1,3 +1,21 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
 ---
 - set_fact:
     dex_endpoint_api: "{{ cdp_endpoint_url }}/dex/api/v1"
@@ -81,6 +99,22 @@
   debug:
     msg: "{{ dex_cde_is_existing }}"
 
+
+# Check PvC version if >= 1.4.1 and use _v1.4.1
+- set_fact:
+    activate_cde_template: 'activate_cde.json'
+
+- set_fact:
+    activate_cde_template: 'activate_cde_v1.4.1.json'
+  when: pvc_version is version('1.4.1', '>=')
+
+- set_fact:
+    create_vc_template: 'create_vc.json'
+
+- set_fact:
+    create_vc_template: 'create_vc_v1.4.1.json'
+  when: pvc_version is version('1.4.1', '>=')
+
 - name: Create CDE Service
   uri:
     url: "{{ dex_endpoint_api }}/cluster"
@@ -91,7 +125,7 @@
       Cookie: "{{ all_cookies }}"
     status_code: [200, 202]
     body_format: json
-    body: "{{ lookup('template', 'activate_cde.json') }}"
+    body: "{{ lookup('template', '{{ activate_cde_template }}' ) }}"
     return_content: yes
     validate_certs: no
   register: create_cde
@@ -156,7 +190,7 @@
       Cookie: "{{ all_cookies }}"
     status_code: [200, 202]
     body_format: json
-    body: "{{ lookup('template', 'create_vc.json') }}"
+    body: "{{ lookup('template', '{{ create_vc_template }}') }}"
     return_content: yes
     validate_certs: no
   register: create_cde
@@ -183,76 +217,3 @@
   retries: 50
   delay: 30
   when: not dex_vc_is_existing
-
-
-# Setup VC endpoint working
-
-- name: Get CDE VC Details
-  uri:
-    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance/{{ cde_vc_id }}"
-    method: GET
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-      Cookie: "{{ all_cookies }}"
-    status_code: 200
-    return_content: yes
-    validate_certs: no
-  register: cde_vc_details
-
-- set_fact:
-    cde_vc_endpoint: "{{ cde_vc_details.json | community.general.json_query(query_id) }}"
-  vars:
-    query_id: "appInfo.dexApiUrl"
-
-- name: DEBUG - cde_vc_endpoint
-  debug:
-    msg: "{{ cde_vc_endpoint }}"
-
-- set_fact:
-    cde_vc_endpoint_hostname: "{{ cde_vc_endpoint.split('//')[1].split('/')[0] }}"
-
-- name: DEBUG - cde_vc_endpoint_hostname
-  debug:
-    msg: "{{ cde_vc_endpoint_hostname }}"
-
-- set_fact:
-    cde_vc_endpoint_hostname_wildcard: "*.{{ cde_vc_endpoint_hostname[9:] }}"
-
-- name: DEBUG - cde_vc_endpoint_hostname_wildcard
-  debug:
-    msg: "{{ cde_vc_endpoint_hostname_wildcard }}"
-
-# Prepare certs
-
-- name: Check rootCA.crt
-  stat: 
-    path: ~/rootCA.crt
-  register: rootca_crt_stat
-
-- name: Check rootCA.key
-  stat: 
-    path: ~/rootCA.key
-  register: rootca_key_stat
-
-- name: Generates rootCA if needed
-  shell: |
-    openssl genrsa -out ~/rootCA.key 4096
-    openssl req -x509 -new -nodes -key ~/rootCA.key -sha256 -days 1024 -out ~/rootCA.crt -subj "/C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/CN=CDE-{{ virtual_cluster.env_name }}"
-  when: not rootca_key_stat.stat.exists and not rootca_crt_stat.stat.exists
-
-- name: Fetch rootCA locally to add it to your browser
-  fetch: 
-    src: ~/rootCA.crt
-    dest: /tmp/rootCA-cde-{{ virtual_cluster.env_name }}.pem
-
-- name: Generate key and csr for endpoint
-  shell: "openssl req -nodes -newkey rsa:2048 -keyout endpoint-{{ cde_vc_endpoint_hostname }}.key -out endpoint-{{ cde_vc_endpoint_hostname }}.csr -subj \"/C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/CN={{ cde_vc_endpoint_hostname_wildcard }}\" "
-
-- name: Sign it using rootCA
-  shell: "openssl x509 -req -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -days 365 -sha256 -in endpoint-{{ cde_vc_endpoint_hostname }}.csr -out endpoint-{{ cde_vc_endpoint_hostname }}.crt"
-
-# Send certs
-
-- name: Add certs with script to VC
-  shell: "./cdp-cde-utils.sh init-virtual-cluster -h {{ cde_vc_endpoint_hostname }} -c endpoint-{{ cde_vc_endpoint_hostname }}.crt -k endpoint-{{ cde_vc_endpoint_hostname }}.key"

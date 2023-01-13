@@ -1,3 +1,21 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
 ---
 ####### PvC pre-requisites and fixes to make before setting up PvC #######
 
@@ -27,7 +45,7 @@
     name: unzip
     state: present
 
-# Apply Patch to generate_crendentials for FreeIPA
+
 - set_fact: 
     cp_domain: "{{ (lookup('template', kube_config_path ) | from_yaml).clusters[0].cluster.server.split('//')[1].split(':')[0].replace('api.', '') }}"
   when: pvc_type == "OC"
@@ -41,18 +59,17 @@
     msg: "{{ cp_domain }}"
   when: debug | default(false)
 
-
 - name: Template Patch to CM 7.4 host
   template:
-    src: gen_credentials_ipa_cm75.p
-    dest: /tmp/gen_credentials.p
+    src: gen_credentials_ipa_cm74.p
+    dest: /tmp/gen_credentials_ipa.p
   when: cm_version.split('.')[1] == '4'
 
 - name: Template Patch to CM 7.5 host
   template:
     src: gen_credentials_ipa_cm75.p
     dest: /tmp/gen_credentials_ipa.p
-  when: cm_version.split('.')[1] == '5' or cm_version.split('.')[1] == '6'
+  when: cm_version.split('.')[1] == '5' or cm_version.split('.')[1] == '6' or cm_version.split('.')[1] == '7' or cm_version.split('.')[1] == '8'
 
 - name: Apply patch remotely
   patch:
@@ -60,6 +77,22 @@
     dest: /opt/cloudera/cm/bin/gen_credentials_ipa.sh
     remote_src: yes
     backup: yes
+  ignore_errors: true
+
+# Apply Patch to generate_credentials for FreeIPA (maybe need a PRINCIPAL=$(echo $PRINCIPAL | sed 's/\.\./\./g'))
+- name: Copy Patch for PvC 1.4.1
+  template:
+    src: gen_credentials_ipa_pvc.p
+    dest: /tmp/gen_credentials_ipa_pvc.p
+  when: pvc_version == '1.4.1'
+
+- name: Apply patch remotely
+  patch:
+    src: /tmp/gen_credentials_ipa_pvc.p
+    dest: /opt/cloudera/cm/bin/gen_credentials_ipa.sh
+    remote_src: yes
+    backup: yes
+  when: pvc_version == '1.4.1'
   ignore_errors: true
 
 # Correct krb5.conf 
@@ -82,12 +115,6 @@
   debug:
     msg: "{{ ipa_server_ip }}"
   when: debug | default(false)
-
-# - name: Replace IPA's server hostname with IP
-#   replace:
-#     path: /etc/krb5.conf
-#     regexp: "{{ ipa_server }}"
-#     replace: "{{ ipa_server_ip }}"
 
 - name: Insert KDC with IPs after
   blockinfile:

@@ -130,12 +130,12 @@
     status_code: 200
     validate_certs: no
     body_format: json
-  when: configure_wxm_with_base
+  when: configure_wxm_with_base and hive_service_name != ''
 
 - name: Pause to let CM acknowledges restart
   pause:
     seconds: 5
-  when: configure_wxm_with_base
+  when: configure_wxm_with_base and hive_service_name != ''
 
 - name: Check Hive is up and running
   uri:
@@ -152,7 +152,7 @@
   until: result.json.serviceState == "STARTED"
   retries: 60
   delay: 10
-  when: configure_wxm_with_base
+  when: configure_wxm_with_base and hive_service_name != ''
 
 - name: Restart Hive on Tez service
   uri:
@@ -164,12 +164,12 @@
     status_code: 200
     validate_certs: no
     body_format: json
-  when: configure_wxm_with_base
+  when: configure_wxm_with_base and hive_on_tez_service_name != ''
 
 - name: Pause to let CM acknowledges restart
   pause:
     seconds: 5
-  when: configure_wxm_with_base
+  when: configure_wxm_with_base and hive_on_tez_service_name != ''
 
 - name: Check Hive On Tez is up and running
   uri:
@@ -186,7 +186,7 @@
   until: result.json.serviceState == "STARTED"
   retries: 60
   delay: 10
-  when: configure_wxm_with_base
+  when: configure_wxm_with_base and hive_on_tez_service_name != ''
 
 - name: Restart Spark service
   uri:
@@ -198,12 +198,12 @@
     status_code: 200
     validate_certs: no
     body_format: json
-  when: configure_wxm_with_base
+  when: configure_wxm_with_base and spark_service_name != ''
 
 - name: Pause to let CM acknowledges restart
   pause:
     seconds: 5
-  when: configure_wxm_with_base
+  when: configure_wxm_with_base and spark_service_name != ''
 
 - name: Check Spark is up and running
   uri:
@@ -220,7 +220,7 @@
   until: result.json.serviceState == "STARTED"
   retries: 60
   delay: 10
-  when: configure_wxm_with_base
+  when: configure_wxm_with_base and spark_service_name != ''
 
 - name: Restart Impala service
   uri:
@@ -232,12 +232,12 @@
     status_code: 200
     validate_certs: no
     body_format: json
-  when: configure_wxm_with_base
+  when: configure_wxm_with_base and impala_service_name != ''
 
 - name: Pause to let CM acknowledges restart
   pause:
     seconds: 5
-  when: configure_wxm_with_base
+  when: configure_wxm_with_base and impala_service_name != ''
 
 - name: Check Impala is up and running
   uri:
@@ -254,7 +254,7 @@
   until: result.json.serviceState == "STARTED"
   retries: 60
   delay: 10
-  when: configure_wxm_with_base
+  when: configure_wxm_with_base and impala_service_name != ''
 
 
 # Restart WXM

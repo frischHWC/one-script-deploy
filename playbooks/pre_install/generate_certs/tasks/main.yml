@@ -44,6 +44,21 @@
   shell: "openssl x509 -req -extfile {{ certs_dir }}/openssl-ext-{{ item }}.conf -CA {{ root_ca_cert }} -CAkey {{ root_ca_key }} -CAcreateserial -days 365 -sha256 -in {{ certs_dir }}{{ item }}.csr -out {{ certs_dir }}{{ item }}.crt"
   with_items: "{{ groups['all'] }}"
 
+# Generate certs PvC
+- name: Template openssl-ext.conf
+  template: 
+    src: openssl-ext-pvc.conf
+    dest: "{{ certs_dir }}/openssl-ext-pvc.conf"
+  when: pvc
+
+- name: Generate key and csr for hosts
+  shell: "openssl req -nodes -newkey rsa:2048 -keyout {{ certs_dir }}{{ pvc_app_domain }}-pvc.key -out {{ certs_dir }}{{ pvc_app_domain }}-pvc.csr -subj \"{{ ca_server_attrs }}CN={{ pvc_app_domain }}\" "
+  when: pvc
+
+- name: Sign it using rootCA provided
+  shell: "openssl x509 -req -extfile {{ certs_dir }}/openssl-ext-pvc.conf -CA {{ root_ca_cert }} -CAkey {{ root_ca_key }} -CAcreateserial -days 365 -sha256 -in {{ certs_dir }}{{ pvc_app_domain }}-pvc.csr -out {{ certs_dir }}{{ pvc_app_domain }}-pvc.crt"
+  when: pvc
+
 # Create password file for key and truststore
 - name: Create key password file
   shell: "echo {{ keystore_password }} > {{ certs_dir }}key.pwd"

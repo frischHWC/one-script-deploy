@@ -147,6 +147,7 @@ export USE_ANSIBLE_PYTHON_3="false"
 export PVC_ECS_SERVER_HOST=""
 export CLUSTER_NAME_STREAMING=""
 export USE_ROOT_CA="false"
+export USE_OUTSIDE_PAYWALL_BUILDS="false"
 
 function usage()
 {
@@ -605,7 +606,13 @@ then
     then
         echo " Since february 2021, you must have a username/password to download binaries, please provide --paywall-username and --paywall-password"
         echo " '${PAYWALL_USER}'/'${PAYWALL_PASSWORD}' are not valid credentials"  
-        exit 1
+        if [ ${DISTRIBUTION_TO_DEPLOY} == 'CDP' ]
+        then
+            echo " Will use default out of the paywall available builds for CDP, made only for test purposes"
+            export USE_OUTSIDE_PAYWALL_BUILDS="true"
+        else
+            exit 1
+        fi
     fi
 fi
 fi
@@ -848,6 +855,12 @@ then
     else    
         export CM_REPO="https://archive.cloudera.com/p/cm${CM_VERSION:0:1}/${CM_VERSION}/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}"
     fi
+fi
+
+if [ "${USE_OUTSIDE_PAYWALL_BUILDS}" = "true" ]
+then
+    export CM_REPO="https://archive.cloudera.com/cm7/7.4.4/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}"
+    export CDH_REPO="https://archive.cloudera.com/cdh7/7.1.7.0/parcels/"
 fi
 
 if [ -z "${PVC_REPO}" ]

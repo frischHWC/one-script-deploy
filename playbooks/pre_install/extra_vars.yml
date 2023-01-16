@@ -33,3 +33,5 @@ ca_server_attrs: /C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/
 certs_dir: "~/cluster-{{ cluster_name }}/certs/"
 keystore_password: ${DEFAULT_PASSWORD}
 truststore_password: ${DEFAULT_PASSWORD}
+pvc: ${PVC}
+pvc_app_domain: ${PVC_APP_DOMAIN}

@@ -118,6 +118,7 @@
     status_code: 200
     return_content: yes
     validate_certs: no
+    timeout: 60
   register: env_creation
   when: pvc_type == "OC" and (is_env_existing and env.to_delete) or not is_env_existing
 
@@ -179,7 +180,7 @@
     msg: "{{ answer_to_register_cluster }}"
   when: pvc_type == "OC" and ((is_env_existing and env.to_delete) or not is_env_existing)
 
-# TODO: Need to get the namespace of the environment and create the log-router namespace based on its name before creating it.
+# Need to get the namespace of the environment and create the log-router namespace based on its name before creating it.
 - name: Get monitoring platform namespace name
   shell: "kubectl get ns | grep monitoring-platform | cut -d' ' -f 1"
   register: monitoring_platform_full_name

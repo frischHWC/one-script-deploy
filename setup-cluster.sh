@@ -14,6 +14,7 @@ export NODES_KTS=
 export PAYWALL_USER=
 export PAYWALL_PASSWORD=
 export LICENSE_FILE=
+export CM_LICENSE_TYPE="enterprise"
 
 # Nodes connection
 export NODE_USER="root"
@@ -121,8 +122,9 @@ export DATA_LOAD_REPO_URL=""
 export DATAGEN_AS_A_SERVICE="false"
 export DATAGEN_REPO_URL="https://github.com/frischHWC/datagen"
 export DATAGEN_REPO_BRANCH="main"
-export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/parcels/0.4.0/7.1.7.1000/"
-export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/csd/0.4.0/7.1.7.1000/DATAGEN-0.4.0.7.1.7.1000.jar"
+export DATAGEN_REPO_PARCEL=""
+export DATAGEN_CSD_URL=""
+export DATAGEN_VERSION="0.4.0"
 export EDGE_HOST=""
 
 # Demo
@@ -206,6 +208,7 @@ function usage()
     echo "  --ansible-extravars-file=$ANSIBLE_EXTRA_VARS_YML_FILE : (Optional) The path to ansible extra_vars file  (Default) $ANSIBLE_EXTRA_VARS_YML_FILE"
     echo "  --distribution-to-deploy=$DISTRIBUTION_TO_DEPLOY : (Optional) Choose between CDP, CDH, HDP (Default) $DISTRIBUTION_TO_DEPLOY"
     echo "  --cm-color=$CM_COLOR : (Optional) Only for CDP: Choose between BROWN, RED, BLACK, GREEN, TEAL, PINK, YELLOW, GRAY, PURPLE, BLUE, DARKBLUE or RANDOM (Default) RANDOM"
+    echo "  --cm-license-type=$CM_LICENSE_TYPE : (Optional) Change this to trial if you do not have a license (Default) $CM_LICENSE_TYPE"
     echo ""
     echo "  --cm-version=$CM_VERSION : (Optional) Version of CM (Default) $ $CM_VERSION "
     echo "  --cdh-version=$CDH_VERSION : (Optional) Version of CDH (Default) $ $CDH_VERSION "
@@ -264,6 +267,7 @@ function usage()
     echo "  --datagen-repo-branch=$DATAGEN_REPO_BRANCH : (Optional) Branch of DATAGEN repository to use (Default) $DATAGEN_REPO_BRANCH "
     echo "  --datagen-repo-parcel=$DATAGEN_REPO_PARCEL : (Optional) Parcel Repository of Datagen (should contains parcel, sha and manifest.json) (Default) $DATAGEN_REPO_PARCEL "
     echo "  --datagen-csd-url=$DATAGEN_CSD_URL : (Optional) URL to the CSD of DATAGEN (Default) $DATAGEN_CSD_URL "
+    echo "  --datagen-version=$DATAGEN_VERSION : (Optional) Datagen version, used to guess URL of Datagen if not provided (Default) $DATAGEN_VERSION"
     echo "  --demo-repo-url=$DEMO_REPO_URL : (Optional) Demo repo URL (Default) $DEMO_REPO_URL"
     echo "  --demo-repo-branch=$DEMO_REPO_BRANCH : (Optional) Demo repo URL (Default) $DEMO_REPO_BRANCH"
     echo ""
@@ -381,7 +385,10 @@ while [ "$1" != "" ]; do
             ;;
         --cm-color)
             CM_COLOR=$VALUE
-            ;;    
+            ;;  
+        --cm-license-type)
+            CM_LICENSE_TYPE=$VALUE
+            ;;  
         --cm-version)
             CM_VERSION=$VALUE
             ;;
@@ -537,6 +544,9 @@ while [ "$1" != "" ]; do
             ;;  
         --datagen-csd-url)
             DATAGEN_CSD_URL=$VALUE
+            ;;
+        --datagen-version)
+            DATAGEN_VERSION=$VALUE
             ;;        
         --demo-repo-url)
             DEMO_REPO_URL=$VALUE
@@ -629,7 +639,7 @@ fi
 
 if [ ! -z ${ROOT_CA_CERT} ] && [ ! -z ${ROOT_CA_KEY} ]
 then
-    echo "Will use root CA file cert (and key) located locally at ${ROOT_CA_CERT}"
+    echo " Will use root CA file cert (and key) located locally at ${ROOT_CA_CERT}"
     export USE_ROOT_CA="true"
 fi
 
@@ -861,6 +871,9 @@ if [ "${USE_OUTSIDE_PAYWALL_BUILDS}" = "true" ]
 then
     export CM_REPO="https://archive.cloudera.com/cm7/7.4.4/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}"
     export CDH_REPO="https://archive.cloudera.com/cdh7/7.1.7.0/parcels/"
+    export CM_VERSION="7.4.4"
+    export CDH_VERSION="7.1.7.0"
+    export CM_LICENSE_TYPE="trial"
 fi
 
 if [ -z "${PVC_REPO}" ]
@@ -942,6 +955,13 @@ then
         export WXM_CSD_JAR=$(curl -s -X GET ${WXM_REPO}/csd/ | grep .jar | grep NIFI- | cut -d '>' -f 3 | cut -d '<' -f 1)
         export WXM_CSD="${WXM_REPO}/csd/${WXM_CSD_JAR}"
     fi
+fi
+
+if [ "${DISTRIBUTION_TO_DEPLOY}" = "CDP" ] && [ -z ${DATAGEN_CSD_URL} ] && [ -z ${DATAGEN_REPO_PARCEL} ]
+then
+    echo " Will guess Datagen Parcel Repo and CSD from Version"
+    export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/parcels/${DATAGEN_VERSION}/${CDH_VERSION}/"
+    export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/csd/${DATAGEN_VERSION}/${CDH_VERSION}/DATAGEN-${DATAGEN_VERSION}.${CDH_VERSION}.jar"
 fi
 
 # Set HDP/Ambari repository 
@@ -1778,13 +1798,18 @@ if [ "${DISTRIBUTION_TO_DEPLOY}" = "HDP" ]
 then 
     echo " Ambari is available at : http://${NODE_0}:8080/ "
 else
-    echo " Cloudera Manager is available at : http://${NODE_0}:7180/ "
+    if [ "${TLS}" = "true" ]
+    then
+        echo " Cloudera Manager is available at : https://${NODE_0}:7183/ "
+    else
+        echo " Cloudera Manager is available at : http://${NODE_0}:7180/ "
+    fi
 fi
 echo ""
 
 if [ "${FREE_IPA}" = "true" ]
 then
-    echo " Free IPA UI is available at : http://${NODE_IPA}/ipa/ui/ "
+    echo " Free IPA UI is available at : https://${NODE_IPA}/ipa/ui/ "
     echo ""
 fi
 

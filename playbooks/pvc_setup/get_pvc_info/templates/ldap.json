@@ -1,5 +1,5 @@
 {
-    "ldapProviderName": "cm-ldap",
+    "ldapProviderName": "cm-ldap-pvc",
     "skipGroupSyncOnLogin": false,
     "url": "ldaps://{{ ipa_server }}:636",
     "bindDn": "uid=admin,cn=users,cn=accounts,{% for i in realm.split('.') %}dc={{ i | lower }}{% if not loop.last %},{% endif %}{% endfor %}",

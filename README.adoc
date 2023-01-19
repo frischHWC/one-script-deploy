@@ -1,6 +1,8 @@
 # One Script Deploy
 
-One script to Easily and Fully deploy a Test/Demo cluster on provided machines, with Configuration, Security and Data.
+One script to rule them all: CDP / CDP Private Cloud / CDH / HDP ! 
+
+Given some machines, this script will **setup** all pre-requisites, **Install**, **Configure** a fully **secure** cluster and **Load Data** into it.
 
 ## Requirements
 
@@ -35,6 +37,13 @@ Many more configurations are available, see them all with:
 
 
 ### Examples
+
+#### !!! Special No license or Paywall Cluster : CDP 7 - Basic 6 nodes !!!
+
+        ./setup-cluster.sh \
+            --cluster-name=${CLUSTER_NAME} \
+            --cluster-type=basic \
+            --nodes-base="${NODES}"
 
 #### CDP 7 - Full 10 nodes with almost all services (Kerberos / TLS)
 
@@ -156,6 +165,16 @@ Many more configurations are available, see them all with:
             --tp-host=<Host in base cluster that will have Telemetry Publisher installed> \
             --nodes-base="${NODES}"
 
+#### CDP 7.1.8 - Full 10 nodes with almost all services (Kerberos / TLS)
+
+        ./setup-cluster.sh \
+            --cluster-name=${CLUSTER_NAME} \
+            --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --cdh-version='7.1.8.1' \
+            --cm-version='7.7.3-33365545' \
+            --nodes-base="${NODES}"
 
 #### CDP 7 - Unsecure
 

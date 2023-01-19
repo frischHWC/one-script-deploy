@@ -11,10 +11,10 @@
       {
         "name": "process_swap_memory_thresholds",
         "value": "{\"warning\":\"any\",\"critical\":\"never\"}"
-      },
+      }{% if cloudera_manager_version is version_compare('7.4.4', '>') %},
       {
         "name": "process_swap_memory_rate_thresholds",
         "value": "{\"warning\":\"any\",\"critical\":\"never\"}"
-      }
+      } {% endif %}
     ]
   }

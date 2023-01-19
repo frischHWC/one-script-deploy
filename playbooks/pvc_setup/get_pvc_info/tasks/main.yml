@@ -68,6 +68,28 @@
 
 - name: Set LDAP provider
   uri:
+    url: "{{ pvc_api_call }}/iam/createLdapProvider"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body: "{{ lookup('template', 'ldap.json') }}"
+    body_format: json
+    status_code: [200, 400, 409]
+    return_content: yes
+    validate_certs: no
+  register: ldap_provider_answer
+  ignore_errors: true
+
+- name: DEBUG - ldap_provider_answer
+  debug:
+    msg: "{{ ldap_provider_answer }}"
+  when: debug | default(false)
+
+
+- name: Update LDAP provider
+  uri:
     url: "{{ pvc_api_call }}/iam/updateLdapProvider"
     method: POST
     headers: 
@@ -76,10 +98,11 @@
       Cookie: "{{ all_cookies }}"
     body: "{{ lookup('template', 'ldap.json') }}"
     body_format: json
-    status_code: [200, 400]
+    status_code: [200, 400, 409]
     return_content: yes
     validate_certs: no
   register: ldap_provider_answer
+  ignore_errors: true
 
 - name: DEBUG - ldap_provider_answer
   debug:

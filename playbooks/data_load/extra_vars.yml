@@ -36,6 +36,7 @@ cluster_name_streaming: ${CLUSTER_NAME_STREAMING}
 cloudera_manager_host: ${NODE_0}
 cloudera_manager_user: admin 
 cloudera_manager_password: admin
+cloudera_manager_version: ${CM_VERSION}
 
 # Ranger info required
 ranger_user: admin

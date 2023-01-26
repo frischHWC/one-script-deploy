@@ -84,6 +84,7 @@
     status_code: [200, 202]
     return_content: yes
     validate_certs: no
+    timeout: 300
   register: answer_to_activate_env
   when: dwx_env_status != 'Running'
 

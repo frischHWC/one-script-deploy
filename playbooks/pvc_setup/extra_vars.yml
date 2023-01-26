@@ -109,6 +109,7 @@ workspaces:
     enable_monitoring: true # default = true
     enable_governance: false # default = false
     enable_model_metrics: false # default = false
+    static_sub_domain: workspace # default = ''
 
 
 # CDE

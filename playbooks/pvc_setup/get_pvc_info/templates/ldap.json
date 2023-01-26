@@ -1,9 +1,9 @@
 {
-    "ldapProviderName": "cm-ldap-pvc",
+    "ldapProviderName": "cm-ldap",
     "skipGroupSyncOnLogin": false,
     "url": "ldaps://{{ ipa_server }}:636",
     "bindDn": "uid=admin,cn=users,cn=accounts,{% for i in realm.split('.') %}dc={{ i | lower }}{% if not loop.last %},{% endif %}{% endfor %}",
-    "bindPassword": "",
+    "bindPassword": "{{ ipa_bind_password | default('') }}",
     "userSearchBase": "cn=users,cn=accounts,{% for i in realm.split('.') %}dc={{ i | lower }}{% if not loop.last %},{% endif %}{% endfor %}",
     "userSearchFilter": "(&(uid={0})(objectClass=person))",
     "groupSearchBase": "cn=groups,cn=accounts,{% for i in realm.split('.') %}dc={{ i | lower }}{% if not loop.last %},{% endif %}{% endfor %}",

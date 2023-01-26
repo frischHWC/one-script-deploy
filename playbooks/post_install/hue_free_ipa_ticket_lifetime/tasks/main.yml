@@ -61,6 +61,7 @@
     return_content: yes
     validate_certs: no
     body_format: json
+    timeout: 120
 
 
 - name: Pause to let CM acknowledges restart

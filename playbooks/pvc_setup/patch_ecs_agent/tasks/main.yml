@@ -37,6 +37,7 @@
     dest: /opt/cloudera/cm-agent/lib/python2.7/site-packages/cmf/monitor/host/filesystem_map.py
     remote_src: yes
     backup: yes
+  when: cm_version.split('.')[1] == '4' or cm_version.split('.')[1] == '5' or cm_version.split('.')[1] == '6'
   ignore_errors: true
 
 - name: Apply patch remotely
@@ -45,6 +46,7 @@
     dest: /opt/cloudera/cm-agent/lib/python2.7/site-packages/cmf_test/monitor/test_host.py
     remote_src: yes
     backup: yes
+  when: cm_version.split('.')[1] == '4' or cm_version.split('.')[1] == '5' or cm_version.split('.')[1] == '6'
   ignore_errors: true
 
 

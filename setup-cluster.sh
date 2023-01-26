@@ -53,7 +53,7 @@ export ENCRYPTION_ACTIVATED="false"
 # Versions
 export CM_VERSION="7.6.5"
 export CDH_VERSION="7.1.7.1000"
-export PVC_VERSION="1.4.1"
+export PVC_VERSION="1.5.0"
 export CSA_VERSION="1.7.0.1"
 export CFM_VERSION="2.1.4.2"
 export SPARK3_VERSION="3.2.7171000.1"
@@ -119,12 +119,12 @@ export ROOT_CA_KEY=
 
 # Data Load
 export DATA_LOAD_REPO_URL=""
-export DATAGEN_AS_A_SERVICE="false"
+export DATAGEN_AS_A_SERVICE="true"
 export DATAGEN_REPO_URL="https://github.com/frischHWC/datagen"
 export DATAGEN_REPO_BRANCH="main"
 export DATAGEN_REPO_PARCEL=""
 export DATAGEN_CSD_URL=""
-export DATAGEN_VERSION="0.4.0"
+export DATAGEN_VERSION="0.4.5"
 export EDGE_HOST=""
 
 # Demo
@@ -688,7 +688,7 @@ then
         export FREE_IPA="true"
         export PVC_TYPE="OC"
         export ENCRYPTION_ACTIVATED="true"  
-        export CM_VERSION="7.8.1"
+        export CM_VERSION="7.9.5"
     elif [ "${CLUSTER_TYPE}" = "all-services-pvc-ecs" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc-ecs/hosts"
@@ -702,7 +702,7 @@ then
         export FREE_IPA="true"
         export PVC_TYPE="ECS"
         export ENCRYPTION_ACTIVATED="true"
-        export CM_VERSION="7.8.1" 
+        export CM_VERSION="7.9.5" 
     elif [ "${CLUSTER_TYPE}" = "pvc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-pvc/hosts"
@@ -711,7 +711,7 @@ then
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-pvc/extra_vars.yml"
         export PVC="true"
         export FREE_IPA="true"
-        export CM_VERSION="7.8.1"
+        export CM_VERSION="7.9.5"
     elif [ "${CLUSTER_TYPE}" = "pvc-oc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-pvc-oc/hosts"
@@ -721,7 +721,7 @@ then
         export PVC="true"
         export PVC_TYPE="OC"
         export FREE_IPA="true"
-        export CM_VERSION="7.8.1"
+        export CM_VERSION="7.9.5"
     elif [ "${CLUSTER_TYPE}" = "streaming" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-streaming/hosts"
@@ -1326,7 +1326,10 @@ fi
 # Print Env variables
 if [ "${DEBUG}" = "true" ]
 then
-    env | sort | tr '\n' '\t' 
+    echo ""
+    echo "****************************** ENV VARIABLES ******************************"
+    env | sort 
+    echo "***************************************************************************"
     echo ""
 fi
 
@@ -1340,10 +1343,10 @@ then
     if [ "${DEBUG}" = "true" ]
     then
         echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/pre_install/main.yml --extra-vars \"@/tmp/pre_install_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
-        echo " Follow advancement at: ${LOG_DIR}/pre_install.log "
     fi
     cp playbooks/pre_install/extra_vars.yml /tmp/pre_install_extra_vars.yml
     envsubst < /tmp/pre_install_extra_vars.yml > /tmp/pre_install_extra_vars.yml.tmp && mv /tmp/pre_install_extra_vars.yml.tmp /tmp/pre_install_extra_vars.yml
+    echo " Follow progression in: ${LOG_DIR}/pre_install.log "
     ansible-playbook -i ${HOSTS_FILE} playbooks/pre_install/main.yml --extra-vars "@/tmp/pre_install_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} 2>&1 > ${LOG_DIR}/pre_install.log
     OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/pre_install.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
@@ -1362,10 +1365,10 @@ then
     if [ "${DEBUG}" = "true" ]
     then
         echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/ansible_install_preparation/main.yml --extra-vars \"@/tmp/ansible_install_preparation_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
-        echo " Follow advancement at: ${LOG_DIR}/prepare_ansible_deployment.log "
     fi
     cp playbooks/ansible_install_preparation/extra_vars.yml /tmp/ansible_install_preparation_extra_vars.yml
     envsubst < /tmp/ansible_install_preparation_extra_vars.yml > /tmp/ansible_install_preparation_extra_vars.yml.tmp && mv /tmp/ansible_install_preparation_extra_vars.yml.tmp /tmp/ansible_install_preparation_extra_vars.yml
+    echo " Follow progression in: ${LOG_DIR}/prepare_ansible_deployment.log "
     ansible-playbook -i ${HOSTS_FILE} playbooks/ansible_install_preparation/main.yml --extra-vars "@/tmp/ansible_install_preparation_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} 2>&1 > ${LOG_DIR}/prepare_ansible_deployment.log
     OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/prepare_ansible_deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
@@ -1381,7 +1384,7 @@ fi
 if [ "${INSTALL}" = "true" ]
 then
     echo "############ On ${NODE_0} : Launch Ansible Deployment ############"
-    echo " Follow advancement at: ${LOG_DIR}/deployment.log "
+    echo " Follow progression in: ${LOG_DIR}/deployment.log "
     if [ "${DISTRIBUTION_TO_DEPLOY}" = "HDP" ]
     then
         ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; export CLOUD_TO_USE=static ; export INVENTORY_TO_USE=hosts ; bash install_cluster.sh' > ${LOG_DIR}/deployment.log
@@ -1619,10 +1622,10 @@ then
     if [ "${DEBUG}" = "true" ]
     then
         echo " Command launched: ansible-playbook -i ${HOSTS_FILE} playbooks/post_install/main.yml --extra-vars \"@/tmp/post_install_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS}"
-        echo " Follow advancement at: ${LOG_DIR}/post_install.log "
     fi
     cp playbooks/post_install/extra_vars.yml /tmp/post_install_extra_vars.yml
     envsubst < /tmp/post_install_extra_vars.yml > /tmp/post_install_extra_vars.yml.tmp && mv /tmp/post_install_extra_vars.yml.tmp /tmp/post_install_extra_vars.yml
+    echo " Follow progression in: ${LOG_DIR}/post_install.log "
     ansible-playbook -i ${HOSTS_FILE} playbooks/post_install/main.yml --extra-vars "@/tmp/post_install_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} 2>&1 > ${LOG_DIR}/post_install.log
     OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/post_install.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
@@ -1641,10 +1644,10 @@ then
     if [ "${DEBUG}" = "true" ]
     then
         echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/user_creation/main.yml --extra-vars \"@/tmp/user_creation_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS}"
-        echo " Follow advancement at: ${LOG_DIR}/user_creation.log "
     fi
     cp playbooks/user_creation/extra_vars.yml /tmp/user_creation_extra_vars.yml
     envsubst < /tmp/user_creation_extra_vars.yml > /tmp/user_creation_extra_vars.yml.tmp && mv /tmp/user_creation_extra_vars.yml.tmp /tmp/user_creation_extra_vars.yml 
+    echo " Follow progression in: ${LOG_DIR}/user_creation.log "
     ansible-playbook -i ${HOSTS_FILE} playbooks/user_creation/main.yml --extra-vars "@/tmp/user_creation_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} 2>&1 > ${LOG_DIR}/user_creation.log 
     OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/user_creation.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
@@ -1660,7 +1663,7 @@ fi
 if [ "${PVC}" = "true" ] && [ "${INSTALL_PVC}" = "true" ]
 then
     echo "############ Creating PvC cluster ############" 
-    echo " Follow advancement at: ${LOG_DIR}/pvc_deployment.log "
+    echo " Follow progression in: ${LOG_DIR}/pvc_deployment.log "
     ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml pvc.yml ${ANSIBLE_PYTHON_3_PARAMS}" 2>&1 > ${LOG_DIR}/pvc_deployment.log
     OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/pvc_deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
@@ -1679,10 +1682,10 @@ then
     if [ "${DEBUG}" = "true" ]
     then
         echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/pvc_setup/main.yml --extra-vars \"@/tmp/pvc_setup_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
-        echo " Follow advancement at: ${LOG_DIR}/pvc_configuration.log "
     fi
     cp playbooks/pvc_setup/extra_vars.yml /tmp/pvc_setup_extra_vars.yml
     envsubst < /tmp/pvc_setup_extra_vars.yml > /tmp/pvc_setup_extra_vars.yml.tmp && mv /tmp/pvc_setup_extra_vars.yml.tmp /tmp/pvc_setup_extra_vars.yml
+    echo " Follow progression in: ${LOG_DIR}/pvc_configuration.log "
     ansible-playbook -i ${HOSTS_FILE} playbooks/pvc_setup/main.yml --extra-vars "@/tmp/pvc_setup_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} 2>&1 > ${LOG_DIR}/pvc_configuration.log
     OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/pvc_configuration.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
@@ -1721,10 +1724,10 @@ then
         if [ "${DEBUG}" = "true" ]
         then
             echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/data_load/main.yml --extra-vars \"@/tmp/data_load_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
-            echo " Follow advancement at: ${LOG_DIR}/data_load.log "
         fi
         cp playbooks/data_load/extra_vars.yml /tmp/data_load_extra_vars.yml
         envsubst < /tmp/data_load_extra_vars.yml > /tmp/data_load_extra_vars.yml.tmp && mv /tmp/data_load_extra_vars.yml.tmp /tmp/data_load_extra_vars.yml
+        echo " Follow progression in: ${LOG_DIR}/data_load.log "
         ansible-playbook -i ${HOSTS_FILE} playbooks/data_load/main.yml --extra-vars "@/tmp/data_load_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} 2>&1 >> ${LOG_DIR}/data_load.log
         OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/data_load.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
@@ -1741,10 +1744,10 @@ then
         if [ "${DEBUG}" = "true" ]
         then
             echo " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/data_load/main_old.yml --extra-vars \"@/tmp/data_load_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
-            echo " Follow advancement at: ${LOG_DIR}/data_load.log "
         fi
         cp playbooks/data_load/extra_vars.yml /tmp/data_load_extra_vars.yml
         envsubst < /tmp/data_load_extra_vars.yml > /tmp/data_load_extra_vars.yml.tmp && mv /tmp/data_load_extra_vars.yml.tmp /tmp/data_load_extra_vars.yml
+        echo " Follow progression in: ${LOG_DIR}/data_load.log "
         ansible-playbook -i ${HOSTS_FILE} playbooks/data_load/main_old.yml --extra-vars "@/tmp/data_load_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} 2>&1 > ${LOG_DIR}/data_load.log
         OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/data_load.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]

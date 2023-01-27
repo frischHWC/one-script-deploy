@@ -25,6 +25,7 @@ echo "Install Python 3"
 yum -y install python3
 
 echo "Install ansible"
+yum -y install epel-release
 yum -y install ansible
 
 echo "Generates a local key"

@@ -8,12 +8,21 @@
 echo "Set script runnable"
 chmod +x *.sh
 
+echo "Install wget"
+yum -y install wget
+
+echo "Install Git"
+yum -y install git
+
 echo "Install Unzip"
 yum -y install unzip
 
 echo "Install network packages"
 yum -y install dnsutils
 yum -y install bind-utils
+
+echo "Install Python 3"
+yum -y install python3
 
 echo "Install ansible"
 yum -y install ansible

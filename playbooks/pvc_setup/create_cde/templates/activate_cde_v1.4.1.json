@@ -11,7 +11,11 @@
         "kubernetes.api.proxyCIDRList": "",
         "subnets": "",
         "tls.enabled": "false", 
-        "yunikorn.disabled": "false"
+        "yunikorn.disabled": "false",
+        "shared.cluster.enabled":"true",
+        "default-vc.create":"true",
+        "wildcard.certificates.enabled":"false",
+        "cluster.nfs.storageClass":"{{ virtual_cluster.storage_class | default('') }}"
       },
       "resources": {
         "cluster_resource_pool_quota": {

@@ -24,6 +24,11 @@
   roles: 
     - ansible_install
     - { role: hdp_libs, when: distribution == "HDP" }
+
+- name: Copy files for installation
+  hosts: main
+  gather_facts: false
+  roles: 
     - set_install_repo
     - { role: cdp_ansible_files, when: distribution != "HDP" }
     - { role: hdp_ansible_files, when: distribution == "HDP" }

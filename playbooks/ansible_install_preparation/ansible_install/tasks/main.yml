@@ -38,6 +38,10 @@
     name: unzip
     state: latest
 
+- name: Install pip
+  shell: python -m pip install
+  ignore_errors: true
+
 - name: Install jmespath
   shell: pip install jmespath
   ignore_errors: true

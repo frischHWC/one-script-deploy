@@ -37,6 +37,10 @@
   package:
     name: unzip
     state: latest
+
+- name: Install jmespath
+  shell: pip install jmespath
+  ignore_errors: true
     
 - name: Copy ansible.cfg file to home dir
   copy:

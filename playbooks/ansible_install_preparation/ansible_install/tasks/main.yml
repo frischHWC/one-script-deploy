@@ -39,7 +39,7 @@
     state: latest
 
 - name: Install pip3
-  shell: python3 -m pip3 install
+  shell: python3 -m pip install --upgrade pip
   ignore_errors: true
 
 - name: Install pip
@@ -50,10 +50,6 @@
   shell: pip install jmespath
   ignore_errors: true
 
-- name: Install jmespath
-  shell: pip3 install jmespath
-  ignore_errors: true
-    
 - name: Copy ansible.cfg file to home dir
   copy:
     src: "{{ deploy_folder }}/ansible.cfg"

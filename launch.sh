@@ -38,7 +38,7 @@ export CLUSTER_NAME="rocky"
     \
     --node-ipa="rockyipa.base.local" \
     --node-base="rocky1.base.local rocky2.base.local rocky3.base.local rocky4.base.local rocky5.base.local rocky6.base.local rocky7.base.local" \
-    --node-kts="rocky8.base.local" \
+    --nodes-kts="rocky8.base.local" \
     \
     --install-repo-url="https://github.com/frischHWC/cldr-playbook/archive/refs/heads/${ANSIBLE_REPO_BRANCH}.zip" \
     --ansible-repo-dir=cldr-playbook-$ANSIBLE_REPO_BRANCH

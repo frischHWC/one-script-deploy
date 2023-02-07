@@ -174,7 +174,7 @@ function usage()
     echo ""
     echo "  --nodes-base=$NODES_BASE : A Space separated list of all nodes (Default) $NODES_BASE "
     echo "  --node-ipa=$NODE_IPA : Required only if using FreeIPA (Default) $NODE_IPA "
-    echo "  --node-kts=$NODES_KTS : Required only if using KTS as a space separated list of maximum two nodes (Default) $NODES_KTS "
+    echo "  --nodes-kts=$NODES_KTS : Required only if using KTS as a space separated list of maximum two nodes (Default) $NODES_KTS "
     echo "  --nodes-ecs=$NODES_PVC_ECS : (Optional) A Space separated list of ECS nodes (external to cluster) where to install ECS (Default) $NODES_PVC_ECS  "
     echo ""
     echo "  --cluster-type=$CLUSTER_TYPE : To simplify deployment, this parameter will adjust number of nodes, security and templates to deploy.  (Default) $CLUSTER_TYPE"

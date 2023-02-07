@@ -20,6 +20,7 @@
 - name: Install required packages for ansible installation
   hosts: main
   gather_facts: false
+  become: true
   roles: 
     - ansible_install
     - { role: hdp_libs, when: distribution == "HDP" }

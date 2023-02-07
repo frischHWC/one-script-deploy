@@ -50,6 +50,10 @@
   shell: pip install jmespath
   ignore_errors: true
 
+- name: Install jmespath
+  shell: pip3 install jmespath
+  ignore_errors: true
+
 - name: Copy ansible.cfg file to home dir
   copy:
     src: "{{ deploy_folder }}/ansible.cfg"

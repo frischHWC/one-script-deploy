@@ -1,0 +1,93 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# CLOUDERA MANAGER
+cluster_definition: environment/
+cloudera_cdh_version: ${CDH_VERSION}
+cloudera_manager_version: ${CM_VERSION}
+cloudera_manager_license_type: ${CM_LICENSE_TYPE}
+cloudera_manager_license_file: ~/license.txt
+cloudera_manager_repo_username: ${PAYWALL_USER}
+cloudera_manager_repo_password: ${PAYWALL_PASSWORD}
+cloudera_manager_repo_url: ${CM_REPO}
+cloudera_manager_csds:
+  - ${CSA_FLINK_CSD}
+  - ${CSA_SSB_CSD}
+  - ${CFM_CSD}
+  - ${CFM_REGISTRY_CSD}
+  - ${SPARK3_CSD}
+  - ${SPARK3_LIVY_CSD}
+cloudera_manager_options:
+# set values to null to delete (and revert to default)
+  custom_banner_html: ""
+  custom_ia_policy: ""
+# valid values for colour are (case sensitive): BROWN, RED, BLACK, GREEN, TEAL, PINK, YELLOW, GRAY, PURPLE, BLUE, DARKBLUE
+  custom_header_color: "${CUSTOM_HEADER_COLOR}"
+message: ""
+
+# MAIN PARAMETERS
+jdk_version: 11
+debug: ${DEBUG}
+node_password: "${NODE_PASSWORD}"
+node_key: ${NODE_KEY}
+cluster_name: ${CLUSTER_NAME}
+cluster_name_pvc: ${CLUSTER_NAME_PVC}
+realm_user: ${REALM}
+
+# SECURITY
+default_password: ${DEFAULT_PASSWORD}
+kerberos_activated: ${KERBEROS}
+encryption_activated: ${ENCRYPTION_ACTIVATED}
+auto_tls: ${TLS}
+free_ipa: ${FREE_IPA}
+krb5_server_type: ${KRB_SERVER_TYPE}
+use_root_ca: ${USE_ROOT_CA}
+root_ca_cert: ${ROOT_CA_CERT}
+root_ca_key: ${ROOT_CA_KEY}
+
+# REPO
+cdh_repo: ${CDH_REPO}
+csa_repo: ${CSA_REPO}
+cfm_repo: ${CFM_REPO}
+spark3_repo: ${SPARK3_REPO}
+
+# SERVICES CONFIGURATION
+kafka_protocol: ${KAFKA_PROTOCOL}
+kafka_connect_protocol: ${KAFKA_CONNECT_PROTOCOL}
+kafka_connect_port: ${KAFKA_CONNECT_PORT}
+das_auth: ${DAS_AUTH}
+hbase_auth: ${HBASE_AUTH}
+bootstrap_servers: ${NODE_7}:${BOOTSTRAP_SERVERS_PORT},${NODE_8}:${BOOTSTRAP_SERVERS_PORT},${NODE_9}:${BOOTSTRAP_SERVERS_PORT}
+node_infra_solr: ${NODE_3}
+
+# PVC
+pvc_type: ${PVC_TYPE}
+pvc_version: ${PVC_VERSION}
+pvc_repo_url: ${PVC_REPO}
+pvc_app_domain: ${PVC_APP_DOMAIN}
+pvc_htpasswdCredentials: "YWRtaW46JDJ5JDA1JDJwOTJFNVRRa1VnelkvbFNsVklYMGUyVnEzd0JtRExuc3RTRUZUanJEUGVSRHUzS0J5UUoyCg=="
+kube_config_path: "/tmp/kubeconfig"
+install_python3: ${INSTALL_PYTHON3}
+oc_tar_file_path: ${OC_TAR_FILE_PATH}
+pvc_ecs_server_host: ${PVC_ECS_SERVER_HOST}
+configure_oc: ${CONFIGURE_OC}
+setup_dns_ecs: ${SETUP_DNS_ECS}
+
+# DATAGEN
+datagen_as_a_service: ${DATAGEN_AS_A_SERVICE}

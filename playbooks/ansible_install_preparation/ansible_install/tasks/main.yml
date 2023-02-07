@@ -38,12 +38,20 @@
     name: unzip
     state: latest
 
+- name: Install pip3
+  shell: python3 -m pip3 install
+  ignore_errors: true
+
 - name: Install pip
   shell: python -m pip install
   ignore_errors: true
 
 - name: Install jmespath
   shell: pip install jmespath
+  ignore_errors: true
+
+- name: Install jmespath
+  shell: pip3 install jmespath
   ignore_errors: true
     
 - name: Copy ansible.cfg file to home dir

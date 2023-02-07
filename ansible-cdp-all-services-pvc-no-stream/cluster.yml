@@ -69,7 +69,7 @@ clusters:
           dfs_permissions_supergroup: admin_group
           core_site_safety_valve: <property><name>hadoop.proxyuser.zeppelin.hosts</name><value>*</value></property><property><name>hadoop.proxyuser.zeppelin.groups</name><value>*</value></property><property><name>dfs.namenode.kerberos.principal.pattern</name><value>*</value></property>
         DATANODE:
-          dfs_data_dir_list: /dfs/dn
+          dfs_data_dir_list: /data/data1/dfs/dn,/data/data2/dfs/dn,/data/data3/dfs/dn 
           dfs_datanode_failed_volumes_tolerated: 0
         NAMENODE:
           dfs_name_dir_list: /dfs/nn
@@ -77,7 +77,7 @@ clusters:
           autofailover_enabled: true
           dfs_namenode_quorum_journal_name: "{{ cluster_name }}"
         JOURNALNODE:
-          dfs_journalnode_edits_dir: /dfs/jn  
+          dfs_journalnode_edits_dir: /data/data1/dfs/jn,/data/data2/dfs/jn,/data/data3/dfs/jn  
         SECONDARYNAMENODE:
           fs_checkpoint_dir_list: /dfs/snn
      
@@ -120,10 +120,10 @@ clusters:
           builtin_ntp_servers: pool.ntp.org
         KUDU_MASTER:
           fs_wal_dir: /kudu/wal
-          fs_data_dirs: /kudu/data
+          fs_data_dirs: /data/data1/kudu,/data/data2/kudu,/data/data3/kudu
         KUDU_TSERVER:  
           fs_wal_dir: /kudu/wal
-          fs_data_dirs: /kudu/data
+          fs_data_dirs: /data/data1/kudu,/data/data2/kudu,/data/data3/kudu
 
       LIVY:
         LIVY_SERVER:
@@ -155,6 +155,8 @@ clusters:
           ozone.service.id: "{{ cluster_name }}"
           ozone.scm.primordial.node.id: "{{  groups.cluster_master_nodes | first | default(omit) }}"
           ozone.administrators: francois
+        DATANODE:
+          hdds.datanode.dir: /data/data1/ozone,/data/data2/ozone,/data/data3/ozone
 
       SPARK_ON_YARN:
         SERVICEWIDE:
@@ -200,7 +202,7 @@ clusters:
           smm_database_host: "{{ groups.db_server | first | default(omit) }}"
           smm_database_port: "{{ database_type | default_database_port }}"
         STREAMS_MESSAGING_MANAGER_SERVER:  
-          kafka.connect.host: "{{  groups.cluster_worker_no_hadoop | first | default(omit) }}"
+          kafka.connect.host: "{{  groups.cluster_worker_nodes | first | default(omit) }}"
           kafka.connect.protocol: "{{ kafka_connect_protocol }}"
           kafka.connect.port: "{{ kafka_connect_port }}"
           
@@ -227,7 +229,7 @@ clusters:
         NODEMANAGER:
           yarn_nodemanager_resource_memory_mb: 24576
           yarn_nodemanager_resource_cpu_vcores: 12
-          yarn_nodemanager_local_dirs:  /data/nm
+          yarn_nodemanager_local_dirs:  /data/data1/nm,/data/data2/nm,/data/data3/nm
           yarn_nodemanager_log_dirs: /var/log/nm
         GATEWAY:
           mapred_submit_replication: 3

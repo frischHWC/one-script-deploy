@@ -696,7 +696,6 @@ then
         export ANSIBLE_ALL_FILE="ansible-cdp-all-services-pvc-no-stream/all"
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-all-services-pvc-no-stream/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-all-services-pvc-no-stream/extra_vars.yml"
-        export USE_CSA="true"
         export USE_CFM="true"
         export USE_SPARK3="true"
         export PVC="true"

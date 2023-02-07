@@ -24,7 +24,7 @@ clusters:
       - "{{ cdh_repo }}"
 
   - name: "{{ cluster_name }}"
-    services: [ATLAS, CRUISE_CONTROL, DAS, FLINK, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, KS_INDEXER, KUDU, LIVY, LIVY_FOR_SPARK3, NIFI, NIFIREGISTRY, OMID, OOZIE, OZONE, PHOENIX, QUEUEMANAGER, RANGER, SCHEMAREGISTRY, SPARK_ON_YARN, SPARK3_ON_YARN, SOLR, SQL_STREAM_BUILDER, STREAMS_MESSAGING_MANAGER, TEZ, YARN, ZEPPELIN, ZOOKEEPER]
+    services: [ATLAS, CRUISE_CONTROL, DAS, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, KS_INDEXER, KUDU, LIVY, LIVY_FOR_SPARK3, NIFI, NIFIREGISTRY, OMID, OOZIE, OZONE, PHOENIX, QUEUEMANAGER, RANGER, SCHEMAREGISTRY, SPARK_ON_YARN, SPARK3_ON_YARN, SOLR, STREAMS_MESSAGING_MANAGER, TEZ, YARN, ZEPPELIN, ZOOKEEPER]
     security:
       kerberos: "{{ kerberos_activated }}"
       hdfs_encryption: "{{ encryption_activated }}"
@@ -48,10 +48,6 @@ clusters:
       DAS:
         DAS_WEBAPP:
           data_analytics_studio_user_authentication: "{{ das_auth }}"
-      
-      FLINK:
-        FLINK_HISTORY_SERVER:
-          historyserver_web_port: 8182
 
       HBASE:
         SERVICEWIDE:
@@ -205,20 +201,6 @@ clusters:
           kafka.connect.host: "{{  groups.cluster_worker_nodes | first | default(omit) }}"
           kafka.connect.protocol: "{{ kafka_connect_protocol }}"
           kafka.connect.port: "{{ kafka_connect_port }}"
-          
-      SQL_STREAM_BUILDER:
-        SERVICEWIDE:
-          loadbalancer.url: "{{  groups.cloudera_manager | first | default(omit) }}"
-        LOAD_BALANCER:
-          loadbalancer.url: "{{  groups.cloudera_manager | first | default(omit) }}"
-        STREAMING_SQL_ENGINE:
-          default.admin.password: "{{ default_password }}" 
-          ssb-conf/application.properties_role_safety_valve: log.sqlio.restapi = true
-        MATERIALIZED_VIEW_ENGINE:
-          ssb.mve.datasource.url: "jdbc:{{ database_type }}://{{ database_host }}:{{ database_type | default_database_port }}/ssb_mve"
-          ssb.mve.datasource.username: ssb_mve
-          ssb.mve.datasource.password: "{{ database_default_password }}"
-          ssb-conf/application.properties_role_safety_valve: log.snapper.restapi = true
 
       YARN:
         SERVICEWIDE:
@@ -246,7 +228,6 @@ clusters:
 
     host_templates:
       Edge:
-        FLINK: [GATEWAY]
         HBASE: [GATEWAY]
         HDFS: [GATEWAY]
         HIVE: [GATEWAY]
@@ -260,14 +241,12 @@ clusters:
         SOLR: [GATEWAY]
         SPARK_ON_YARN: [GATEWAY]
         SPARK3_ON_YARN: [GATEWAY]
-        SQL_STREAM_BUILDER: [LOAD_BALANCER]
         YARN: [GATEWAY]
         ZEPPELIN: [ZEPPELIN_SERVER]
 
       Master1:
         ATLAS: [ATLAS_SERVER]
         CRUISE_CONTROL: [CRUISE_CONTROL_SERVER]
-        FLINK: [FLINK_HISTORY_SERVER, GATEWAY]
         HBASE: [GATEWAY, HBASETHRIFTSERVER, HBASERESTSERVER]
         HDFS: [JOURNALNODE, GATEWAY, HTTPFS]
         HIVE: [HIVEMETASTORE, GATEWAY]
@@ -290,7 +269,6 @@ clusters:
       Master2:
         ATLAS: [ATLAS_SERVER]
         DAS: [DAS_EVENT_PROCESSOR, DAS_WEBAPP]
-        FLINK: [GATEWAY]
         HBASE: [MASTER, HBASERESTSERVER, HBASETHRIFTSERVER, GATEWAY]
         HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
         HIVE: [HIVEMETASTORE, GATEWAY]
@@ -312,7 +290,6 @@ clusters:
         ZOOKEEPER: [SERVER]
 
       Master3:
-        FLINK: [GATEWAY]
         HBASE: [MASTER, GATEWAY]
         HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
         HIVE: [GATEWAY]
@@ -333,13 +310,11 @@ clusters:
         STREAMS_MESSAGING_MANAGER: [STREAMS_MESSAGING_MANAGER_UI, STREAMS_MESSAGING_MANAGER_SERVER]
         SPARK_ON_YARN: [GATEWAY]
         SPARK3_ON_YARN: [SPARK3_YARN_HISTORY_SERVER, GATEWAY]
-        SQL_STREAM_BUILDER: [STREAMING_SQL_ENGINE, MATERIALIZED_VIEW_ENGINE]
         TEZ: [GATEWAY]
         YARN: [RESOURCEMANAGER, GATEWAY]
         ZOOKEEPER: [SERVER]    
 
       Workers:
-        FLINK: [GATEWAY]
         HBASE: [REGIONSERVER, GATEWAY]
         HDFS: [DATANODE, GATEWAY]
         HIVE: [GATEWAY]

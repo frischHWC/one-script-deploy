@@ -36,6 +36,9 @@ export CLUSTER_NAME="rocky"
     --free-ipa=true \
     --debug=true \
     \
+    --os="rhel" \
+    --os-version="8.6" \
+    \
     --node-ipa="rockyipa.base.local" \
     --nodes-base="rocky1.base.local rocky2.base.local rocky3.base.local rocky4.base.local rocky5.base.local rocky6.base.local rocky7.base.local" \
     --nodes-kts="rocky8.base.local" \

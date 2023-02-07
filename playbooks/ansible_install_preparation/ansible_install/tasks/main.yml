@@ -17,6 +17,12 @@
 # under the License.
 #
 ---
+- name: Install epel-release
+  package:
+    name: epel-release
+    state: latest
+  ignore_errors: true
+
 - name: Install Ansible
   package:
     name: ansible

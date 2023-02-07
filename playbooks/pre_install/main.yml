@@ -21,6 +21,7 @@
   hosts: all
   gather_facts: false
   strategy: free
+  become: true
   roles: 
     - network_requirements
     - license

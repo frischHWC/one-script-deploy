@@ -690,6 +690,21 @@ then
         export ENCRYPTION_ACTIVATED="true"  
         export CM_VERSION="7.9.5"
         export CDH_VERSION="7.1.7.1000"
+    elif [ "${CLUSTER_TYPE}" = "all-services-pvc-no-stream" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc-no-stream/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-all-services-pvc-no-stream/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-all-services-pvc-no-stream/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-all-services-pvc-no-stream/extra_vars.yml"
+        export USE_CSA="true"
+        export USE_CFM="true"
+        export USE_SPARK3="true"
+        export PVC="true"
+        export FREE_IPA="true"
+        export PVC_TYPE="OC"
+        export ENCRYPTION_ACTIVATED="true"  
+        export CM_VERSION="7.9.5"
+        export CDH_VERSION="7.1.7.1000"
     elif [ "${CLUSTER_TYPE}" = "all-services-pvc-ecs" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc-ecs/hosts"

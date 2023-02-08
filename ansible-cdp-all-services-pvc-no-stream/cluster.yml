@@ -72,12 +72,12 @@ clusters:
           dfs_data_dir_list: /data/data1/dfs/dn,/data/data2/dfs/dn,/data/data3/dfs/dn 
           dfs_datanode_failed_volumes_tolerated: 0
         NAMENODE:
-          dfs_name_dir_list: /dfs/nn
+          dfs_name_dir_list: /data/data1/dfs/nn,/data/data2/dfs/nn,/data/data3/dfs/nn
           dfs_federation_namenode_nameservice: "{{ cluster_name }}"
           autofailover_enabled: true
           dfs_namenode_quorum_journal_name: "{{ cluster_name }}"
         JOURNALNODE:
-          dfs_journalnode_edits_dir: /data/data1/dfs/jn,/data/data2/dfs/jn,/data/data3/dfs/jn  
+          dfs_journalnode_edits_dir: /data/data1/dfs/jn  
         SECONDARYNAMENODE:
           fs_checkpoint_dir_list: /dfs/snn
      
@@ -149,7 +149,6 @@ clusters:
         OOZIE_SERVER:
           oozie_plugins_list: "org.apache.oozie.service.ZKLocksService,,org.apache.oozie.service.ZKUUIDService,org.apache.oozie.service.ZKJobsConcurrencyService,org.apache.oozie.service.ZKXLogStreamingService"
  
-
       OZONE:
         SERVICEWIDE:
           ozone.service.id: "{{ cluster_name }}"

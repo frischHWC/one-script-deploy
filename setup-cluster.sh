@@ -1327,9 +1327,21 @@ then
     cp ${TO_DEPLOY_FOLDER}/all ~/cluster-${CLUSTER_NAME}/deploy-extra_vars.yml
 fi
 
-
 envsubst < ${TO_DEPLOY_FOLDER}/hosts > ${TO_DEPLOY_FOLDER}/hosts.tmp && mv ${TO_DEPLOY_FOLDER}/hosts.tmp ${TO_DEPLOY_FOLDER}/hosts
 envsubst < ${TO_DEPLOY_FOLDER}/all > ${TO_DEPLOY_FOLDER}/all.tmp && mv ${TO_DEPLOY_FOLDER}/all.tmp ${TO_DEPLOY_FOLDER}/all
+
+if [ "${NODE_USER}" != "root" ]
+then
+    echo "ansible_user=${NODE_USER}" >> ${TO_DEPLOY_FOLDER}/hosts
+
+    if [ ! -z ${NODE_KEY} ]
+    then 
+        echo "ansible_ssh_private_key_file=${NODE_KEY}" >> ${TO_DEPLOY_FOLDER}/hosts
+    elif [ ! -z ${NODE_PASSWORD} ]
+    then
+        echo "ansible_ssh_pass=${NODE_PASSWORD}" >> ${TO_DEPLOY_FOLDER}/hosts
+    fi
+fi
 
 cp ${TO_DEPLOY_FOLDER}/all ~/cluster-${CLUSTER_NAME}/deploy-all
 cp ${TO_DEPLOY_FOLDER}/hosts ~/cluster-${CLUSTER_NAME}/deploy-hosts

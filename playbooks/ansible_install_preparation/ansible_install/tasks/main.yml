@@ -61,7 +61,7 @@
   ignore_errors: true 
 
 - name: Install Ansible core 2.11.12
-  shell: python3 -m pip install ansible-core=='2.11.12'
+  shell: python3 -m pip install ansible-base=='2.10.16'
   ignore_errors: true 
 
 - name: Copy ansible.cfg file to home dir

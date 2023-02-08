@@ -17,13 +17,18 @@
 # under the License.
 #
 ---
-- name: Setup machines with key, known_hosts, local key, license, and node key if required
+- name: Setup network requirements for all machines
   hosts: all
   gather_facts: false
   strategy: free
   become: true
   roles: 
     - network_requirements
+
+- name: Copy node_key and license to CM
+  hosts: cloudera_manager
+  gather_facts: false
+  roles: 
     - license
     - node_key
 

@@ -150,7 +150,7 @@ clusters:
           ozone.service.id: "{{ cluster_name }}"
           ozone.scm.primordial.node.id: "{{  groups.cluster_master_nodes | first | default(omit) }}"
           ozone.administrators: francois
-        DATANODE:
+        OZONE_DATANODE:
           hdds.datanode.dir: /data/data1/ozone,/data/data2/ozone,/data/data3/ozone
 
       SPARK_ON_YARN:

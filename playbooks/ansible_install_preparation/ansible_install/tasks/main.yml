@@ -23,11 +23,6 @@
     state: latest
   ignore_errors: true
 
-- name: Install Ansible
-  package:
-    name: ansible
-    state: latest
-
 - name: Install git
   package:
     name: git
@@ -53,6 +48,21 @@
 - name: Install jmespath
   shell: pip3 install jmespath
   ignore_errors: true
+
+# Old one
+# - name: Install Ansible
+#   package:
+#     name: ansible
+#     state: latest
+
+# New One
+- name: Install Ansible
+  shell: python3 -m pip install ansible
+  ignore_errors: true 
+
+- name: Install Ansible core 2.11.12
+  shell: python3 -m pip install ansible-core=='2.11.12'
+  ignore_errors: true 
 
 - name: Copy ansible.cfg file to home dir
   copy:

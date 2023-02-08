@@ -27,6 +27,8 @@ cloudera_manager_repo_username: ${PAYWALL_USER}
 cloudera_manager_repo_password: ${PAYWALL_PASSWORD}
 cloudera_manager_repo_url: ${CM_REPO}
 cloudera_manager_csds:
+  - ${CSA_FLINK_CSD}
+  - ${CSA_SSB_CSD}
   - ${CFM_CSD}
   - ${CFM_REGISTRY_CSD}
   - ${SPARK3_CSD}

@@ -1336,7 +1336,7 @@ then
 
     if [ ! -z ${NODE_KEY} ]
     then 
-        echo "ansible_ssh_private_key_file=${NODE_KEY}" >> ${TO_DEPLOY_FOLDER}/hosts
+        echo "ansible_ssh_private_key_file=~/node_key" >> ${TO_DEPLOY_FOLDER}/hosts
     elif [ ! -z ${NODE_PASSWORD} ]
     then
         echo "ansible_ssh_pass=${NODE_PASSWORD}" >> ${TO_DEPLOY_FOLDER}/hosts

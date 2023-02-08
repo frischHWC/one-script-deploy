@@ -21,5 +21,6 @@
   copy:
     src: "{{ node_key }}"
     dest: ~/node_key
+    mode: 400
   when: node_key is defined and node_key != ""
   ignore_errors: true

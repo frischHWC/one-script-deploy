@@ -30,7 +30,6 @@ clusters:
       hdfs_encryption: "{{ encryption_activated }}"
     repositories:
       - "{{ cdh_repo }}"
-      - "{{ csa_repo }}"
       - "{{ spark3_repo }}"
       - "{{ cfm_repo }}"
 

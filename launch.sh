@@ -19,6 +19,9 @@ export CLUSTER_NAME="rocky"
     --kubeconfig-path=${KUBECONFIG_PATH} \
     --oc-tar-file-path=${OC_TAR_FILE_PATH} \
     \
+    --node-user="rocky"\
+    --node-key="/home/rocky/rockybase.pem" \
+    \
     --cluster-type="all-services-pvc-no-stream" \
     \
     --pre-install=true \

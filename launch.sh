@@ -24,7 +24,7 @@ export CLUSTER_NAME="rocky"
     \
     --cluster-type="all-services-pvc-no-stream" \
     \
-    --pre-install=false \
+    --pre-install=true \
     --prepare-ansible-deployment=true \
     --install=true \
     --post-install=true \

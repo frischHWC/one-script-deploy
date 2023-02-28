@@ -33,16 +33,14 @@
     name: unzip
     state: latest
 
+- name: Install Python 3
+  package:
+    name: python3
+    state: present
+  ignore_errors: true
+
 - name: Install pip3
   shell: python3 -m pip install --upgrade pip
-  ignore_errors: true
-
-- name: Install pip
-  shell: python -m pip install
-  ignore_errors: true
-
-- name: Install jmespath
-  shell: pip install jmespath
   ignore_errors: true
 
 - name: Install jmespath
@@ -60,9 +58,15 @@
   shell: python3 -m pip install ansible
   ignore_errors: true 
 
-- name: Install Ansible core 2.11.12
+- name: Install Ansible core 2.10.16
   shell: python3 -m pip install ansible-base=='2.10.16'
   ignore_errors: true 
+
+- name: Create Directory /etc/ansible
+  file:
+    path: /etc/ansible/
+    state: directory
+    mode: '0755'
 
 - name: Copy ansible.cfg file to home dir
   copy:

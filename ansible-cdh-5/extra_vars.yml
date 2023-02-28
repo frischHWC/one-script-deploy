@@ -19,6 +19,7 @@
 ---
 cluster_definition: environment/
 cloudera_manager_version: ${CM_VERSION}
+cloudera_cdh_version: ${CDH_VERSION}
 cloudera_manager_license_type: enterprise
 cloudera_manager_license_file: ~/license.txt
 cloudera_manager_repo_username: ${PAYWALL_USER}

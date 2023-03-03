@@ -17,12 +17,12 @@
 # under the License.
 #
 ---
-- name: Prereqs for FreeIPA
-  hosts: ipa
-  become: yes
-  gather_facts: no
-  roles:
-    - prereqs_ipa
+# - name: Prereqs for FreeIPA
+#   hosts: ipa
+#   become: yes
+#   gather_facts: no
+#   roles:
+#     - prereqs_ipa
 
 - name: Pre-requisites on base DB
   hosts: "{{ database_host }}"

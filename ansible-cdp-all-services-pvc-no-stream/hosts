@@ -1,0 +1,36 @@
+[cloudera_manager]
+${NODE_0} host_template=Edge
+
+[cluster_master_nodes]
+${NODE_1} host_template=Master1
+${NODE_2} host_template=Master2
+${NODE_3} host_template=Master3
+
+[cluster_worker_nodes]
+${NODE_4} host_template=Workers
+${NODE_5} host_template=Workers
+${NODE_6} host_template=Workers
+
+[db_server]
+${NODE_0}
+
+[custom_repo]
+${NODE_0}
+
+${KTS_SERVERS}
+
+${KMS_SERVERS}
+
+${CA_SERVERS}
+
+${KRB5_SERVERS}
+
+[cluster:children]
+cluster_master_nodes
+cluster_worker_nodes
+cloudera_manager
+${KTS_SERVERS_GROUP}
+
+[all:vars]
+tls=False
+host_pattern_mismatch=ignore

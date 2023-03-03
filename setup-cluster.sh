@@ -54,7 +54,7 @@ export ENCRYPTION_ACTIVATED="false"
 export CM_VERSION="7.6.7"
 export CDH_VERSION="7.1.7.2000"
 export PVC_VERSION="1.5.0"
-export CSA_VERSION="1.7.0.1"
+export CSA_VERSION="1.7.0.0"
 export CFM_VERSION="2.1.4.2"
 export SPARK3_VERSION="3.2.7171000.1"
 export WXM_VERSION="2.2.2"
@@ -174,7 +174,7 @@ function usage()
     echo ""
     echo "  --nodes-base=$NODES_BASE : A Space separated list of all nodes (Default) $NODES_BASE "
     echo "  --node-ipa=$NODE_IPA : Required only if using FreeIPA (Default) $NODE_IPA "
-    echo "  --node-kts=$NODES_KTS : Required only if using KTS as a space separated list of maximum two nodes (Default) $NODES_KTS "
+    echo "  --nodes-kts=$NODES_KTS : Required only if using KTS as a space separated list of maximum two nodes (Default) $NODES_KTS "
     echo "  --nodes-ecs=$NODES_PVC_ECS : (Optional) A Space separated list of ECS nodes (external to cluster) where to install ECS (Default) $NODES_PVC_ECS  "
     echo ""
     echo "  --cluster-type=$CLUSTER_TYPE : To simplify deployment, this parameter will adjust number of nodes, security and templates to deploy.  (Default) $CLUSTER_TYPE"
@@ -681,6 +681,21 @@ then
         export ANSIBLE_ALL_FILE="ansible-cdp-all-services-pvc/all"
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-all-services-pvc/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-all-services-pvc/extra_vars.yml"
+        export USE_CSA="true"
+        export USE_CFM="true"
+        export USE_SPARK3="true"
+        export PVC="true"
+        export FREE_IPA="true"
+        export PVC_TYPE="OC"
+        export ENCRYPTION_ACTIVATED="true"  
+        export CM_VERSION="7.9.5"
+        export CDH_VERSION="7.1.7.1000"
+    elif [ "${CLUSTER_TYPE}" = "all-services-pvc-no-stream" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc-no-stream/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-all-services-pvc-no-stream/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-all-services-pvc-no-stream/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-all-services-pvc-no-stream/extra_vars.yml"
         export USE_CSA="true"
         export USE_CFM="true"
         export USE_SPARK3="true"
@@ -1313,9 +1328,21 @@ then
     cp ${TO_DEPLOY_FOLDER}/all ~/cluster-${CLUSTER_NAME}/deploy-extra_vars.yml
 fi
 
-
 envsubst < ${TO_DEPLOY_FOLDER}/hosts > ${TO_DEPLOY_FOLDER}/hosts.tmp && mv ${TO_DEPLOY_FOLDER}/hosts.tmp ${TO_DEPLOY_FOLDER}/hosts
 envsubst < ${TO_DEPLOY_FOLDER}/all > ${TO_DEPLOY_FOLDER}/all.tmp && mv ${TO_DEPLOY_FOLDER}/all.tmp ${TO_DEPLOY_FOLDER}/all
+
+if [ "${NODE_USER}" != "root" ]
+then
+    echo "ansible_user=${NODE_USER}" >> ${TO_DEPLOY_FOLDER}/hosts
+
+    if [ ! -z ${NODE_KEY} ]
+    then 
+        echo "ansible_ssh_private_key_file=~/node_key" >> ${TO_DEPLOY_FOLDER}/hosts
+    elif [ ! -z ${NODE_PASSWORD} ]
+    then
+        echo "ansible_ssh_pass=${NODE_PASSWORD}" >> ${TO_DEPLOY_FOLDER}/hosts
+    fi
+fi
 
 cp ${TO_DEPLOY_FOLDER}/all ~/cluster-${CLUSTER_NAME}/deploy-all
 cp ${TO_DEPLOY_FOLDER}/hosts ~/cluster-${CLUSTER_NAME}/deploy-hosts
@@ -1841,6 +1868,6 @@ echo ""
 echo " To allow easy interaction with the cluster the hosts file used to setup the cluster has been copied to ~/${CLUSTER_NAME}/hosts "
 echo " Examples:"
 echo ""
-echo "  ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} ansible_playbook.yml --extra-vars \"\" "
-echo "  ansible all -i /tmp/hosts-${CLUSTER_NAME} -a \"cat /etc/hosts\" "
+echo "  ansible-playbook -i ~/cluster-${CLUSTER_NAME}/hosts ansible_playbook.yml --extra-vars \"\" "
+echo "  ansible all -i ~/cluster-${CLUSTER_NAME}/hosts -a \"cat /etc/hosts\" "
 echo ""

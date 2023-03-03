@@ -17,10 +17,11 @@
 # under the License.
 #
 ---
-- name: Install Ansible
+- name: Install epel-release
   package:
-    name: ansible
+    name: epel-release
     state: latest
+  ignore_errors: true
 
 - name: Install git
   package:
@@ -31,7 +32,42 @@
   package:
     name: unzip
     state: latest
-    
+
+- name: Install Python 3
+  package:
+    name: python3
+    state: present
+  ignore_errors: true
+
+- name: Install pip3
+  shell: python3 -m pip install --upgrade pip
+  ignore_errors: true
+
+- name: Install jmespath
+  shell: pip3 install jmespath
+  ignore_errors: true
+
+# Old one
+# - name: Install Ansible
+#   package:
+#     name: ansible
+#     state: latest
+
+# New One
+- name: Install Ansible
+  shell: python3 -m pip install ansible
+  ignore_errors: true 
+
+- name: Install Ansible core 2.10.16
+  shell: python3 -m pip install ansible-base=='2.10.16'
+  ignore_errors: true 
+
+- name: Create Directory /etc/ansible
+  file:
+    path: /etc/ansible/
+    state: directory
+    mode: '0755'
+
 - name: Copy ansible.cfg file to home dir
   copy:
     src: "{{ deploy_folder }}/ansible.cfg"

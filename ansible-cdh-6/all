@@ -1,6 +1,6 @@
 ---
 database_type: postgresql
-database_version: 9.6
+database_version: 10
 database_default_password: "{{ default_password }}"
 database_host: "{{ groups['db_server'][0] | default('localhost') }}"
 

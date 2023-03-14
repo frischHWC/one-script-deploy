@@ -91,6 +91,7 @@ export PVC_TYPE="ECS"
 export CREATE_CDW="true"
 export CREATE_CDE="true"
 export CREATE_CML="true"
+export CREATE_CML_REGISTRY="true"
 export CREATE_VIZ="true"
 export OC_TAR_FILE_PATH=""
 export CONFIGURE_OC="true"
@@ -262,6 +263,7 @@ function usage()
     echo "  --create-cdw=$CREATE_CDW Optional, used to auto setup a CDW if PVC is deployed (Default) $CREATE_CDW"
     echo "  --create-cde=$CREATE_CDE Optional, used to auto setup a CDE if PVC is deployed (Default) $CREATE_CDE"
     echo "  --create-cml=$CREATE_CML Optional, used to auto setup a CML if PVC is deployed (Default) $CREATE_CML"
+    echo "  --create-cml-registry=$CREATE_CML_REGISTRY Optional, used to auto setup a CML Registry if PVC is deployed (Default) $CREATE_CML_REGISTRY"
     echo "  --create-viz=$CREATE_VIZ Optional, used to auto setup a Data Viz if PVC is deployed (Default) $CREATE_VIZ"
     echo ""
     echo "  --install-repo-url=$INSTALL_REPO_URL : (Optional) Install repo URL (Default) $INSTALL_REPO_URL  "
@@ -522,6 +524,9 @@ while [ "$1" != "" ]; do
             ;;
         --create-cml)
             CREATE_CML=$VALUE
+            ;;
+        --create-cml-registry)
+            CREATE_CML_REGISTRY=$VALUE
             ;;
         --create-viz)
             CREATE_VIZ=$VALUE

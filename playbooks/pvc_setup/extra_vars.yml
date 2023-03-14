@@ -40,6 +40,7 @@ docker_registry_password: ${PAYWALL_PASSWORD}
 cdw: ${CREATE_CDW}
 cde: ${CREATE_CDE}
 cml: ${CREATE_CML}
+cmlr: ${CREATE_CML_REGISTRY}
 dataviz: ${CREATE_VIZ}
 pvc_type: ${PVC_TYPE}
 pvc_ecs_server_host: ${PVC_ECS_SERVER_HOST}
@@ -111,6 +112,10 @@ workspaces:
     enable_governance: true # default = false
     enable_model_metrics: true # default = false
     static_sub_domain: workspace1 # default = ''
+
+ml_registries:
+  - name: "mlr"
+    env_name: "{{ cluster_name_pvc }}-env"
 
 
 # CDE

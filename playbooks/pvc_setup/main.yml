@@ -28,56 +28,61 @@
   hosts: "{{ database_host }}"
   gather_facts: false
   roles: 
-    - prereqs_db
+    - role: prereqs_db
+      when: not skip_pvc_prereqs
   
 - name: Pre-requisites on Open Shift
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false
   roles: 
     - role: prereqs_oc
-      when: pvc_type == "OC"
+      when: not skip_pvc_prereqs and pvc_type == "OC"
 
 - name: Pre-requisites on ECS Nodes
   hosts: pvc
   gather_facts: false
   roles: 
     - role: prereqs_ecs_nodes
-      when: pvc_type == "ECS"
+      when: not skip_pvc_prereqs and pvc_type == "ECS"
 
 - name: Pre-requisites on ECS Server Node
   hosts: "{{ pvc_ecs_server_host }}"
   gather_facts: false
   roles: 
     - role: prereqs_ecs_server
-      when: pvc_type == "ECS"
+      when: not skip_pvc_prereqs and pvc_type == "ECS"
 
 - name: Pre-requisites on ECS
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false
   roles: 
     - role: prereqs_ecs
-      when: pvc_type == "ECS"
+      when: not skip_pvc_prereqs and pvc_type == "ECS"
 
 - name: Patches for ECS agent
   hosts: pvc
   gather_facts: false
   roles: 
     - role: patch_ecs_agent
-      when: pvc_type == "ECS"
+      when: not skip_pvc_prereqs and pvc_type == "ECS"
 
 - name: Pre-requisites and fixes for PvC 
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false
   roles: 
-    - prereqs
+    - role: prereqs
+      when: not skip_pvc_prereqs
 
 - name: Setup PvC 
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false
   roles: 
-    - cm_config
-    - get_pvc_info 
-    - setup_cdpcli
+    - role: cm_config
+      when: not skip_pvc_prereqs
+    - role: get_pvc_info 
+      when: not skip_pvc_prereqs
+    - role: setup_cdpcli
+      when: not skip_pvc_prereqs
 
 - name: Create environments
   hosts: "{{ cloudera_manager_host }}"

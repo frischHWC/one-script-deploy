@@ -50,6 +50,7 @@ root_ca_key: ${ROOT_CA_KEY}
 oc_tar_file_path: ${OC_TAR_FILE_PATH}
 configure_oc: ${CONFIGURE_OC}
 setup_dns_ecs: ${SETUP_DNS_ECS}
+skip_pvc_prereqs: ${SKIP_PVC_PREREQS}
 
 # Environments
 environments:
@@ -107,9 +108,9 @@ workspaces:
     env_name: "{{ cluster_name_pvc }}-env"
     disable_tls: false # default = false
     enable_monitoring: true # default = true
-    enable_governance: false # default = false
-    enable_model_metrics: false # default = false
-    static_sub_domain: workspace # default = ''
+    enable_governance: true # default = false
+    enable_model_metrics: true # default = false
+    static_sub_domain: workspace1 # default = ''
 
 
 # CDE

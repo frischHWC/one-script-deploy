@@ -101,3 +101,5 @@ cloudera_manager_external_auth:
 
 local_temp_dir: "/home/tmp"
 skip_user_group_init: false
+config_system_locale: 'en_US.UTF-8'
+config_system_language: 'en_US.UTF-8'

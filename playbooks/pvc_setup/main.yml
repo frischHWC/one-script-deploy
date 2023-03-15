@@ -167,6 +167,20 @@
 
 
 #### CML ####
+- name: Create Cloudera Machine Learning Registries
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: true
+  tasks: 
+    - name: create CML Registries
+      include_role:
+        name: create_cml_registry
+      with_items: "{{ ml_registries }}"
+      vars: 
+        ml_registry: "{{ item }}"
+      when: cmlr | default(false)
+      ignore_errors: yes
+
+
 - name: Create Cloudera Machine Learning
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false
@@ -206,18 +220,6 @@
       when: cml | default(false)
       ignore_errors: yes
 
-- name: Create Cloudera Machine Learning Registries
-  hosts: "{{ cloudera_manager_host }}"
-  gather_facts: true
-  tasks: 
-    - name: create CML Registries
-      include_role:
-        name: create_cml_registry
-      with_items: "{{ ml_registries }}"
-      vars: 
-        ml_registry: "{{ item }}"
-      when: cmlr | default(false)
-      ignore_errors: yes
 
 - name: Setting up users' rights
   hosts: "{{ cloudera_manager_host }}"

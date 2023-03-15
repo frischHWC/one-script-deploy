@@ -105,13 +105,13 @@ vizs:
 
 # CML
 workspaces:
-  - name: "{{ cluster_name_pvc }}-workspace-1"
+  - name: "{{ cluster_name_pvc }}-workspace-2"
     env_name: "{{ cluster_name_pvc }}-env"
     disable_tls: false # default = false
     enable_monitoring: true # default = true
     enable_governance: true # default = false
     enable_model_metrics: true # default = false
-    static_sub_domain: workspace1 # default = ''
+    static_sub_domain: workspace2 # default = ''
 
 ml_registries:
   - name: "mlr"

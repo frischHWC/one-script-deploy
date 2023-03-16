@@ -126,7 +126,7 @@ export DATAGEN_REPO_URL="https://github.com/frischHWC/datagen"
 export DATAGEN_REPO_BRANCH="main"
 export DATAGEN_REPO_PARCEL=""
 export DATAGEN_CSD_URL=""
-export DATAGEN_VERSION="0.4.5"
+export DATAGEN_VERSION="0.4.7"
 export EDGE_HOST=""
 
 # Demo
@@ -702,7 +702,6 @@ then
         export PVC_TYPE="OC"
         export ENCRYPTION_ACTIVATED="true"  
         export CM_VERSION="7.9.5"
-        export CDH_VERSION="7.1.7.1000"
     elif [ "${CLUSTER_TYPE}" = "all-services-pvc-no-stream" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc-no-stream/hosts"
@@ -717,7 +716,6 @@ then
         export PVC_TYPE="OC"
         export ENCRYPTION_ACTIVATED="true"  
         export CM_VERSION="7.9.5"
-        export CDH_VERSION="7.1.7.1000"
     elif [ "${CLUSTER_TYPE}" = "all-services-pvc-ecs" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc-ecs/hosts"
@@ -732,7 +730,6 @@ then
         export PVC_TYPE="ECS"
         export ENCRYPTION_ACTIVATED="true"
         export CM_VERSION="7.9.5" 
-        #export CDH_VERSION="7.1.7.1000"
     elif [ "${CLUSTER_TYPE}" = "pvc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-pvc/hosts"
@@ -742,7 +739,6 @@ then
         export PVC="true"
         export FREE_IPA="true"
         export CM_VERSION="7.9.5"
-        export CDH_VERSION="7.1.7.1000"
     elif [ "${CLUSTER_TYPE}" = "pvc-oc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-pvc-oc/hosts"
@@ -753,7 +749,6 @@ then
         export PVC_TYPE="OC"
         export FREE_IPA="true"
         export CM_VERSION="7.9.5"
-        export CDH_VERSION="7.1.7.1000"
     elif [ "${CLUSTER_TYPE}" = "streaming" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-streaming/hosts"
@@ -780,7 +775,6 @@ then
         export ENCRYPTION_HA="true"
         export CLUSTER_NAME_STREAMING="${CLUSTER_NAME}-stream"
         export CM_VERSION="7.9.5"
-        export CDH_VERSION="7.1.7.1000"
     elif [ "${CLUSTER_TYPE}" = "wxm" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-wxm/hosts"

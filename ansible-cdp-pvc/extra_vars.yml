@@ -72,8 +72,8 @@ kafka_connect_protocol: ${KAFKA_CONNECT_PROTOCOL}
 kafka_connect_port: ${KAFKA_CONNECT_PORT}
 das_auth: ${DAS_AUTH}
 hbase_auth: ${HBASE_AUTH}
-bootstrap_servers: ${NODE_7}:${BOOTSTRAP_SERVERS_PORT},${NODE_8}:${BOOTSTRAP_SERVERS_PORT},${NODE_9}:${BOOTSTRAP_SERVERS_PORT}
-node_infra_solr: ${NODE_3}
+bootstrap_servers: ${NODE_3}:${BOOTSTRAP_SERVERS_PORT},${NODE_4}:${BOOTSTRAP_SERVERS_PORT},${NODE_5}:${BOOTSTRAP_SERVERS_PORT}
+node_infra_solr: ${NODE_2}
 
 # PVC
 pvc_type: ${PVC_TYPE}

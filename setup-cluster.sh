@@ -126,7 +126,7 @@ export DATAGEN_REPO_URL="https://github.com/frischHWC/datagen"
 export DATAGEN_REPO_BRANCH="main"
 export DATAGEN_REPO_PARCEL=""
 export DATAGEN_CSD_URL=""
-export DATAGEN_VERSION="0.4.8"
+export DATAGEN_VERSION="0.4.9"
 export EDGE_HOST=""
 
 # Demo

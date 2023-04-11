@@ -149,5 +149,19 @@ user_rights:
       - name: "Spark2-{{ cluster_name }}"
         env_name: "{{ cluster_name_pvc }}-env"
         cde_service_name: "CDE-Service-1"
+  - name: batman
+    keytab: /home/batman/batman.keytab # Used if defined to push keytab to CML and CDE
+    password: ${DEFAULT_PASSWORD}
+    roles: [ "EnvironmentUser", "IamUser" ]
+    envs: 
+      - name: "{{ cluster_name_pvc }}-env"
+        roles: [ "DEUser", "DWUser",  "MLUser" ]
+    virtual_clusters: # Optionnal: If not defined no keytab pushed to cde
+      - name: "Spark3-{{ cluster_name }}"
+        env_name: "{{ cluster_name_pvc }}-env"
+        cde_service_name: "CDE-Service-1"
+      - name: "Spark2-{{ cluster_name }}"
+        env_name: "{{ cluster_name_pvc }}-env"
+        cde_service_name: "CDE-Service-1"
     
     

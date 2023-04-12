@@ -37,18 +37,7 @@
 - name: Destroy ~/local-key
   file:
       path: ~/local-key
-      state: absent     
-  
-- name: Copy /etc/hosts 
-  copy:
-    src: "{{ etc_hosts_file }}"
-    dest: ~/etc_hosts
-- name: Change /etc/hosts
-  shell: cat ~/etc_hosts >> /etc/hosts
-- name: Destroy etc_hosts
-  file:
-      path: ~/etc_hosts
-      state: absent  
+      state: absent
 
 - name: Copy Known hosts file
   copy:

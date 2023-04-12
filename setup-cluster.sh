@@ -20,6 +20,7 @@ export CM_LICENSE_TYPE="enterprise"
 export NODE_USER="root"
 export NODE_KEY=""
 export NODE_PASSWORD=""
+export SETUP_HOSTS_KEYS="true"
 
 # Steps to do
 export PRE_INSTALL="true"
@@ -176,6 +177,7 @@ function usage()
     echo "  --node-user=$NODE_USER : The user to connect to each node (Default) $NODE_USER "
     echo "  --node-key=$NODE_KEY : The key to connect to all nodes (Default) $NODE_KEY "
     echo "  --node-password=$NODE_PASSWORD : The password to connect to all nodes (Default) $NODE_PASSWORD "
+    echo "  --setup-hosts-keys=$SETUP_HOSTS_KEYS : If needed to setup hosts keys between hosts (to allow passwordless connections) Set it to false on some Cloud Provider already setup machines (Default) $SETUP_HOSTS_KEYS "
     echo ""
     echo "  --nodes-base=$NODES_BASE : A Space separated list of all nodes (Default) $NODES_BASE "
     echo "  --node-ipa=$NODE_IPA : Required only if using FreeIPA (Default) $NODE_IPA "
@@ -323,6 +325,9 @@ while [ "$1" != "" ]; do
             ;;
         --node-key)
             NODE_KEY=$VALUE
+            ;;
+        --setup-hosts-keys)
+            SETUP_HOSTS_KEYS=$VALUE
             ;;
         --node-password)
             NODE_PASSWORD=$VALUE

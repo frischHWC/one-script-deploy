@@ -17,22 +17,15 @@
 # under the License.
 #
 ---
-distribution: ${DISTRIBUTION_TO_DEPLOY} 
-debug: ${DEBUG} 
-free_ipa: ${FREE_IPA} 
-cluster_name: ${CLUSTER_NAME}
-etc_hosts_file: ${HOSTS_ETC}
-known_hosts: ${KNOWN_HOSTS}
-license_file: ${LICENSE_FILE}
-authorized_keys: ${AUTHORIZED_KEYS}
-set_hosts_key: ${SETUP_HOSTS_KEYS}
-node_key: ${NODE_KEY}
-use_root_ca: ${USE_ROOT_CA}
-root_ca_cert: ${ROOT_CA_CERT}
-root_ca_key: ${ROOT_CA_KEY}
-ca_server_attrs: /C=FR/ST=Paris/L=Paris/O=Cloudera/OU=PS/
-certs_dir: "~/cluster-{{ cluster_name }}/certs/"
-keystore_password: ${DEFAULT_PASSWORD}
-truststore_password: ${DEFAULT_PASSWORD}
-pvc: ${PVC}
-pvc_app_domain: ${PVC_APP_DOMAIN}
+- name: Copy /etc/hosts 
+  copy:
+    src: "{{ etc_hosts_file }}"
+    dest: ~/etc_hosts
+
+- name: Change /etc/hosts
+  shell: cat ~/etc_hosts >> /etc/hosts
+
+- name: Destroy etc_hosts
+  file:
+      path: ~/etc_hosts
+      state: absent  

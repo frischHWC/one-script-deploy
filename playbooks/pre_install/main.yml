@@ -23,7 +23,21 @@
   strategy: free
   become: true
   roles: 
-    - network_requirements
+    - etc_hosts_copy
+    - { role: setup_hosts_key, when: set_hosts_key }
+
+- name: Create authorized_keys file from all hosts keys file locally 
+  hosts: localhost
+  gather_facts: false
+  roles: 
+    - { role: authorized_keys , when: set_hosts_key }
+
+- name: Copy and set authorized_keys to all nodes
+  hosts: all
+  gather_facts: false
+  strategy: free
+  roles: 
+    - { role: auth_key_for_all , when: set_hosts_key }
 
 - name: Copy node_key and license to CM
   hosts: cloudera_manager
@@ -31,19 +45,6 @@
   roles: 
     - license
     - node_key
-
-- name: Create authorized_keys file from all hosts keys file locally 
-  hosts: localhost
-  gather_facts: false
-  roles: 
-    - authorized_keys
-
-- name: Copy and set authorized_keys to all nodes
-  hosts: all
-  gather_facts: false
-  strategy: free
-  roles: 
-    - auth_key_for_all
 
 - name: Fix FreeIPA Dbus configuration
   hosts: all

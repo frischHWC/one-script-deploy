@@ -50,13 +50,19 @@
       path: ~/known_hosts
       state: absent     
 
-- name: Generate key
+- name: Check if public key already exists for the machine
+  stat:
+    path: ~/.ssh/id_rsa.pub
+  register: ssh_pub_key
+
+- name: Generate key only if it does not exists already
   openssh_keypair:
-    path: /root/.ssh/id_rsa
+    path: ~/.ssh/id_rsa
     size: 2048
+  when: not ssh_pub_key.stat.exists
     
 - name: Get key generated for all hosts into one local file (authorized_keys)
   fetch:
-    src: /root/.ssh/id_rsa.pub
+    src: ~/.ssh/id_rsa.pub
     dest: "~/authorized-key-{{ inventory_hostname }}.pub"
     flat: yes  

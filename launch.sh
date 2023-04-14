@@ -37,11 +37,9 @@ export CLUSTER_NAME="bootcamp"
     --free-ipa=true \
     --debug=true \
     \
-    --setup-hosts-keys=false \
-    \
     --os="rhel" \
     --os-version="8.6" \
     \
-    --node-ipa="" \
-    --nodes-base="" \
-    --nodes-ecs=""
+    --node-ipa="fri-ipa.cloudera.local" \
+    --nodes-base="fri-base-1.cloudera.local fri-base-2.cloudera.local fri-base-3.cloudera.local fri-base-4.cloudera.local fri-base-5.cloudera.local fri-base-6.cloudera.local" \
+    --nodes-ecs="fri-ecs-1.cloudera.local fri-ecs-2.cloudera.local fri-ecs-3.cloudera.local"

@@ -24,7 +24,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<service name="ssb-sse-ui" role="SSB-SSE-UI" version="1.7.0">
+<service name="ssb-sse-ui" role="SSB-SSE-UI" version="1.9.0">
     <metadata>
        <context>/ssb-sse-ui</context>
        <description>SSB-SSE-UI</description>

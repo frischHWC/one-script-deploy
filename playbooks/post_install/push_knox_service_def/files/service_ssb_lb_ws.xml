@@ -24,7 +24,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<service name="ssb-sse-ws-lb" role="SSB-SSE-WS-LB" version="1.7.0">
+<service name="ssb-sse-ws-lb" role="SSB-SSE-WS-LB" version="1.9.0">
     <dispatch classname="org.apache.knox.gateway.dispatch.ConfigurableDispatch" use-two-way-ssl="false">
         <param>
             <name>responseExcludeHeaders</name>

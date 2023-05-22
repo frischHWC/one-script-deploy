@@ -131,7 +131,7 @@
 
 - name: Download cdp-cde-utils.sh.gz
   get_url:
-    url: "https://docs.cloudera.com/data-engineering/1.3.4/cdp-cde-utils.sh"
+    url: "https://docs.cloudera.com/data-engineering/1.5.0/cdp-cde-utils.sh"
     dest: ~/cdp-cde-utils.sh
     mode: '0775'
   ignore_errors: true

@@ -25,3 +25,4 @@
       alias kubectl-ecs='/var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml'
       alias docker-ecs='/opt/cloudera/parcels/ECS/docker/docker'
       alias crictl-ecs='/var/lib/rancher/rke2/bin/crictl --config /var/lib/rancher/rke2/agent/etc/crictl.yaml'
+      alias ctr-ecs='/var/lib/rancher/rke2/bin/ctr  -a /run/k3s/containerd/containerd.sock'

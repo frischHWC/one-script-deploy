@@ -52,6 +52,7 @@ oc_tar_file_path: ${OC_TAR_FILE_PATH}
 configure_oc: ${CONFIGURE_OC}
 setup_dns_ecs: ${SETUP_DNS_ECS}
 skip_pvc_prereqs: ${SKIP_PVC_PREREQS}
+pvc_eco_resources: ${PVC_ECO_RESOURCES}
 
 # Environments
 environments:
@@ -68,7 +69,7 @@ delegation_username: admin
 delegation_password: "{{ ipa_bind_password }}"
 
 warehouses: 
-  - name: "Hive-1-{{ cluster_name }}"
+  - name: "hive-1-{{ cluster_name }}"
     database_catalog_name: "{{ cluster_name_pvc }}-env-datalake-default"
     env_name: "{{ cluster_name_pvc }}-env"
     low_resource_mode: true
@@ -78,9 +79,9 @@ warehouses:
     max_nodes: 5 # default = 5
     auto_suspend_timeout: 300 # default = 300
     wait_time: 60 # default = 60
-    disable_auto_suspend: false # default = false
+    disable_auto_suspend: true # default = false
 
-  - name: "Impala-1-{{ cluster_name }}"
+  - name: "impala-1-{{ cluster_name }}"
     database_catalog_name: "{{ cluster_name_pvc }}-env-datalake-default"
     env_name: "{{ cluster_name_pvc }}-env"
     low_resource_mode: true
@@ -93,25 +94,25 @@ warehouses:
     scale_up_delay: 20 # default = 20
     scale_down_delay: 20 # default = 20
     wait_time: 60 # default = 60
-    disable_auto_suspend: false # default = false
+    disable_auto_suspend: true # default = false
     legacy_multithreading: false # default = false
 
 # Data Viz
 vizs:
-  - name: "Viz-1-{{ cluster_name }}"
+  - name: "viz-1-{{ cluster_name }}"
     env_name: "{{ cluster_name_pvc }}-env"
     size: "small" # default = small 
     admin_group: "admin_group" # Group that will be added to be admin and access data viz
 
 # CML
 workspaces:
-  - name: "{{ cluster_name_pvc }}-workspace-2"
+  - name: "{{ cluster_name_pvc }}-workspace-1"
     env_name: "{{ cluster_name_pvc }}-env"
     disable_tls: false # default = false
     enable_monitoring: true # default = true
     enable_governance: true # default = false
     enable_model_metrics: true # default = false
-    static_sub_domain: workspace2 # default = ''
+    static_sub_domain: workspace1 # default = ''
 
 ml_registries:
   - name: "mlr"
@@ -120,13 +121,13 @@ ml_registries:
 
 # CDE
 virtual_clusters:
-  - name: "Spark3-{{ cluster_name }}"
+  - name: "spark3-{{ cluster_name }}"
     env_name: "{{ cluster_name_pvc }}-env"
-    cde_service_name: "CDE-Service-1"
+    cde_service_name: "cde-service-1"
     spark_version: "3.2.1" # From 1.4.1, it is 3.2.1, before it is 3.2.0
-  - name: "Spark2-{{ cluster_name }}"
+  - name: "spark2-{{ cluster_name }}"
     env_name: "{{ cluster_name_pvc }}-env"
-    cde_service_name: "CDE-Service-1"
+    cde_service_name: "cde-service-1"
     spark_version: "2.4.7"
 
 
@@ -143,12 +144,12 @@ user_rights:
       - name: "{{ cluster_name_pvc }}-workspace-1" 
         env_name: "{{ cluster_name_pvc }}-env"
     virtual_clusters: # Optionnal: If not defined no keytab pushed to cde
-      - name: "Spark3-{{ cluster_name }}"
+      - name: "spark3-{{ cluster_name }}"
         env_name: "{{ cluster_name_pvc }}-env"
-        cde_service_name: "CDE-Service-1"
-      - name: "Spark2-{{ cluster_name }}"
+        cde_service_name: "cde-service-1"
+      - name: "spark2-{{ cluster_name }}"
         env_name: "{{ cluster_name_pvc }}-env"
-        cde_service_name: "CDE-Service-1"
+        cde_service_name: "cde-service-1"
   - name: batman
     keytab: /home/batman/batman.keytab # Used if defined to push keytab to CML and CDE
     password: ${DEFAULT_PASSWORD}
@@ -157,11 +158,11 @@ user_rights:
       - name: "{{ cluster_name_pvc }}-env"
         roles: [ "DEUser", "DWUser",  "MLUser" ]
     virtual_clusters: # Optionnal: If not defined no keytab pushed to cde
-      - name: "Spark3-{{ cluster_name }}"
+      - name: "spark3-{{ cluster_name }}"
         env_name: "{{ cluster_name_pvc }}-env"
-        cde_service_name: "CDE-Service-1"
-      - name: "Spark2-{{ cluster_name }}"
+        cde_service_name: "cde-service-1"
+      - name: "spark2-{{ cluster_name }}"
         env_name: "{{ cluster_name_pvc }}-env"
-        cde_service_name: "CDE-Service-1"
+        cde_service_name: "cde-service-1"
     
     

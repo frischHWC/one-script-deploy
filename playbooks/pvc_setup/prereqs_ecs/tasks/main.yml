@@ -50,6 +50,7 @@
   copy:
     src: "/tmp/kubeconfig/{{ pvc_ecs_server_host }}/etc/rancher/rke2/rke2.yaml"
     dest: "/root/kubeconfig"
+    mode: 0400
 
 - name: Replace in kubeconfig the pvc_ecs_server_host
   replace:
@@ -62,3 +63,4 @@
     path: ~/.bashrc
     block: |
       export KUBECONFIG=/root/kubeconfig
+      alias kubectl-ecs='kubectl --kubeconfig /root/kubeconfig'

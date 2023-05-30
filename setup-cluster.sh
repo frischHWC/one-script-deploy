@@ -98,6 +98,7 @@ export OC_TAR_FILE_PATH=""
 export CONFIGURE_OC="true"
 export SETUP_DNS_ECS="true"
 export PVC_APP_DOMAIN=""
+export PVC_ECO_RESOURCES="true"
 
 # External CSD
 export USE_CSA="false"

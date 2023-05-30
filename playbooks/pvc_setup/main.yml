@@ -100,7 +100,7 @@
 #### CDW ####
 - name: Create Cloudera Data Warehouse
   hosts: "{{ cloudera_manager_host }}"
-  gather_facts: false
+  gather_facts: true
   tasks: 
     - name: create CDWs
       include_role:

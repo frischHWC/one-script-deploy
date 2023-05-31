@@ -268,6 +268,7 @@ function usage()
     echo "  --create-cml=$CREATE_CML Optional, used to auto setup a CML if PVC is deployed (Default) $CREATE_CML"
     echo "  --create-cml-registry=$CREATE_CML_REGISTRY Optional, used to auto setup a CML Registry if PVC is deployed (Default) $CREATE_CML_REGISTRY"
     echo "  --create-viz=$CREATE_VIZ Optional, used to auto setup a Data Viz if PVC is deployed (Default) $CREATE_VIZ"
+    echo "  --pvc-eco-resources=$PVC_ECO_RESOURCES : (Optional) To reduce footprint of pvc deployment by making a mini-small cluster (Default) $PVC_ECO_RESOURCES"
     echo ""
     echo "  --install-repo-url=$INSTALL_REPO_URL : (Optional) Install repo URL (Default) $INSTALL_REPO_URL  "
     echo "  --ansible-repo-dir=$ANSIBLE_REPO_DIR : (Optional) Directory where install repo will be deployed (Default) $ANSIBLE_REPO_DIR "
@@ -536,6 +537,9 @@ while [ "$1" != "" ]; do
             ;;
         --create-viz)
             CREATE_VIZ=$VALUE
+            ;;
+        --pvc-eco-resources)
+            PVC_ECO_RESOURCES=$VALUE
             ;;    
         --pvc-app-domain)
             PVC_APP_DOMAIN=$VALUE

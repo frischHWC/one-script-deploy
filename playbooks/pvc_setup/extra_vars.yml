@@ -79,7 +79,7 @@ warehouses:
     max_nodes: 5 # default = 5
     auto_suspend_timeout: 300 # default = 300
     wait_time: 60 # default = 60
-    disable_auto_suspend: true # default = false
+    disable_auto_suspend: false # default = false
 
   - name: "impala-1-{{ cluster_name }}"
     database_catalog_name: "{{ cluster_name_pvc }}-env-datalake-default"
@@ -94,7 +94,7 @@ warehouses:
     scale_up_delay: 20 # default = 20
     scale_down_delay: 20 # default = 20
     wait_time: 60 # default = 60
-    disable_auto_suspend: true # default = false
+    disable_auto_suspend: false # default = false
     legacy_multithreading: false # default = false
 
 # Data Viz

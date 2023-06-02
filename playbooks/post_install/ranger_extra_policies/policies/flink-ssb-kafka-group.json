@@ -4,7 +4,7 @@
     "isEnabled": true,
     "version": 1,
     "service": "cm_kafka",
-    "name": "Flink & SSB access to Kafka",
+    "name": "Flink & SSB access to Kafka Group",
     "policyType": 0,
     "policyPriority": 0,
     "description": "Required for Flink and SSB to work with Kafka",
@@ -14,7 +14,8 @@
         "values": [
           "*",
           "flink*",
-          "ssb*"
+          "ssb*",
+          "flink_group"
         ],
         "isExcludes": false,
         "isRecursive": false

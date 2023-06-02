@@ -17,12 +17,12 @@
 # under the License.
 #
 ---
-- name: CM Configuration post-install no unlog and fix TLS settings
-  hosts: main
-  gather_facts: false
-  roles: 
-    - no-unlog
-    - restart_cm
+# - name: CM Configuration post-install no unlog and fix TLS settings
+#   hosts: main
+#   gather_facts: false
+#   roles: 
+#     - no-unlog
+#     - restart_cm
 
 - name: Check existing services
   hosts: cluster
@@ -30,29 +30,29 @@
   roles: 
     - check_existing_services
 
-- name: Get CM cert locally (to trust it and access custer services)
-  hosts: main
-  gather_facts: false
-  roles: 
-    - { role: get_cluster_root_cert, when: auto_tls | default(false) }
+# - name: Get CM cert locally (to trust it and access custer services)
+#   hosts: main
+#   gather_facts: false
+#   roles: 
+#     - { role: get_cluster_root_cert, when: auto_tls | default(false) }
 
-- name: Fix krb5.conf with Free IPA
-  hosts: cluster
-  gather_facts: false
-  roles: 
-    - { role: fix_krb5_conf_freeipa, when: free_ipa | default(false) }
+# - name: Fix krb5.conf with Free IPA
+#   hosts: cluster
+#   gather_facts: false
+#   roles: 
+#     - { role: fix_krb5_conf_freeipa, when: free_ipa | default(false) }
 
-- name: Fix Hue ticket lifetime for Free IPA
-  hosts: main
-  gather_facts: false
-  roles: 
-    - { role: hue_free_ipa_ticket_lifetime, when: free_ipa and hue_service_exists | default(false) }
+# - name: Fix Hue ticket lifetime for Free IPA
+#   hosts: main
+#   gather_facts: false
+#   roles: 
+#     - { role: hue_free_ipa_ticket_lifetime, when: free_ipa and hue_service_exists | default(false) }
 
-- name: Create missing SolR plugin for Ranger
-  hosts: main
-  gather_facts: false
-  roles: 
-    - { role: fix_solr_plugin, when: ranger_service_exists and solr_service_exists | default(false) }
+# - name: Create missing SolR plugin for Ranger
+#   hosts: main
+#   gather_facts: false
+#   roles: 
+#     - { role: fix_solr_plugin, when: ranger_service_exists and solr_service_exists | default(false) }
 
 - name: Copy Knox Service Definition files
   hosts: cluster
@@ -60,11 +60,11 @@
   roles: 
     - { role: push_knox_service_def, when: knox_service_exists | default(false) }
 
-- name: Add Solr urls to Knox
-  hosts: main
-  gather_facts: false
-  roles: 
-    - { role: add_solr_knox, when: knox_service_exists and solr_service_exists | default(false) }
+# - name: Add Solr urls to Knox
+#   hosts: main
+#   gather_facts: false
+#   roles: 
+#     - { role: add_solr_knox, when: knox_service_exists and solr_service_exists | default(false) }
 
 - name: Add SSB urls to Knox
   hosts: main
@@ -85,39 +85,39 @@
     - { role: restart_knox, when: knox_service_exists | default(false) }
 
 
-- name: Add missing TLS values for KMS
-  hosts: main
-  gather_facts: false
-  roles: 
-    - { role: fix_kms_tls, when: encryption_activated | default(false) }
+# - name: Add missing TLS values for KMS
+#   hosts: main
+#   gather_facts: false
+#   roles: 
+#     - { role: fix_kms_tls, when: encryption_activated | default(false) }
 
-- name: Add missing ExtJS for Oozie
-  hosts: cluster
-  gather_facts: false
-  roles: 
-    - { role: fix_oozie_ui, when: oozie_service_exists | default(false) }
+# - name: Add missing ExtJS for Oozie
+#   hosts: cluster
+#   gather_facts: false
+#   roles: 
+#     - { role: fix_oozie_ui, when: oozie_service_exists | default(false) }
 
-- name: Pre-Configure WXM
-  hosts: main, tp_host
-  gather_facts: false
-  roles: 
-    - { role: wxm_config, when: use_wxm | default(false) }
+# - name: Pre-Configure WXM
+#   hosts: main, tp_host
+#   gather_facts: false
+#   roles: 
+#     - { role: wxm_config, when: use_wxm | default(false) }
 
-- name: Configure Telemetry for WXM
-  hosts: tp_host
-  gather_facts: false
-  roles: 
-    - { role: wxm_configure_telemetry, when: use_wxm | default(false) }
-    - { role: wxm_truststore_to_base, when: use_wxm | default(false) }
+# - name: Configure Telemetry for WXM
+#   hosts: tp_host
+#   gather_facts: false
+#   roles: 
+#     - { role: wxm_configure_telemetry, when: use_wxm | default(false) }
+#     - { role: wxm_truststore_to_base, when: use_wxm | default(false) }
 
-- name: Restart WXM and Services
-  hosts: main
-  gather_facts: false
-  roles: 
-    - { role: wxm_restart, when: use_wxm | default(false) }
+# - name: Restart WXM and Services
+#   hosts: main
+#   gather_facts: false
+#   roles: 
+#     - { role: wxm_restart, when: use_wxm | default(false) }
 
-- name: Ranger extra policies to have enough rights with basic accounts
-  hosts: main
-  gather_facts: false
-  roles: 
-    - { role: ranger_extra_policies, when: ranger_service_exists }
+# - name: Ranger extra policies to have enough rights with basic accounts
+#   hosts: main
+#   gather_facts: false
+#   roles: 
+#     - { role: ranger_extra_policies, when: ranger_service_exists }

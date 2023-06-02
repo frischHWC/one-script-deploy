@@ -20,7 +20,7 @@
 clusters:
   - name: "{{ cluster_name }}"
     # Remove undesired services below
-    services: [ATLAS, HBASE, HDFS, HIVE, HIVE_ON_TEZ, INFRA_SOLR, KAFKA, KNOX, OZONE, QUEUEMANAGER, RANGER, SPARK_ON_YARN, TEZ, YARN, ZOOKEEPER]
+    services: [ATLAS, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, INFRA_SOLR, KAFKA, KNOX, OZONE, QUEUEMANAGER, RANGER, SPARK_ON_YARN, TEZ, YARN, ZOOKEEPER]
     security:
       kerberos: "{{ kerberos_activated }}"
     repositories:
@@ -59,6 +59,9 @@ clusters:
       HIVE_ON_TEZ:
         HIVESERVER2:
           hive_server2_transport_mode: "all"
+      HUE:
+        SERVICEWIDE:
+          auth_backend: desktop.auth.backend.KnoxSpnegoDjangoBackend
       KNOX:
         SERVICEWIDE:
           knox_encryptquerystring_secret: "{{ default_password }}"
@@ -151,6 +154,7 @@ clusters:
         HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
         HIVE: [HIVEMETASTORE, GATEWAY]
         HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
+        HUE: [HUE_SERVER, HUE_LOAD_BALANCER]
         KAFKA: [KAFKA_BROKER, GATEWAY]
         OZONE: [OZONE_MANAGER, STORAGE_CONTAINER_MANAGER, GATEWAY]
         RANGER: [RANGER_ADMIN]

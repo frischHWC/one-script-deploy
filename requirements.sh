@@ -1,6 +1,12 @@
 #!/bin/bash
 # TODO: Make it for Debian, Suse & Mac
 
+if [ $# -ne 1 ]
+then
+  echo "ERROR: missing machine_type=[rhel|debian|suse|mac] argument"
+  exit 1
+fi
+
 machine_type = $1
 
 if [ -z $machine_type ]

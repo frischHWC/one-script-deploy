@@ -17,6 +17,13 @@
 # under the License.
 #
 ---  
+- name: Change file ownership of home user
+  file:
+    path: "/home/{{ user.name }}/"
+    owner: "{{ user.name }}"
+    group: "{{ user.group }}"
+    mode: '0755'
+
 - name: Create .ssh directory
   file:
     path: "/home/{{ user.name }}/.ssh/"

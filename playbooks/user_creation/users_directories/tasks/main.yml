@@ -23,6 +23,7 @@
     owner: "{{ user.name }}"
     group: "{{ user.group }}"
     mode: '0755'
+    state: directory
 
 - name: Create .ssh directory
   file:

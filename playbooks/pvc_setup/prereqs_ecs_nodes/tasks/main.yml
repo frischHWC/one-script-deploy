@@ -22,6 +22,9 @@
   blockinfile:
     path: ~/.bashrc
     block: |
+      export PATH=/var/lib/rancher/rke2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
+      export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
+      alias helm=/opt/cloudera/parcels/ECS/installer/install/bin/linux/helm
       alias kubectl-ecs='/var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml'
       alias docker-ecs='/opt/cloudera/parcels/ECS/docker/docker'
       alias crictl-ecs='/var/lib/rancher/rke2/bin/crictl --config /var/lib/rancher/rke2/agent/etc/crictl.yaml'

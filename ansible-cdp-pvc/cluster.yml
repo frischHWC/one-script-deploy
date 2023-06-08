@@ -122,7 +122,7 @@ clusters:
     host_templates:
       Edge:
         HBASE: [GATEWAY]
-        HDFS: [JOURNALNODE, GATEWAY]
+        HDFS: [JOURNALNODE, GATEWAY, HTTPFS]
         HIVE: [GATEWAY]
         HIVE_ON_TEZ: [GATEWAY]
         KAFKA: [KAFKA_BROKER, GATEWAY]

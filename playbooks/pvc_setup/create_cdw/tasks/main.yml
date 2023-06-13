@@ -134,7 +134,7 @@
 - name: DEBUG - dwx_environments
   debug:
     msg: "{{ dwx_environments }}"
-    
+
 - set_fact:
     dwx_dbc_id: "{{ dwx_environments.json | community.general.json_query(query) }}"
   vars:
@@ -202,7 +202,7 @@
   debug:
     msg: "{{ dwx_dbc_id }}"
     
-# TODO: Here you change deployment resources of DBC to lower it
+# TODO: Here you change deployment resources of DBC to lower it. To remove it and use helm charts upgrae instead.
 
 - name: Pause 5 seconds to let the deployments to be created
   pause:
@@ -267,7 +267,7 @@
   register: answer_to_hive_activation
   when: warehouse.type == 'hive' | default(false)
 
-# TODO: Here you change deployment resources of Hive VW to lower it
+# TODO: Here you change deployment resources of Hive VW to lower it.  To remove it and use helm charts upgrae instead.
 
 - name: Pause 10 seconds to let the deployments to be created
   pause:
@@ -341,7 +341,7 @@
   register: answer_to_impala_activation
   when: warehouse.type == 'impala' | default(false)
 
-# TODO: Here you change deployment resources of VW to lower it
+# TODO: Here you change deployment resources of VW to lower it. To remove it and use helm charts upgrae instead.
 
 - name: Pause 10 seconds to let the deployments to be created
   pause:

@@ -91,6 +91,33 @@
   vars:
     query: "vizId"
 
+# TODO: Starting from 1.5.1, we must use environments API (dwx/api/v2/environments), that in [0].clusterState.vizs. name of the viz . viz.status
+- name: Get Environments to get Viz ID
+  uri:
+    url: "{{ dwx_endpoint_api }}/environments"
+    method: GET
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: dwx_environments
+  when: pvc_version is version('1.5.1', '>=')
+
+- name: DEBUG - dwx_environments
+  debug:
+    msg: "{{ dwx_environments }}"
+  when: pvc_version is version('1.5.1', '>=')
+    
+- set_fact:
+    dviz_id: "{{ dwx_environments.json | community.general.json_query(query) }}"
+  vars:
+    query: "clusters[?name == '{{ viz.env_name }}' ].clusterState.vizs.[*] | [0] | [0] [?viz.displayName == '{{ viz.name }}' ] | [0].viz.id"
+  when: pvc_version is version('1.5.1', '>=')
+
+
 - name: DEBUG - dviz_id
   debug:
     msg: "{{ dviz_id }}"

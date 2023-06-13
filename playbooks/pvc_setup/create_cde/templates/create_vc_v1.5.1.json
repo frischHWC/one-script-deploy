@@ -1,0 +1,20 @@
+{
+  "name": "{{ virtual_cluster.name }}",
+  "config": {
+    "properties": {
+      "livy.ingress.enabled": "true",
+      "spark.version":"{{ virtual_cluster.spark_version }}",
+      "dexapp.appTier":"{{ virtual_cluster.tier }}",
+      "session.timeout":"{{ virtual_cluster.session_timeout }}"
+    },
+    "resources": {
+      "cpu_requests": "{{ virtual_cluster.vc_quota_cpu | default('12') }}",
+      "mem_requests": "{{ virtual_cluster.vc_quota_mem | default('32Gi') }}"
+    },
+    "chartValueOverrides":
+    {
+      "dex-app":
+        {"pipelines.enabled":"true"}
+    }
+  }
+}

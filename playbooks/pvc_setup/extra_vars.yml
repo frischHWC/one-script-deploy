@@ -70,7 +70,7 @@ delegation_password: "{{ ipa_bind_password }}"
 
 warehouses: 
   - name: "hive-1-{{ cluster_name }}"
-    database_catalog_name: "{{ cluster_name_pvc }}-env-datalake-default"
+    database_catalog_name: "{{ cluster_name_pvc }}-env" # Since 1.5.1, DBC name should be the same than Env name
     env_name: "{{ cluster_name_pvc }}-env"
     low_resource_mode: true
     type: "hive" 
@@ -82,7 +82,7 @@ warehouses:
     disable_auto_suspend: false # default = false
 
   - name: "impala-1-{{ cluster_name }}"
-    database_catalog_name: "{{ cluster_name_pvc }}-env-datalake-default"
+    database_catalog_name: "{{ cluster_name_pvc }}-env" # Since 1.5.1, DBC name should be the same than Env name
     env_name: "{{ cluster_name_pvc }}-env"
     low_resource_mode: true
     type: "impala"
@@ -124,11 +124,15 @@ virtual_clusters:
   - name: "spark3-{{ cluster_name }}"
     env_name: "{{ cluster_name_pvc }}-env"
     cde_service_name: "cde-service-1"
-    spark_version: "3.2.1" # From 1.4.1, it is 3.2.1, before it is 3.2.0
+    spark_version: "3.2.3" # From 1.5.1, it is 3.2.3, From 1.4.1, it is 3.2.1, before it is 3.2.0
+    tier: tier-2
+    session_timeout: 8h
   - name: "spark2-{{ cluster_name }}"
     env_name: "{{ cluster_name_pvc }}-env"
     cde_service_name: "cde-service-1"
     spark_version: "2.4.7"
+    tier: tier-2
+    session_timeout: 8h
 
 
 # Rights

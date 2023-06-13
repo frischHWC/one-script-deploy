@@ -115,6 +115,10 @@
     create_vc_template: 'create_vc_v1.4.1.json'
   when: pvc_version is version('1.4.1', '>=')
 
+- set_fact:
+    create_vc_template: 'create_vc_v1.5.1.json'
+  when: pvc_version is version('1.5.1', '>=')
+
 - name: Create CDE Service
   uri:
     url: "{{ dex_endpoint_api }}/cluster"
@@ -154,6 +158,8 @@
 
 # Create VC for created cde service
 
+# TODO: Add purposes and session timeout from 1.5.1
+# {"name":"test","config":{"properties":{"livy.ingress.enabled":"true","iceberg.enabled":"false","spark.version":"3.2.3","dexapp.appTier":"tier-2","session.timeout":"1h"},"resources":{"cpu_requests":"12","mem_requests":"60Gi","gcpu_requests":"8","gmem_requests":"24Gi"},"chartValueOverrides":{"dex-app":{"pipelines.enabled":"true"}}}}
 - name: Get CDE VCs
   uri:
     url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance"

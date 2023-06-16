@@ -79,8 +79,13 @@
   roles: 
     - role: cm_config
       when: not skip_pvc_prereqs
-    - role: get_pvc_info 
+    - role: setup_ldap_provider 
       when: not skip_pvc_prereqs
+
+- name: Setup CDP CLI
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: false
+  roles: 
     - role: setup_cdpcli
       when: not skip_pvc_prereqs
 
@@ -165,6 +170,13 @@
       when: cde | default(false)
       ignore_errors: yes
 
+- name: Install CDE CLI 
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: false
+  roles: 
+    - role: setup_cde_cli
+      when: cde | default(false)
+
 
 #### CML ####
 - name: Create Cloudera Machine Learning Registries
@@ -220,7 +232,7 @@
       when: cml | default(false)
       ignore_errors: yes
 
-
+### User's Rights ###
 - name: Setting up users' rights
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false

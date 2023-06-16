@@ -1,0 +1,11 @@
+# ~/.cde/config.yaml
+
+credentials-file: "~/.cde/credentials"
+cdp-endpoint: "{{ cdp_endpoint_url }}"
+tls-insecure: true
+  
+profiles:
+{% for vc in cde_vcs.json %}
+- name: {{ vc.name }}
+  vcluster-endpoint: {{ vc.appInfo.dexApiUrl }}
+{% endfor %}

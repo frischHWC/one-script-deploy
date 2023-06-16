@@ -17,6 +17,71 @@
 # under the License.
 #
 ---
+- name: Get admin user CRN
+  uri:
+    url: "{{ pvc_api_call }}/iam/listUsers"
+    method: POST
+    headers: 
+      Content-TYpe: application/json
+      Cookie: "{{ all_cookies }}"
+    body: "{\"pageSize\":500}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: list_all_users
+
+- set_fact:
+    admin_crn: "{{ list_all_users.json | community.general.json_query(query) }}"
+  vars:
+    query: "users[?workloadUsername == 'admin' ].crn | [0]"
+
+- name: DEBUG - admin_crn
+  debug:
+    msg: "{{ admin_crn }}"
+  when: debug | default(false)
+
+- name: DEBUG - call to gen acces key
+  debug:
+    msg: "{{ lookup('template', 'gen_access_key.json') }}"
+  when: debug | default(false)
+
+
+- name: Generate Access Key for admin using API
+  uri:
+    url: "{{ pvc_api_call }}/iam/createUserAccessKey"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', 'gen_access_key.json') }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: gen_access_key_answer
+
+- set_fact:
+    admin_access_key_id: "{{ gen_access_key_answer.json | community.general.json_query(query) }}"
+  vars:
+    query: "accessKey.accessKeyId"
+
+- name: DEBUG - admin_access_key_id
+  debug:
+    msg: "{{ admin_access_key_id }}"
+  when: debug | default(false)
+
+- set_fact:
+    admin_private_key: "{{ gen_access_key_answer.json | community.general.json_query(query) }}"
+  vars:
+    query: "privateKey"
+
+- name: DEBUG - admin_private_key
+  debug:
+    msg: "{{ admin_private_key }}"
+  when: debug | default(false)
+
+
 - name: Remove .cdp directory
   ansible.builtin.file:
     path: ~/.cdp/

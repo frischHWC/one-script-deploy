@@ -127,12 +127,6 @@ virtual_clusters:
     spark_version: "3.2.3" # From 1.5.1, it is 3.2.3, From 1.4.1, it is 3.2.1, before it is 3.2.0
     tier: tier-2
     session_timeout: 8h
-  - name: "spark3-{{ cluster_name }}"
-    env_name: "{{ cluster_name_pvc }}-env"
-    cde_service_name: "cde-service-2"
-    spark_version: "3.2.3" # From 1.5.1, it is 3.2.3, From 1.4.1, it is 3.2.1, before it is 3.2.0
-    tier: tier-2
-    session_timeout: 8h
   - name: "spark2-{{ cluster_name }}"
     env_name: "{{ cluster_name_pvc }}-env"
     cde_service_name: "cde-service-1"

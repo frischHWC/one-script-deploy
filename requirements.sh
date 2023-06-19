@@ -7,11 +7,11 @@ then
   exit 1
 fi
 
-machine_type = $1
+machine_type=$1
 
 if [ -z $machine_type ]
 then
-    machine_type = "rhel"
+    machine_type="rhel"
 fi
 
 echo "Will run requirements for $machine_type"
@@ -49,17 +49,60 @@ then
 elif [ "$machine_type" == "debian" ]
 then
 
+    echo "TODO: Install wget"
+
+    echo "TODO: Install Git"
+
+    echo "TODO: Install Unzip"
+
+    echo "TODO: Install network packages"
+
+    echo "TODO: Install Python 3"
+
+    echo "TODO:Install ansible"
+
 elif [ "$machine_type" == "suse" ]
 then
+
+    echo "TODO: Install wget"
+
+    echo "TODO: Install Git"
+
+    echo "TODO: Install Unzip"
+
+    echo "TODO: Install network packages"
+
+    echo "TODO: Install Python 3"
+
+    echo "TODO:Install ansible"
 
 elif [ "$machine_type" == "mac" ]
 then
 
+    echo "TODO: Install wget"
+
+    echo "TODO: Install Git"
+
+    echo "TODO: Install Unzip"
+
+    echo "TODO: Install network packages"
+
+    echo "TODO: Install Python 3"
+
+    echo "TODO:Install ansible"
+
 fi
 
-echo "Generates a local key"
-mkdir -p ~/.ssh/
-ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''
+if [ ! -d "~/.ssh/" ]
+then
+  echo "Creates .ssh directory"
+  mkdir -p ~/.ssh/
+fi
+if [ ! -f "~/.ssh/id_rsa" ]
+then
+  echo "Generates a local key"
+  ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''
+fi
 
 echo "Install ansible required collections"
 ansible-galaxy collection install community.general

@@ -89,6 +89,20 @@
     - role: setup_cdpcli
       when: not skip_pvc_prereqs
 
+- name: Setup AWS CLI for Ozone
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: true
+  roles: 
+    - role: setup_aws_cli
+      when: setup_pvc_tools and not skip_pvc_prereqs
+
+- name: Install k9s 
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: false
+  roles: 
+    - role: setup_k9s
+      when: setup_pvc_tools and not skip_pvc_prereqs
+
 - name: Create environments
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false
@@ -102,7 +116,7 @@
       ignore_errors: yes
 
 
-#### CDW ####
+### CDW ####
 - name: Create Cloudera Data Warehouse
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: true
@@ -175,7 +189,7 @@
   gather_facts: false
   roles: 
     - role: setup_cde_cli
-      when: cde | default(false)
+      when: setup_pvc_tools and cde | default(false)
 
 
 #### CML ####
@@ -231,6 +245,13 @@
         workspace: "{{ item }}"
       when: cml | default(false)
       ignore_errors: yes
+
+- name: Install cdswctl 
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: false
+  roles: 
+    - role: setup_cdswctl
+      when: setup_pvc_tools and cml | default(false)
 
 ### User's Rights ###
 - name: Setting up users' rights

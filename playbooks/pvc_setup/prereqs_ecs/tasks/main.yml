@@ -61,6 +61,7 @@
 - name: Insert KUBECONFIG vars to bashrc
   blockinfile:
     path: ~/.bashrc
+    marker: "# Kubeconfig "
     block: |
       export KUBECONFIG=/root/kubeconfig
       alias kubectl-ecs='kubectl --kubeconfig /root/kubeconfig'

@@ -17,16 +17,41 @@
 # under the License.
 #
 ---
-# Set up aliases for kubeconfig
-- name: Add kubeconfig and docker alias
-  blockinfile:
-    path: ~/.bashrc
-    marker: "# K8s Tools"
-    block: |
-      export PATH=/var/lib/rancher/rke2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
-      export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
-      alias helm=/opt/cloudera/parcels/ECS/installer/install/bin/linux/helm
-      alias kubectl-ecs='/var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml'
-      alias docker-ecs='/opt/cloudera/parcels/ECS/docker/docker'
-      alias crictl-ecs='/var/lib/rancher/rke2/bin/crictl --config /var/lib/rancher/rke2/agent/etc/crictl.yaml'
-      alias ctr-ecs='/var/lib/rancher/rke2/bin/ctr  -a /run/k3s/containerd/containerd.sock'
+- name: Remove k9s directory
+  file:
+    path: ~/k9s/
+    state: absent
+
+- name: Create k9s directory
+  file:
+    path: ~/k9s/
+    state: directory
+    mode: '0755'
+
+
+- name: Download k9s tool
+  uri:
+    url: "https://github.com/derailed/k9s/releases/download/v0.27.4/k9s_Linux_amd64.tar.gz"
+    method: GET
+    follow_redirects: all
+    status_code: [200, 304]
+    return_content: yes
+    validate_certs: no
+    dest: ~/k9s.tar.gz
+  ignore_errors: true
+
+
+- name: Extract k9s Tool
+  unarchive:
+    src: ~/k9s.tar.gz
+    dest: ~/k9s/
+    remote_src: yes 
+  ignore_errors: true
+
+
+- name: Copy k9s
+  copy:
+    src: ~/k9s/k9s
+    dest: /usr/bin/k9s
+    remote_src: yes 
+  ignore_errors: true

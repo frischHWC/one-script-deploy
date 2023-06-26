@@ -98,7 +98,8 @@ export OC_TAR_FILE_PATH=""
 export CONFIGURE_OC="true"
 export SETUP_DNS_ECS="true"
 export PVC_APP_DOMAIN=""
-export PVC_ECO_RESOURCES="true"
+export PVC_ECO_RESOURCES="false"
+export SETUP_PVC_TOOLS="false"
 
 # External CSD
 export USE_CSA="false"
@@ -540,7 +541,10 @@ while [ "$1" != "" ]; do
             ;;
         --pvc-eco-resources)
             PVC_ECO_RESOURCES=$VALUE
-            ;;    
+            ;;  
+        --setup-pvc-tools)
+            SETUP_PVC_TOOLS=$VALUE
+            ;;  
         --pvc-app-domain)
             PVC_APP_DOMAIN=$VALUE
             ;;

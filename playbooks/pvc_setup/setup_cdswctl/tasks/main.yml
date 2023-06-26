@@ -1,0 +1,105 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+- set_fact:
+    cml_endpoint_api: "{{ cdp_endpoint_url }}/api/v1/ml"
+
+- name: DEBUG - cml_endpoint_api
+  debug:
+    msg: "{{ cml_endpoint_api }}"
+
+- name: Get CML Worksapces
+  uri:
+    url: "{{ cml_endpoint_api }}/listWorkspaces"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{}"
+    status_code: [200, 202]
+    return_content: yes
+    validate_certs: no
+    follow_redirects: all
+  register: cml_workspaces
+
+- name: DEBUG - cml_workspaces
+  debug:
+    msg: "{{ cml_workspaces }}"
+
+- set_fact:
+    cml_endpoint_workspace: "{{ cml_workspaces.json.workspaces | community.general.json_query(query) }}"
+  vars:
+    query: "[?instanceStatus == 'installation:finished' ].instanceUrl | [0]"
+
+- name: DEBUG - cml_endpoint_workspace
+  debug:
+    msg: "{{ cml_endpoint_workspace }}"
+
+- name: Download CDSWCTL tool
+  uri:
+    url: "{{ cml_endpoint_workspace }}/cli/linux/amd64/cdsw.tar.gz"
+    method: GET
+    body_format: json
+    follow_redirects: all
+    status_code: [200, 304]
+    return_content: yes
+    validate_certs: no
+    dest: ~/cdsw.tar.gz
+  ignore_errors: true
+
+- name: Remove cdsw directory
+  file:
+    path: ~/cdsw/
+    state: absent
+
+- name: Create cdsw directory
+  file:
+    path: ~/cdsw/
+    state: directory
+    mode: '0755'
+
+- name: Extract CDSWCTL Tool
+  unarchive:
+    src: ~/cdsw.tar.gz
+    dest: ~/cdsw/
+    remote_src: yes 
+  ignore_errors: true
+
+# TODO: copy cdswctl to /usr/bin
+
+- name: Register cdsw path
+  find:
+    paths: "~/cdsw/"
+    patterns: 'cdsw*'
+    file_type: directory 
+  register: cdsw_directory
+
+- name: DEBUG - cdsw_directory
+  debug:
+    msg: "{{ cdsw_directory }}"
+
+- name: Copy cdswctl
+  copy:
+    src: "{{ cdsw_directory.files[0].path }}/cdswctl"
+    dest: /usr/bin/cdswctl
+    mode: 755
+    remote_src: yes 
+  ignore_errors: true

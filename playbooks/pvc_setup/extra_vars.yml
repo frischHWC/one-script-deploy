@@ -53,6 +53,7 @@ configure_oc: ${CONFIGURE_OC}
 setup_dns_ecs: ${SETUP_DNS_ECS}
 skip_pvc_prereqs: ${SKIP_PVC_PREREQS}
 pvc_eco_resources: ${PVC_ECO_RESOURCES}
+setup_pvc_tools: ${SETUP_PVC_TOOLS}
 
 # Environments
 environments:
@@ -136,7 +137,9 @@ virtual_clusters:
 # Below user/password is used to authentify against a CDE Service to download CDE tools (it only needs to be a valid LDAP user)
 cde_user: francois 
 cde_password: ${DEFAULT_PASSWORD}
-
+# Below user is used to configure ozone aws s3 cli
+ozone_user_keytab: /home/francois/francois.keytab
+ozone_user: francois
 
 # Rights
 user_rights:

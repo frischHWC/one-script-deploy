@@ -2,7 +2,7 @@
 # Database configs
 
 database_type: postgresql
-database_version: 10
+database_version: 14
 database_host: "{{ groups['db_server'][0] | default('localhost') }}"
 database_default_password: "{{ default_password }}"
 
@@ -31,43 +31,6 @@ ipa_ldap_user_search_base: "cn=users,cn=accounts,{{ ipa_ldap_dc_suffix }}"
 ipa_ldap_user_search_filter: "(&(uid={0})(objectClass=person))"
 ipa_ldap_group_search_base: "cn=groups,cn=accounts,{{ ipa_ldap_dc_suffix }}"
 ipa_ldap_user_group_filter: "(&(member={1})(objectClass=posixgroup))"
-
-
-# TLS security configs
-
-skip_tls_cert_distribution: "false"
-base_dir_security: /opt/cloudera/security
-base_dir_security_pki: "{{ base_dir_security }}/pki"
-
-manual_tls_cert_distribution: false
-
-tls_cert_path: "{{ base_dir_security_pki }}/{{ inventory_hostname }}.pem"
-tls_cert_path_generic: "{{ base_dir_security_pki }}/host.pem"
-tls_chain_path: "{{ base_dir_security_pki }}/chain.pem"
-tls_csr_path: "{{ base_dir_security_pki }}/{{ inventory_hostname }}.csr"
-tls_csr_config_path: "{{ base_dir_security_pki }}/csr.cnf"
-tls_key_password: changeme
-tls_key_password_file: "{{ base_dir_security_pki }}/host.key.pw"
-tls_key_path: "{{ base_dir_security_pki }}/{{ inventory_hostname }}.key"
-tls_key_path_generic: "{{ base_dir_security_pki }}/host.key"
-tls_key_path_plaintext: "{{ tls_key_path }}.unenc"
-tls_key_path_plaintext_generic: "{{ tls_key_path_generic }}.unenc"
-tls_keystore_password: changeme
-tls_keystore_path: "{{ base_dir_security_pki }}/{{ inventory_hostname }}.jks"
-tls_keystore_path_generic: "{{ base_dir_security_pki }}/host.jks"
-tls_truststore_password: changeme
-tls_truststore_path: "{{ base_dir_security_pki }}/truststore.jks"
-
-tls_acl_groups_keystore: ["cloudera-scm", "cruisecontrol", "flume", "hbase", "hive", "httpfs", "kafka", "keytrustee", "kms", "knox", "livy", "nifi", "nifiregistry", "oozie", "schemaregistry", "solr", "spark", "streamsmsgmgr", "streamsrepmgr", "zeppelin", "zookeeper"]
-tls_acl_groups_key: ["cloudera-scm", "hue", "impala", "keytrustee", "kudu", "streamsmsgmgr"]
-tls_acl_groups_key_unencrypted: []
-tls_acl_groups_key_password: ["cloudera-scm", "hue", "impala", "keytrustee", "kudu"]
-
-ca_server_attrs_general:
-  OU: PS
-  O: Cloudera, Inc.
-  ST: CA
-  C: US
 
 
 # Configure FreeIPA LDAP for CM
@@ -104,3 +67,5 @@ cloudera_manager_external_auth:
 
 local_temp_dir: "/home/tmp"
 skip_user_group_init: false
+config_system_locale: 'en_US.UTF-8'
+config_system_language: 'en_US.UTF-8'

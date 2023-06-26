@@ -1443,7 +1443,7 @@ then
         ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; export CLOUD_TO_USE=static ; export INVENTORY_TO_USE=hosts ; bash install_cluster.sh' > ${LOG_DIR}/deployment.log
     else
         echo "******* Installing required packages *******"
-        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-galaxy install -r requirements.yml ; ansible-galaxy collection install -r requirements.yml " > ${LOG_DIR}/deployment.log 2>&1
+        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-galaxy install -r requirements.yml --force ; ansible-galaxy collection install -r requirements.yml --force" > ${LOG_DIR}/deployment.log 2>&1
         
         ################################################
         ######## Installation of CDP step by step in order to be able to track installation #######

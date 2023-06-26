@@ -4,14 +4,14 @@
     "properties": {
       "livy.ingress.enabled": "true",
       "spark.version":"{{ virtual_cluster.spark_version }}",
-      "dexapp.appTier":"{{ virtual_cluster.tier }}",
-      "session.timeout":"{{ virtual_cluster.session_timeout }}"
+      "dexapp.appTier":"{{ virtual_cluster.tier | default('tier2') }}",
+      "session.timeout":"{{ virtual_cluster.session_timeout | default('8h') }}"
     },
     "resources": {
       "cpu_requests": "{{ virtual_cluster.vc_quota_cpu | default('12') }}",
       "mem_requests": "{{ virtual_cluster.vc_quota_mem | default('32Gi') }}",
-      "gcpu_requests": "{{ virtual_cluster.vc_quota_min_cpu | default('12') }}",
-      "gmem_requests": "{{ virtual_cluster.vc_quota_min_mem | default('32Gi') }}"
+      "gcpu_requests": "{{ virtual_cluster.vc_quota_min_cpu | default('8') }}",
+      "gmem_requests": "{{ virtual_cluster.vc_quota_min_mem | default('24Gi') }}"
     },
     "chartValueOverrides":
     {

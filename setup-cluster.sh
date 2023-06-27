@@ -75,6 +75,10 @@ export AMBARI_REPO=
 export HDP_REPO=
 export HDF_REPO=
 
+# Database
+export DATABASE_TYPE="postgresql"
+export DATABASE_VERSION="14"
+
 # OS Related
 export OS="centos"
 export OS_VERSION="7.9"
@@ -220,27 +224,30 @@ function usage()
     echo "  --cm-color=$CM_COLOR : (Optional) Only for CDP: Choose between BROWN, RED, BLACK, GREEN, TEAL, PINK, YELLOW, GRAY, PURPLE, BLUE, DARKBLUE or RANDOM (Default) RANDOM"
     echo "  --cm-license-type=$CM_LICENSE_TYPE : (Optional) Change this to trial if you do not have a license (Default) $CM_LICENSE_TYPE"
     echo ""
-    echo "  --cm-version=$CM_VERSION : (Optional) Version of CM (Default) $ $CM_VERSION "
-    echo "  --cdh-version=$CDH_VERSION : (Optional) Version of CDH (Default) $ $CDH_VERSION "
-    echo "  --csa-version=$CSA_VERSION : (Optional) Version of CSA (Default) $ $CSA_VERSION "
-    echo "  --cfm-version=$CFM_VERSION : (Optional) Version of CFM (Default) $ $CFM_VERSION "
-    echo "  --ambari-version=$AMBARI_VERSION : (Optional) Version of Ambari (Default) $ $AMBARI_VERSION "
-    echo "  --hdp-version=$HDP_VERSION : (Optional) Version of HDP (Default) $ $HDP_VERSION "
-    echo "  --hdf-version=$HDF_VERSION : (Optional) Version of HDP (Default) $ $HDF_VERSION "
-    echo "  --spark3-version=$SPARK3_VERSION : (Optional) Version of SPARK3 (Default) $ $SPARK3_VERSION"
-    echo "  --wxm-version=$WXM_VERSION : (Optional) Version of WXM (Default) $ $WXM_VERSION"
-    echo "  --pvc-version=$PVC_VERSION : (Optional) Version of PVC for CDP deployment (Default) $ $PVC_VERSION "
+    echo "  --cm-version=$CM_VERSION : (Optional) Version of CM (Default) $CM_VERSION "
+    echo "  --cdh-version=$CDH_VERSION : (Optional) Version of CDH (Default) $CDH_VERSION "
+    echo "  --csa-version=$CSA_VERSION : (Optional) Version of CSA (Default) $CSA_VERSION "
+    echo "  --cfm-version=$CFM_VERSION : (Optional) Version of CFM (Default) $CFM_VERSION "
+    echo "  --ambari-version=$AMBARI_VERSION : (Optional) Version of Ambari (Default) $AMBARI_VERSION "
+    echo "  --hdp-version=$HDP_VERSION : (Optional) Version of HDP (Default) $HDP_VERSION "
+    echo "  --hdf-version=$HDF_VERSION : (Optional) Version of HDP (Default) $HDF_VERSION "
+    echo "  --spark3-version=$SPARK3_VERSION : (Optional) Version of SPARK3 (Default) $SPARK3_VERSION"
+    echo "  --wxm-version=$WXM_VERSION : (Optional) Version of WXM (Default) $WXM_VERSION"
+    echo "  --pvc-version=$PVC_VERSION : (Optional) Version of PVC for CDP deployment (Default) $PVC_VERSION "
     echo ""
-    echo "  --cm-repo=$CM_REPO : (Optional) repo of CM (Default) $ $CM_REPO "
-    echo "  --cdh-repo=$CDH_REPO : (Optional) repo of CDH (Default) $ $CDH_REPO "
-    echo "  --csa-repo=$CSA_BASE_REPO : (Optional) repo of CSA (Default) $ $CSA_BASE_REPO "
-    echo "  --cfm-repo=$CFM_BASE_REPO : (Optional) repo of CFM (Default) $ $CFM_BASE_REPO "
-    echo "  --spark3-repo=$SPARK3_BASE_REPO : (Optional) repo of SPARK3 (Default) $ $SPARK3_BASE_REPO "
-    echo "  --wxm-repo=$WXM_BASE_REPO : (Optional) repo of WXM (Default) $ $WXM_BASE_REPO "
-    echo "  --ambari-repo=$AMBARI_REPO : (Optional) repo of Ambari (Default) $ $AMBARI_REPO "
-    echo "  --hdp-repo=$HDP_REPO : (Optional) repo of HDP (Default) $ $HDP_REPO "
-    echo "  --hdf-repo=$HDF_REPO : (Optional) repo of HDP (Default) $ $HDF_REPO "
-    echo "  --pvc-repo=$PVC_REPO : (Optional) repo of PVC for CDP deployment (Default) $ $PVC_REPO "
+    echo "  --cm-repo=$CM_REPO : (Optional) repo of CM (Default) $CM_REPO "
+    echo "  --cdh-repo=$CDH_REPO : (Optional) repo of CDH (Default) $CDH_REPO "
+    echo "  --csa-repo=$CSA_BASE_REPO : (Optional) repo of CSA (Default) $CSA_BASE_REPO "
+    echo "  --cfm-repo=$CFM_BASE_REPO : (Optional) repo of CFM (Default) $CFM_BASE_REPO "
+    echo "  --spark3-repo=$SPARK3_BASE_REPO : (Optional) repo of SPARK3 (Default) $SPARK3_BASE_REPO "
+    echo "  --wxm-repo=$WXM_BASE_REPO : (Optional) repo of WXM (Default) $WXM_BASE_REPO "
+    echo "  --ambari-repo=$AMBARI_REPO : (Optional) repo of Ambari (Default) $AMBARI_REPO "
+    echo "  --hdp-repo=$HDP_REPO : (Optional) repo of HDP (Default) $HDP_REPO "
+    echo "  --hdf-repo=$HDF_REPO : (Optional) repo of HDP (Default) $HDF_REPO "
+    echo "  --pvc-repo=$PVC_REPO : (Optional) repo of PVC for CDP deployment (Default) $PVC_REPO "
+    echo ""
+    echo "  --database-type=$DATABASE_TYPE : (Optional) Type of the base database to deploy among: postgres, mysql, mariadb  (Default) $DATABASE_TYPE "
+    echo "  --database-version=$DATABASE_VERSION : (Optional) Version of the base database to deploy  (Default) $DATABASE_VERSION "
     echo ""
     echo "  --kerberos=$KERBEROS : (Optional) To set up Kerberos or not (Default) $KERBEROS "
     echo "  --realm=$REALM : (Optional) Realm specified for kerberos(Default) $REALM "
@@ -466,6 +473,12 @@ while [ "$1" != "" ]; do
             ;;
         --pvc-repo)
             PVC_REPO=$VALUE
+            ;;
+        --database-type)
+            DATABASE_TYPE=$VALUE
+            ;;
+        --database-version)
+            DATABASE_VERSION=$VALUE
             ;;
         --kerberos)
             KERBEROS=$VALUE
@@ -788,7 +801,7 @@ then
         export ENCRYPTION_ACTIVATED="true"
         export ENCRYPTION_HA="true"
         export CLUSTER_NAME_STREAMING="${CLUSTER_NAME}-stream"
-        export CM_VERSION="7.9.5"
+        export CM_VERSION="7.10.1"
     elif [ "${CLUSTER_TYPE}" = "wxm" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-wxm/hosts"
@@ -810,6 +823,7 @@ then
         export CDH_VERSION="6.3.4"
         export TLS="false"
         export DATA_LOAD="false"
+        export DATABASE_VERSION="10"
     elif [ "${CLUSTER_TYPE}" = "cdh6-enc-stream" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdh6-enc-stream/hosts"
@@ -822,6 +836,7 @@ then
         export TLS="true"
         export ENCRYPTION_ACTIVATED="true"
         export DATA_LOAD="false"
+        export DATABASE_VERSION="10"
     elif [ "${CLUSTER_TYPE}" = "cdh5" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdh-5/hosts"
@@ -834,6 +849,7 @@ then
         export TLS="false"
         export DATA_LOAD="false"
         export POST_INSTALL="false"
+        export DATABASE_VERSION="10"
     elif [ "${CLUSTER_TYPE}" = "hdp2" ]
     then
         export ANSIBLE_HOST_FILE="ansible-hdp-2/hosts"
@@ -846,6 +862,7 @@ then
         export ANSIBLE_REPO_DIR="ansible-hortonworks-master"
         export DATA_LOAD="false"
         export POST_INSTALL="false"
+        export DATABASE_TYPE="postgres"
     elif [ "${CLUSTER_TYPE}" = "hdp3" ]
     then
         export ANSIBLE_HOST_FILE="ansible-hdp-3/hosts"
@@ -855,6 +872,7 @@ then
         export ANSIBLE_REPO_DIR="ansible-hortonworks-master"
         export DATA_LOAD="false"
         export POST_INSTALL="false"
+        export DATABASE_TYPE="mysql"
     else
         export ANSIBLE_HOST_FILE="${CLUSTER_TYPE}/hosts"
         export ANSIBLE_ALL_FILE="${CLUSTER_TYPE}/all"

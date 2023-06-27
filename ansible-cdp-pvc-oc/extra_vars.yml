@@ -90,3 +90,7 @@ setup_dns_ecs: ${SETUP_DNS_ECS}
 
 # DATAGEN
 datagen_as_a_service: ${DATAGEN_AS_A_SERVICE}
+
+# DATABASE
+database_type: ${DATABASE_TYPE}
+database_version: ${DATABASE_VERSION}

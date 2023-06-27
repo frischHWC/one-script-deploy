@@ -1,8 +1,8 @@
 ---
 # Database configs
 
-database_type: postgresql
-database_version: 10
+database_type: "{{ database_type }}"
+database_version: "{{ database_version }}"
 database_default_password: "{{ default_password }}"
 database_host: "{{ groups['db_server'][0] | default('localhost') }}"
 

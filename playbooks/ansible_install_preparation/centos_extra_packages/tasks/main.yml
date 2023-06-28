@@ -17,26 +17,21 @@
 # under the License.
 #
 ---
-- name: Install required packages for ansible installation
-  hosts: main
-  gather_facts: false
-  become: true
-  roles: 
-    - ansible_install
-    - { role: hdp_libs, when: distribution == "HDP" }
+- name: Remove centos extra packages if it exists
+  file:
+    path: /etc/yum.repos.d/centos-extra-cdp-install.repo
+    state: absent
 
-- name: Install required package repository for Postgres DB
-  hosts: all
-  gather_facts: false
-  become: true
-  roles: 
-    - { role: centos_extra_packages, when: os == 'centos' and database_type == 'postgresql' }
+- name: Template centos Extra Packages file to
+  template:
+    src: centos-extras.repo
+    dest: /etc/yum.repos.d/centos-extra-cdp-install.repo
+    mode: '0744'
 
-- name: Copy files for installation
-  hosts: main
-  gather_facts: false
-  roles: 
-    - set_install_repo
-    - { role: cdp_ansible_files, when: distribution != "HDP" }
-    - { role: hdp_ansible_files, when: distribution == "HDP" }
+- name: Enable new repo
+  shell: sudo yum -q makecache -y --disablerepo='*' --enablerepo='extras'
 
+- name: Install centos-release-scl
+  yum:
+    name: centos-release-scl
+    state: present

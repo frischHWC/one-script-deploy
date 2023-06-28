@@ -53,7 +53,7 @@ export ENCRYPTION_ACTIVATED="false"
 
 # Versions
 export CM_VERSION="7.6.7"
-export CDH_VERSION="7.1.7.2000"
+export CDH_VERSION="7.1.7.2026"
 export PVC_VERSION="1.5.1"
 export CSA_VERSION="1.9.0.0"
 export CFM_VERSION="2.1.4.2"

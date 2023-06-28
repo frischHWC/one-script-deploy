@@ -27,3 +27,6 @@ ansible_repo: "${ANSIBLE_REPO_DIR}"
 encryption_activated: ${ENCRYPTION_ACTIVATED}
 cdh6_kts_path: ${CDH6_KTS_PATH}
 cdh6_kts_kms_path: ${CDH6_KTS_KMS_PATH}
+os: ${OS}
+os_version: "${OS_VERSION}"
+database_type: ${DATABASE_TYPE}

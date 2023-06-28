@@ -45,36 +45,49 @@ then
     yum -y install ansible
 
 
-
 elif [ "$machine_type" == "debian" ]
 then
 
-    echo "TODO: Install wget"
+    echo "Install wget"
+    apt -y install wget
 
-    echo "TODO: Install Git"
+    echo "Install Git"
+    apt -y install wget
 
-    echo "TODO: Install Unzip"
+    echo "Install Unzip"
+    apt -y install unzip
 
-    echo "TODO: Install network packages"
+    echo "Install network packages"
+    apt -y install dnsutils
+    apt -y install bind9-utils
 
-    echo "TODO: Install Python 3"
+    echo "Install Python 3"
+    apt -y install python3
 
-    echo "TODO:Install ansible"
+    echo "Install ansible"
+    apt -y install ansible
+
 
 elif [ "$machine_type" == "suse" ]
 then
 
-    echo "TODO: Install wget"
+    echo "Install wget"
+    zypper -n install wget
 
-    echo "TODO: Install Git"
+    echo "Install Git"
+    zypper -n install git
 
-    echo "TODO: Install Unzip"
+    echo "Install Unzip"
+    zypper -n install unzip
 
-    echo "TODO: Install network packages"
+    echo "Install network packages"
+    zypper -n install bind-utils
 
-    echo "TODO: Install Python 3"
+    echo "Install Python 3"
+    zypper -n install python3
 
-    echo "TODO:Install ansible"
+    echo "Install ansible"
+    zypper -n install ansible
 
 elif [ "$machine_type" == "mac" ]
 then

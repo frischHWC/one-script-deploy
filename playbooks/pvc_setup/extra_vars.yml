@@ -132,10 +132,10 @@ virtual_clusters:
     service_pool_quota_mem: 100Gi # default = 100Gi
     service_base_quota_cpu: 8 # default = 8
     service_base_quota_mem: 20Gi # default = 20Gi
-    vc_quota_cpu: 16 # default = 12
-    vc_quota_mem: 48Gi # default = 32Gi
-    vc_quota_min_cpu: 8 # default = 8
-    vc_quota_min_mem: 24Gi # default = 24Gi
+    vc_quota_cpu: 24 # default = 12
+    vc_quota_mem: 96Gi # default = 32Gi
+    vc_quota_min_cpu: 20 # default = 8
+    vc_quota_min_mem: 64Gi # default = 24Gi
 
   - name: "spark2-{{ cluster_name }}"
     env_name: "{{ cluster_name_pvc }}-env"
@@ -147,10 +147,10 @@ virtual_clusters:
     service_pool_quota_mem: 100Gi # default = 100Gi
     service_base_quota_cpu: 8 # default = 8
     service_base_quota_mem: 20Gi # default = 20Gi
-    vc_quota_cpu: 12 # default = 12
-    vc_quota_mem: 32Gi # default = 32Gi
-    vc_quota_min_cpu: 8 # default = 8
-    vc_quota_min_mem: 24Gi # default = 24Gi
+    vc_quota_cpu: 16 # default = 12
+    vc_quota_mem: 48Gi # default = 32Gi
+    vc_quota_min_cpu: 12 # default = 8
+    vc_quota_min_mem: 36Gi # default = 24Gi
 
 # Below user/password is used to authentify against a CDE Service to download CDE tools (it only needs to be a valid LDAP user)
 cde_user: francois 

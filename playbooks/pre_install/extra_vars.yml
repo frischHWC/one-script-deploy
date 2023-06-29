@@ -25,6 +25,7 @@ etc_hosts_file: ${HOSTS_ETC}
 known_hosts: ${KNOWN_HOSTS}
 license_file: ${LICENSE_FILE}
 authorized_keys: ${AUTHORIZED_KEYS}
+set_hosts_key: ${SETUP_HOSTS_KEYS}
 node_key: ${NODE_KEY}
 use_root_ca: ${USE_ROOT_CA}
 root_ca_cert: ${ROOT_CA_CERT}

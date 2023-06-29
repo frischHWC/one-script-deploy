@@ -89,3 +89,7 @@ pvc_ecs_server_host: ${PVC_ECS_SERVER_HOST}
 
 # DATAGEN
 datagen_as_a_service: ${DATAGEN_AS_A_SERVICE}
+
+# DATABASE
+database_type: ${DATABASE_TYPE}
+database_version: ${DATABASE_VERSION}

@@ -1,0 +1,277 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Get CML endpoint
+- set_fact:
+    cml_endpoint_api: "{{ cdp_endpoint_url }}/api/v1/ml"
+
+- name: DEBUG - cml_endpoint_api
+  debug:
+    msg: "{{ cml_endpoint_api }}"
+
+# Get cluster configs from CM
+- name: Get CM deployment
+  uri:
+    url: "{{ cloudera_manager_api_url }}/cm/deployment"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/cloudera_manager_deployment.json
+  register: cloudera_manager_deployment
+
+- set_fact:
+    cluster_name: "{{ cloudera_manager_deployment.json | community.general.json_query(query) }}"
+  vars:
+    query: "clusters[?clusterType == 'BASE_CLUSTER' && services[?type=='HDFS']].name | [0]"
+
+- name: DEBUG - cluster_name
+  debug:
+    msg: "{{ cluster_name }}"
+  when: debug | default(false)
+
+- name: Get All services from CM
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/cloudera_manager_all_services.json
+  register: cloudera_manager_all_services
+
+# Get Ozone specific configs from CM
+- set_fact:
+    ozone_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'OZONE'].name | [0]"
+
+- name: DEBUG - ozone_service_name
+  debug:
+    msg: "{{ ozone_service_name }}"
+  when: debug | default(false)
+
+- name: Get SolR roles repartition
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ ozone_service_name }}/roles"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: ozone_roles
+
+- name: Get Ozone full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ ozone_service_name }}/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: ozone_full_config
+
+- name: Get Ozone S3G full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ ozone_service_name }}/roleConfigGroups/{{ ozone_service_name }}-S3_GATEWAY-BASE/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: ozone_s3g_full_config
+
+
+# Get ozone service id
+- set_fact:
+    ozone_service_id: "{{ ozone_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ozone.service.id'].value | [0]"
+
+- name: DEBUG - ozone_service_id
+  debug:
+    msg: "{{ ozone_service_id }}"
+    
+
+# Get ozone S3G Machine
+- set_fact:
+    ozone_s3g_host: "{{ ozone_roles.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'S3_GATEWAY'].hostRef.hostname | [0]"
+
+- name: DEBUG - ozone_s3g_host
+  debug:
+    msg: "{{ ozone_s3g_host }}"
+  when: debug | default(false)
+
+# Get Ozone S3G TLS
+- set_fact:
+    os3g_ssl: "{{ ozone_s3g_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ssl_enabled'].value | [0]"
+
+- set_fact:
+    os3g_ssl: "{{ ozone_s3g_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ssl_enabled'].default | [0]"
+  when: os3g_ssl == ""
+
+- name: DEBUG - os3g_ssl
+  debug:
+    msg: "{{ os3g_ssl }}"
+  when: debug | default(false)
+
+- set_fact:
+    os3g_protocol: "{{ 'https' if os3g_ssl else 'http' }}"
+
+- name: DEBUG - os3g_protocol
+  debug:
+    msg: "{{ os3g_protocol }}"
+  when: debug | default(false)
+
+# Get Ozone S3G Port
+- set_fact:
+    os3g_port: "{{ ozone_s3g_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ozone.s3g.http-port'].value | [0]"
+  when: not os3g_ssl
+
+- set_fact:
+    os3g_port: "{{ ozone_s3g_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ozone.s3g.http-port'].default | [0]"
+  when: not os3g_ssl and os3g_port == ""
+
+- set_fact:
+    os3g_port: "{{ ozone_s3g_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ozone.s3g.https-port'].value | [0]"
+  when: os3g_ssl 
+
+- set_fact:
+    os3g_port: "{{ ozone_s3g_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ozone.s3g.https-port'].default | [0]"
+  when: os3g_ssl and os3g_port == ""
+
+- name: DEBUG - os3g_port
+  debug:
+    msg: "{{ os3g_port }}"
+  when: debug | default(false)
+
+
+- set_fact:
+    os3g_url: "{{ os3g_protocol }}://{{ ozone_s3g_host }}:{{ os3g_port }}"
+
+- name: DEBUG - os3g_url
+  debug:
+    msg: "{{ os3g_url }}"
+  when: debug | default(false)
+
+
+# Get ozone S3 API key
+- name: Get ozone S3 API key
+  shell: |
+    kinit -kt /home/francois/francois.keytab francois
+    ozone s3 getsecret --om-service-id={{ ozone_service_id }}
+  register: s3_api_output
+
+- name: DEBUG - s3_api_output
+  debug:
+    msg: "{{ s3_api_output }}"
+  when: debug | default(false)
+
+- set_fact: 
+    o3g_accesskey: "{{ s3_api_output.stdout.split('=')[1].split('\n')[0] }}"
+
+- name: DEBUG - o3g_accesskey
+  debug:
+    msg: "{{ o3g_accesskey }}"
+  when: debug | default(false)
+
+- set_fact: 
+    o3g_secret: "{{ s3_api_output.stdout.split('=')[2] }}"
+
+- name: DEBUG - o3g_secret
+  debug:
+    msg: "{{ o3g_secret }}"
+  when: debug | default(false)
+
+# Get env CRN
+- name: List Environments and get its crn
+  uri:
+    url: "{{ pvc_api_call }}/environments2/listEnvironments"
+    method: POST
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{\"pageSize\":500}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: env_details
+
+- name: DEBUG - env_details
+  debug:
+    msg: "{{ env_details }}"
+  when: debug | default(false)
+
+- set_fact:
+    env_crn: "{{ env_details.json | community.general.json_query(query) }}"
+  vars:
+    query: "environments[?environmentName == '{{ ml_registry.env_name }}' ].crn | [0]"
+    
+- name: DEBUG - env_crn
+  debug:
+    msg: "{{ env_crn }}"
+
+# Create ML Registry
+- name: Create CML Registry
+  uri:
+    url: "{{ cml_endpoint_api }}/createModelRegistry"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', 'create_cml_registry.json') }}"
+    status_code: [200, 202]
+    return_content: yes
+    validate_certs: no
+

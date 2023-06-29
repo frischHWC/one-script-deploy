@@ -1,0 +1,189 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Download CDE Tools
+
+- name: Remove CDE CLI
+  file:
+    path: ~/cde
+    state: absent
+  ignore_errors: true
+
+- name: Download CDE CLI
+  uri:
+    url: "{{ dex_service_endpoint }}/downloads/cde/latest/linux/cde"
+    method: GET
+    headers: 
+      Authorization: "Bearer {{ cde_acces_token }}"
+    body_format: json
+    follow_redirects: all
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    dest: ~/cde
+
+- name: Remove CDE Migration tool
+  file:
+    path: ~/cde-env.zip
+    state: absent
+  ignore_errors: true
+
+- name: Download CDE Migration tool
+  uri:
+    url: "{{ dex_service_endpoint }}/downloads/cde-env/latest/linux/cde-env.zip"
+    method: GET
+    headers: 
+      Authorization: "Bearer {{ cde_acces_token }}"
+    body_format: json
+    follow_redirects: all
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    dest: ~/cde-env.zip
+
+
+#  Copy it to /usr/local/bin and chmod +x 
+- name: Copy CDE CLI
+  copy: 
+    src: ~/cde
+    dest: /usr/local/bin/cde
+    mode: '0755'
+    remote_src: yes   
+
+- name: Extract CDE Migration Tool
+  unarchive:
+    src: ~/cde-env.zip
+    dest: ~/
+    remote_src: yes 
+
+#  List all VCs and pushes them with their name + URL 
+- set_fact:
+    cde_service_id: "{{ cde_clusters.json | community.general.json_query(query) }}"
+  vars:
+    query: "[?status == 'ClusterCreationCompleted' ].id | [0]"
+
+- name: Get CDE VCs
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_vcs
+
+- name: DEBUG - cde_vcs
+  debug:
+    msg: "{{ cde_vcs }}"
+  when: debug | default(false)
+
+
+# Push cde config file to ~/.cde/config.yaml
+- name: Remove .cde directory
+  file:
+    path: ~/.cde/
+    state: absent
+    mode: '0750'
+
+- name: Create .cde directory
+  file:
+    path: ~/.cde/
+    state: directory
+    mode: '0750'
+
+- name: Copy CDE config file
+  template:
+    src: "cde_config"
+    dest: "~/.cde/config.yaml"
+
+
+#  Setup CDE credentials
+
+- name: Get user CRN
+  uri:
+    url: "{{ pvc_api_call }}/iam/listUsers"
+    method: POST
+    headers: 
+      Content-TYpe: application/json
+      Cookie: "{{ all_cookies }}"
+    body: "{\"pageSize\":500}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: list_all_users
+
+- set_fact:
+    user_crn: "{{ list_all_users.json | community.general.json_query(query) }}"
+  vars:
+    query: "users[?workloadUsername == 'admin' ].crn | [0]"
+
+- name: DEBUG - user_crn
+  debug:
+    msg: "{{ user_crn }}"
+  when: debug | default(false)
+
+
+- name: DEBUG - call to gen acces key
+  debug:
+    msg: "{{ lookup('template', 'gen_access_key.json') }}"
+  when: debug | default(false)
+
+
+- name: Generate Access Key for admin using API
+  uri:
+    url: "{{ pvc_api_call }}/iam/createUserAccessKey"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', 'gen_access_key.json') }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: gen_access_key_answer
+
+- set_fact:
+    user_access_key_id: "{{ gen_access_key_answer.json | community.general.json_query(query) }}"
+  vars:
+    query: "accessKey.accessKeyId"
+
+- name: DEBUG - user_access_key_id
+  debug:
+    msg: "{{ user_access_key_id }}"
+  when: debug | default(false)
+
+- set_fact:
+    user_private_key: "{{ gen_access_key_answer.json | community.general.json_query(query) }}"
+  vars:
+    query: "privateKey"
+
+- name: DEBUG - user_private_key
+  debug:
+    msg: "{{ user_private_key }}"
+  when: debug | default(false)
+
+- name: Copy CDE credentials file 
+  template:
+    src: "cde_credentials"
+    dest: "~/.cde/credentials"

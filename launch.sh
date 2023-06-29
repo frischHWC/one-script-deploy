@@ -1,28 +1,26 @@
 export PAYWALL_USER=
 export PAYWALL_PASSWORD=
-export LICENSE_FILE="/home/rocky/license.txt"
-export KUBECONFIG_PATH="/home/rocky/kubeconfig"
-export OC_TAR_FILE_PATH="/home/rocky/oc.tar"
+export LICENSE_FILE="/root/license.txt"
+export NODE_KEY="/root/frisch.pem"
 
-export ANSIBLE_REPO_BRANCH="rockylinux"
+export REALM=FRISCH.CLOUDERA.COM
+export CLUSTER_NAME="bootcamp"
 
-export REALM=CLOUDERA.ROCKY.COM
-export CLUSTER_NAME="rocky"
 
 
 ./setup-cluster.sh \
     --cluster-name=${CLUSTER_NAME} \
     --realm=${REALM} \
+    \
     --license-file=${LICENSE_FILE} \
+    \
     --paywall-username=${PAYWALL_USER} \
     --paywall-password=${PAYWALL_PASSWORD} \
-    --kubeconfig-path=${KUBECONFIG_PATH} \
-    --oc-tar-file-path=${OC_TAR_FILE_PATH} \
     \
-    --node-user="rocky" \
-    --node-key="/home/rocky/rockybase.pem" \
+    --node-user="root" \
+    --node-key=${NODE_KEY} \
     \
-    --cluster-type="all-services-pvc-no-stream" \
+    --cluster-type="pvc" \
     \
     --pre-install=true \
     --prepare-ansible-deployment=true \
@@ -42,9 +40,6 @@ export CLUSTER_NAME="rocky"
     --os="rhel" \
     --os-version="8.6" \
     \
-    --node-ipa="rockyipa.base.local" \
-    --nodes-base="rocky1.base.local rocky2.base.local rocky3.base.local rocky4.base.local rocky5.base.local rocky6.base.local rocky7.base.local" \
-    --nodes-kts="rocky8.base.local" \
-    \
-    --install-repo-url="https://github.com/frischHWC/cldr-playbook/archive/refs/heads/${ANSIBLE_REPO_BRANCH}.zip" \
-    --ansible-repo-dir=cldr-playbook-$ANSIBLE_REPO_BRANCH
+    --node-ipa="fri-ipa.cloudera.local" \
+    --nodes-base="fri-base-1.cloudera.local fri-base-2.cloudera.local fri-base-3.cloudera.local fri-base-4.cloudera.local fri-base-5.cloudera.local fri-base-6.cloudera.local" \
+    --nodes-ecs="fri-ecs-1.cloudera.local fri-ecs-2.cloudera.local fri-ecs-3.cloudera.local"

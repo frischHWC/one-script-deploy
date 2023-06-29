@@ -8,6 +8,11 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 
 Launch the script ```requirements.sh``` to enable all requirements before launching the full script.
 
+You need to pass one parameter, which is the type of the machine where you are running it, it could be: rhel, debian, suse or mac.
+As an example, if you run this on your macOS, you will run:
+
+        ./requirements.sh mac
+
 ## Installation
 
 ### Command line tool

@@ -82,3 +82,6 @@ install_python3: ${INSTALL_PYTHON3}
 oc_tar_file_path: ${OC_TAR_FILE_PATH}
 pvc_ecs_server_host: ${PVC_ECS_SERVER_HOST}
 
+# DATABASE
+database_type: ${DATABASE_TYPE}
+database_version: ${DATABASE_VERSION}

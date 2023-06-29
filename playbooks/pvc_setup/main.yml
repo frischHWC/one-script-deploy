@@ -28,56 +28,80 @@
   hosts: "{{ database_host }}"
   gather_facts: false
   roles: 
-    - prereqs_db
+    - role: prereqs_db
+      when: not skip_pvc_prereqs
   
 - name: Pre-requisites on Open Shift
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false
   roles: 
     - role: prereqs_oc
-      when: pvc_type == "OC"
+      when: not skip_pvc_prereqs and pvc_type == "OC"
 
 - name: Pre-requisites on ECS Nodes
   hosts: pvc
   gather_facts: false
   roles: 
     - role: prereqs_ecs_nodes
-      when: pvc_type == "ECS"
+      when: not skip_pvc_prereqs and pvc_type == "ECS"
 
 - name: Pre-requisites on ECS Server Node
   hosts: "{{ pvc_ecs_server_host }}"
   gather_facts: false
   roles: 
     - role: prereqs_ecs_server
-      when: pvc_type == "ECS"
+      when: not skip_pvc_prereqs and pvc_type == "ECS"
 
 - name: Pre-requisites on ECS
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false
   roles: 
     - role: prereqs_ecs
-      when: pvc_type == "ECS"
+      when: not skip_pvc_prereqs and pvc_type == "ECS"
 
 - name: Patches for ECS agent
   hosts: pvc
   gather_facts: false
   roles: 
     - role: patch_ecs_agent
-      when: pvc_type == "ECS"
+      when: not skip_pvc_prereqs and pvc_type == "ECS"
 
 - name: Pre-requisites and fixes for PvC 
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false
   roles: 
-    - prereqs
+    - role: prereqs
+      when: not skip_pvc_prereqs
 
 - name: Setup PvC 
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false
   roles: 
-    - cm_config
-    - get_pvc_info 
-    - setup_cdpcli
+    - role: cm_config
+      when: not skip_pvc_prereqs
+    - role: setup_ldap_provider 
+      when: not skip_pvc_prereqs
+
+- name: Setup CDP CLI
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: false
+  roles: 
+    - role: setup_cdpcli
+      when: not skip_pvc_prereqs
+
+- name: Setup AWS CLI for Ozone
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: true
+  roles: 
+    - role: setup_aws_cli
+      when: setup_pvc_tools and not skip_pvc_prereqs
+
+- name: Install k9s 
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: false
+  roles: 
+    - role: setup_k9s
+      when: setup_pvc_tools and not skip_pvc_prereqs
 
 - name: Create environments
   hosts: "{{ cloudera_manager_host }}"
@@ -92,10 +116,10 @@
       ignore_errors: yes
 
 
-#### CDW ####
+### CDW ####
 - name: Create Cloudera Data Warehouse
   hosts: "{{ cloudera_manager_host }}"
-  gather_facts: false
+  gather_facts: true
   tasks: 
     - name: create CDWs
       include_role:
@@ -160,8 +184,29 @@
       when: cde | default(false)
       ignore_errors: yes
 
+- name: Install CDE CLI 
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: false
+  roles: 
+    - role: setup_cde_cli
+      when: setup_pvc_tools and cde | default(false)
+
 
 #### CML ####
+- name: Create Cloudera Machine Learning Registries
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: true
+  tasks: 
+    - name: create CML Registries
+      include_role:
+        name: create_cml_registry
+      with_items: "{{ ml_registries }}"
+      vars: 
+        ml_registry: "{{ item }}"
+      when: cmlr | default(false)
+      ignore_errors: yes
+
+
 - name: Create Cloudera Machine Learning
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false
@@ -201,8 +246,14 @@
       when: cml | default(false)
       ignore_errors: yes
 
+- name: Install cdswctl 
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: false
+  roles: 
+    - role: setup_cdswctl
+      when: setup_pvc_tools and cml | default(false)
 
-
+### User's Rights ###
 - name: Setting up users' rights
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false

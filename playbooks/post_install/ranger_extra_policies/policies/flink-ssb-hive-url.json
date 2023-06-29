@@ -4,7 +4,7 @@
     "isEnabled": true,
     "version": 1,
     "service": "cm_hive",
-    "name": "Flink & SSB access to Hive",
+    "name": "Flink & SSB access to Hive URI",
     "policyType": 0,
     "policyPriority": 0,
     "description": "Required for Flink and SSB to work with Hive",
@@ -14,7 +14,8 @@
         "values": [
           "*",
           "flink*",
-          "ssb*"
+          "ssb*",
+          "flink_url"
         ],
         "isExcludes": false,
         "isRecursive": false

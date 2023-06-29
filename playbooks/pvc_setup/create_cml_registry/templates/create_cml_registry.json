@@ -1,0 +1,8 @@
+{
+  "environmentName": "{{ ml_registry.env_name }}",
+  "s3AccessKey": "{{ o3g_accesskey }}",
+  "s3SecretKey": "{{ o3g_secret }}",
+  "s3Bucket": "{{ ml_registry.name }}",
+  "s3Endpoint": "{{ os3g_url }}",
+  "environmentCrn": "{{ env_crn }}"
+}

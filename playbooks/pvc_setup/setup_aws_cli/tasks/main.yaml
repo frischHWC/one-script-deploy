@@ -1,0 +1,227 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+- name: Download AWS CLI Tool
+  uri:
+    url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+    method: GET
+    status_code: [200, 304]
+    return_content: yes
+    validate_certs: no
+    dest: ~/awscliv2.zip
+
+- name: Extract AWS CLI Tool
+  unarchive:
+    src: ~/awscliv2.zip
+    dest: ~/
+    remote_src: yes 
+
+- name: Install AWS CLI
+  shell: |
+    sudo ./aws/install
+  ignore_errors: true
+
+### GET OZONE CONFIGS ###
+
+- name: Get All services from CM
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    dest: /tmp/cloudera_manager_all_services.json
+  register: cloudera_manager_all_services
+
+- set_fact:
+    ozone_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'OZONE'].name | [0]"
+
+- name: DEBUG - ozone_service_name
+  debug:
+    msg: "{{ ozone_service_name }}"
+  when: debug | default(false)
+
+
+- name: Get Ozone full config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ ozone_service_name }}/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: ozone_full_config
+
+- name: Get Ozone S3G config
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ ozone_service_name }}/roleConfigGroups/{{ ozone_service_name }}-S3_GATEWAY-BASE/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: ozone_s3g_config
+
+- name: Get Ozone roles repartition
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ ozone_service_name }}/roles"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: ozone_roles
+
+### SET OZONE CONFIGS ###
+
+- set_fact:
+    ozone_service_id: "{{ ozone_full_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ozone.service.id'].value | [0]"
+
+- name: DEBUG - ozone_service_id
+  debug:
+    msg: "{{ ozone_service_id }}"
+
+
+# Set Ozone protocol
+
+- set_fact:
+    ozone_ssl: "{{ ozone_s3g_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ssl_enabled'].value | [0]"
+
+- set_fact:
+    ozone_ssl: "{{ ozone_s3g_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ssl_enabled'].default | [0]"
+  when: ozone_ssl == ""
+
+- name: DEBUG - ozone_ssl
+  debug:
+    msg: "{{ ozone_ssl }}"
+  when: debug | default(false)
+
+- set_fact:
+    ozone_protocol: "{{ 'https' if ozone_ssl else 'http' }}"
+
+- name: DEBUG - ozone_protocol
+  debug:
+    msg: "{{ ozone_protocol }}"
+  when: debug | default(false)
+
+
+# Set Ozone port
+
+- set_fact:
+    ozone_port: "{{ ozone_s3g_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ozone.s3g.https-port'].value | [0]"
+  when: "ozone_ssl"
+
+- set_fact:
+    ozone_port: "{{ ozone_s3g_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ozone.s3g.https-port'].default | [0]"
+  when: "ozone_ssl and (ozone_port is not defined or ozone_port == '') "
+
+- set_fact:
+    ozone_port: "{{ ozone_s3g_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ozone.s3g.http-port'].value | [0]"
+  when: " ozone_port is not defined or ozone_port == ''"
+
+- set_fact:
+    ozone_port: "{{ ozone_s3g_config.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ozone.s3g.http-port'].default | [0]"
+  when: " ozone_port is not defined or ozone_port == '' "
+
+
+- name: DEBUG - ozone_port
+  debug:
+    msg: "{{ ozone_port }}"
+  when: debug | default(false)
+
+- set_fact:
+    ozone_s3_endpoint: "{{ ozone_roles.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'S3_GATEWAY'].hostRef.hostname | [0]"
+
+- name: DEBUG - ozone_s3_endpoint
+  debug:
+    msg: "{{ ozone_s3_endpoint }}"
+  when: debug | default(false)
+
+
+# Set Ozone S3 credentials
+
+- name: Kinit as user
+  shell: "/usr/bin/kinit -kt {{ ozone_user_keytab }} {{ ozone_user }}"
+  ignore_errors: true
+
+- name: Get Ozone S3 Secret
+  shell: "/usr/bin/ozone s3 getsecret --om-service-id={{ ozone_service_id }}"
+  register: ozone_get_secret
+  ignore_errors: true
+
+- name: DEBUG - ozone_get_secret
+  debug:
+    msg: "{{ ozone_get_secret }}"
+  when: debug | default(false)
+
+- set_fact:
+    ozone_aws_secret_access_key: "{{ ozone_get_secret.stdout_lines[1].split('=')[1]  }}"
+
+- set_fact:
+    ozone_aws_access_key: "{{ ozone_get_secret.stdout_lines[0].split('=')[1] }}"
+
+- name: DEBUG - ozone_aws_secret_access_key
+  debug:
+    msg: "{{ ozone_aws_secret_access_key }}"
+  when: debug | default(false)
+
+- name: DEBUG - ozone_aws_access_key
+  debug:
+    msg: "{{ ozone_aws_access_key }}"
+  when: debug | default(false)
+
+- name: Insert aws command
+  blockinfile:
+    path: ~/.bashrc
+    marker: "# Ozone AWS S3"
+    block: |
+      export AWS_SECRET_ACCESS_KEY="{{ ozone_aws_secret_access_key }}"
+      export AWS_ACCESS_KEY_ID="{{ ozone_aws_access_key }}"
+      alias aws-s3api='aws s3api --endpoint {{ ozone_protocol }}://{{ ozone_s3_endpoint }}:{{ ozone_port }} --ca-bundle /var/lib/cloudera-scm-agent/agent-cert/cm-auto-global_cacerts.pem'

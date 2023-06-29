@@ -51,3 +51,6 @@ repo_tar_local_dir: "/tmp/"
 
 debug: ${DEBUG}
 
+# DATABASE
+database_type: ${DATABASE_TYPE}
+database_version: ${DATABASE_VERSION}

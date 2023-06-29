@@ -49,7 +49,7 @@
 
 - name: Insert into postgres.conf SSL settings
   blockinfile:
-    path: /var/lib/pgsql/10/data/postgresql.conf
+    path: "/var/lib/pgsql/{{ postgres_version }}/data/postgresql.conf"
     insertafter: '^#ssl = off'
     block: |
       ssl = on

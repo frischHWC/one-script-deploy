@@ -1,0 +1,85 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Get CDE Endpoint
+- set_fact:
+    dex_endpoint_api: "{{ cdp_endpoint_url }}/dex/api/v1"
+
+- name: DEBUG - dex_endpoint_api
+  debug:
+    msg: "{{ dex_endpoint_api }}"
+
+- name: Get CDE Services
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_clusters
+
+- name: DEBUG - cde_clusters
+  debug:
+    msg: "{{ cde_clusters }}"
+
+- set_fact:
+    cde_service_id: "{{ cde_clusters.json | community.general.json_query(query) }}"
+  vars:
+    query: "[?status == 'ClusterCreationCompleted' ].clusterInfo.ClusterFQDN | [0]"
+
+- set_fact:
+    dex_service_endpoint: "https://{{ cde_service_id }}"
+
+- name: DEBUG - dex_service_endpoint
+  debug:
+    msg: "{{ dex_service_endpoint }}"
+
+
+# Get access token for cde
+- name: Get Access Token of CDE
+  uri:
+    url: "{{ dex_service_endpoint }}/gateway/authtkn/knoxtoken/api/v1/token"
+    method: GET
+    user: "{{ cde_user }}"
+    password: "{{ cde_password }}"
+    force_basic_auth: true
+    status_code: [200]
+    return_content: yes
+    validate_certs: no
+    follow_redirects: no
+  register: cde_access_token_call
+
+- name: DEBUG - cde_access_token_call
+  debug:
+    msg: "{{ cde_access_token_call }}"
+
+- set_fact:
+    cde_acces_token: "{{ cde_access_token_call.json  | to_json | from_json |  community.general.json_query(query) }}"
+  vars:
+    query: "access_token"
+
+- name: DEBUG - cde_acces_token
+  debug:
+    msg: "{{ cde_acces_token }}"
+
+

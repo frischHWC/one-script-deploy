@@ -23,7 +23,7 @@ cloudera_manager_user: admin
 cloudera_manager_password: admin
 cm_version: ${CM_VERSION}
 database_host: ${NODE_0}
-postgres_version: 10
+postgres_version: ${DATABASE_VERSION}
 pvc_version: ${PVC_VERSION}
 cluster_name: ${CLUSTER_NAME}
 cluster_name_pvc: ${CLUSTER_NAME_PVC}
@@ -40,6 +40,7 @@ docker_registry_password: ${PAYWALL_PASSWORD}
 cdw: ${CREATE_CDW}
 cde: ${CREATE_CDE}
 cml: ${CREATE_CML}
+cmlr: ${CREATE_CML_REGISTRY}
 dataviz: ${CREATE_VIZ}
 pvc_type: ${PVC_TYPE}
 pvc_ecs_server_host: ${PVC_ECS_SERVER_HOST}
@@ -50,6 +51,9 @@ root_ca_key: ${ROOT_CA_KEY}
 oc_tar_file_path: ${OC_TAR_FILE_PATH}
 configure_oc: ${CONFIGURE_OC}
 setup_dns_ecs: ${SETUP_DNS_ECS}
+skip_pvc_prereqs: ${SKIP_PVC_PREREQS}
+pvc_eco_resources: ${PVC_ECO_RESOURCES}
+setup_pvc_tools: ${SETUP_PVC_TOOLS}
 
 # Environments
 environments:
@@ -66,8 +70,8 @@ delegation_username: admin
 delegation_password: "{{ ipa_bind_password }}"
 
 warehouses: 
-  - name: "Hive-1-{{ cluster_name }}"
-    database_catalog_name: "{{ cluster_name_pvc }}-env-datalake-default"
+  - name: "hive-1-{{ cluster_name }}"
+    database_catalog_name: "{{ cluster_name_pvc }}-env" # Since 1.5.1, DBC name should be the same than Env name
     env_name: "{{ cluster_name_pvc }}-env"
     low_resource_mode: true
     type: "hive" 
@@ -78,8 +82,8 @@ warehouses:
     wait_time: 60 # default = 60
     disable_auto_suspend: false # default = false
 
-  - name: "Impala-1-{{ cluster_name }}"
-    database_catalog_name: "{{ cluster_name_pvc }}-env-datalake-default"
+  - name: "impala-1-{{ cluster_name }}"
+    database_catalog_name: "{{ cluster_name_pvc }}-env" # Since 1.5.1, DBC name should be the same than Env name
     env_name: "{{ cluster_name_pvc }}-env"
     low_resource_mode: true
     type: "impala"
@@ -96,7 +100,7 @@ warehouses:
 
 # Data Viz
 vizs:
-  - name: "Viz-1-{{ cluster_name }}"
+  - name: "viz-1-{{ cluster_name }}"
     env_name: "{{ cluster_name_pvc }}-env"
     size: "small" # default = small 
     admin_group: "admin_group" # Group that will be added to be admin and access data viz
@@ -107,22 +111,53 @@ workspaces:
     env_name: "{{ cluster_name_pvc }}-env"
     disable_tls: false # default = false
     enable_monitoring: true # default = true
-    enable_governance: false # default = false
-    enable_model_metrics: false # default = false
-    static_sub_domain: workspace # default = ''
+    enable_governance: true # default = false
+    enable_model_metrics: true # default = false
+    static_sub_domain: workspace1 # default = ''
+
+ml_registries:
+  - name: "mlr"
+    env_name: "{{ cluster_name_pvc }}-env"
 
 
 # CDE
 virtual_clusters:
-  - name: "Spark3-{{ cluster_name }}"
+  - name: "spark3-{{ cluster_name }}"
     env_name: "{{ cluster_name_pvc }}-env"
-    cde_service_name: "CDE-Service-1"
-    spark_version: "3.2.1" # From 1.4.1, it is 3.2.1, before it is 3.2.0
-  - name: "Spark2-{{ cluster_name }}"
-    env_name: "{{ cluster_name_pvc }}-env"
-    cde_service_name: "CDE-Service-1"
-    spark_version: "2.4.7"
+    cde_service_name: "cde-service-1"
+    spark_version: "3.2.3" # From 1.5.1, it is 3.2.3, From 1.4.1, it is 3.2.1, before it is 3.2.0
+    tier: tier-2 # default = tier-2
+    session_timeout: 8h # default = 8h
+    service_pool_quota_cpu: 32 # default = 32
+    service_pool_quota_mem: 100Gi # default = 100Gi
+    service_base_quota_cpu: 8 # default = 8
+    service_base_quota_mem: 20Gi # default = 20Gi
+    vc_quota_cpu: 24 # default = 12
+    vc_quota_mem: 96Gi # default = 32Gi
+    vc_quota_min_cpu: 20 # default = 8
+    vc_quota_min_mem: 64Gi # default = 24Gi
 
+  - name: "spark2-{{ cluster_name }}"
+    env_name: "{{ cluster_name_pvc }}-env"
+    cde_service_name: "cde-service-1"
+    spark_version: "2.4.7"
+    tier: tier-2 # default = tier-2
+    session_timeout: 8h # default = 8h
+    service_pool_quota_cpu: 32 # default = 32
+    service_pool_quota_mem: 100Gi # default = 100Gi
+    service_base_quota_cpu: 8 # default = 8
+    service_base_quota_mem: 20Gi # default = 20Gi
+    vc_quota_cpu: 16 # default = 12
+    vc_quota_mem: 48Gi # default = 32Gi
+    vc_quota_min_cpu: 12 # default = 8
+    vc_quota_min_mem: 36Gi # default = 24Gi
+
+# Below user/password is used to authentify against a CDE Service to download CDE tools (it only needs to be a valid LDAP user)
+cde_user: francois 
+cde_password: ${DEFAULT_PASSWORD}
+# Below user is used to configure ozone aws s3 cli
+ozone_user_keytab: /home/francois/francois.keytab
+ozone_user: francois
 
 # Rights
 user_rights:
@@ -137,11 +172,25 @@ user_rights:
       - name: "{{ cluster_name_pvc }}-workspace-1" 
         env_name: "{{ cluster_name_pvc }}-env"
     virtual_clusters: # Optionnal: If not defined no keytab pushed to cde
-      - name: "Spark3-{{ cluster_name }}"
+      - name: "spark3-{{ cluster_name }}"
         env_name: "{{ cluster_name_pvc }}-env"
-        cde_service_name: "CDE-Service-1"
-      - name: "Spark2-{{ cluster_name }}"
+        cde_service_name: "cde-service-1"
+      - name: "spark2-{{ cluster_name }}"
         env_name: "{{ cluster_name_pvc }}-env"
-        cde_service_name: "CDE-Service-1"
+        cde_service_name: "cde-service-1"
+  - name: batman
+    keytab: /home/batman/batman.keytab # Used if defined to push keytab to CML and CDE
+    password: ${DEFAULT_PASSWORD}
+    roles: [ "EnvironmentUser", "IamUser" ]
+    envs: 
+      - name: "{{ cluster_name_pvc }}-env"
+        roles: [ "DEUser", "DWUser",  "MLUser" ]
+    virtual_clusters: # Optionnal: If not defined no keytab pushed to cde
+      - name: "spark3-{{ cluster_name }}"
+        env_name: "{{ cluster_name_pvc }}-env"
+        cde_service_name: "cde-service-1"
+      - name: "spark2-{{ cluster_name }}"
+        env_name: "{{ cluster_name_pvc }}-env"
+        cde_service_name: "cde-service-1"
     
     

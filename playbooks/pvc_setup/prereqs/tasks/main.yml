@@ -65,11 +65,11 @@
     dest: /tmp/gen_credentials_ipa.p
   when: cm_version.split('.')[1] == '4'
 
-- name: Template Patch to CM 7.5 host
+- name: Template Patch to CM 7.5+ host
   template:
     src: gen_credentials_ipa_cm75.p
     dest: /tmp/gen_credentials_ipa.p
-  when: cm_version.split('.')[1] == '5' or cm_version.split('.')[1] == '6' or cm_version.split('.')[1] == '7' or cm_version.split('.')[1] == '8' or cm_version.split('.')[1] == '9'
+  when: cm_version.split('.')[1] == '5' or cm_version.split('.')[1] == '6' or cm_version.split('.')[1] == '7' or cm_version.split('.')[1] == '8' or cm_version.split('.')[1] == '9' or cm_version.split('.')[1] == '10'
 
 - name: Apply patch remotely
   patch:
@@ -131,7 +131,7 @@
 
 - name: Download cdp-cde-utils.sh.gz
   get_url:
-    url: "https://docs.cloudera.com/data-engineering/1.3.4/cdp-cde-utils.sh"
+    url: "https://docs.cloudera.com/data-engineering/1.5.0/cdp-cde-utils.sh"
     dest: ~/cdp-cde-utils.sh
     mode: '0775'
   ignore_errors: true

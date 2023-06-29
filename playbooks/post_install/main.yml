@@ -84,7 +84,6 @@
   roles: 
     - { role: restart_knox, when: knox_service_exists | default(false) }
 
-
 - name: Add missing TLS values for KMS
   hosts: main
   gather_facts: false

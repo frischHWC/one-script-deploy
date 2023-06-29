@@ -43,3 +43,7 @@ cdh_repo: ${CDH_REPO}
 auto_tls: ${TLS}
 
 debug: ${DEBUG}
+
+# DATABASE
+database_type: ${DATABASE_TYPE}
+database_version: ${DATABASE_VERSION}

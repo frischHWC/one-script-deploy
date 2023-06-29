@@ -25,6 +25,13 @@
     - ansible_install
     - { role: hdp_libs, when: distribution == "HDP" }
 
+- name: Install required package repository for Postgres DB
+  hosts: all
+  gather_facts: false
+  become: true
+  roles: 
+    - { role: centos_extra_packages, when: os == 'centos' and database_type == 'postgresql' }
+
 - name: Copy files for installation
   hosts: main
   gather_facts: false
@@ -32,3 +39,4 @@
     - set_install_repo
     - { role: cdp_ansible_files, when: distribution != "HDP" }
     - { role: hdp_ansible_files, when: distribution == "HDP" }
+

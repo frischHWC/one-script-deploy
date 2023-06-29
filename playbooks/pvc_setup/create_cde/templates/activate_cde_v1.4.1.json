@@ -13,7 +13,7 @@
         "tls.enabled": "false", 
         "yunikorn.disabled": "false",
         "shared.cluster.enabled":"true",
-        "default-vc.create":"true",
+        "default-vc.create":"false",
         "wildcard.certificates.enabled":"false",
         "cluster.nfs.storageClass":"{{ virtual_cluster.storage_class | default('') }}"
       },

@@ -1,0 +1,37 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+- name: Remove centos extra packages if it exists
+  file:
+    path: /etc/yum.repos.d/centos-extra-cdp-install.repo
+    state: absent
+
+- name: Template centos Extra Packages file to
+  template:
+    src: centos-extras.repo
+    dest: /etc/yum.repos.d/centos-extra-cdp-install.repo
+    mode: '0744'
+
+- name: Enable new repo
+  shell: sudo yum -q makecache -y --disablerepo='*' --enablerepo='extras'
+
+- name: Install centos-release-scl
+  yum:
+    name: centos-release-scl
+    state: present

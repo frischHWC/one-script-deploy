@@ -183,7 +183,7 @@
   when: debug | default(false)
 
 - set_fact:
-    new_gateway_descriptor_cdp_proxy: "{{ gateway_descriptor_cdp_proxy }}#SSB-SSE-UI-LB:url={{ ssb_protocol }}://{{ ssb_host }}:{{ ssb_port }}#SSB-SSE-UI-LB:httpclient.connectionTimeout=5m#SSB-SSE-UI-LB:httpclient.socketTimeout=5m#SSB-SSE-UI-LB:version=1.7.0#SSB-SSE-WS-LB:url=wss://{{ ssb_host }}:{{ ssb_port }}#SSB-SSE-WS:version=1.7.0"
+    new_gateway_descriptor_cdp_proxy: "{{ gateway_descriptor_cdp_proxy }}#SSB-SSE-UI-LB:url={{ ssb_protocol }}://{{ ssb_host }}:{{ ssb_port }}#SSB-SSE-UI-LB:httpclient.connectionTimeout=5m#SSB-SSE-UI-LB:httpclient.socketTimeout=5m#SSB-SSE-UI-LB:version=1.9.0#SSB-SSE-WS-LB:url=wss://{{ ssb_host }}:{{ ssb_port }}#SSB-SSE-WS:version=1.9.0"
 
 
 - set_fact:
@@ -203,7 +203,7 @@
   when: debug | default(false)
 
 - set_fact:
-    new_gateway_descriptor_cdp_proxy_api: "{{ gateway_descriptor_cdp_proxy_api }}#SSB-MVE-API-LB:url={{ ssb_protocol }}://{{ ssb_host }}:{{ ssb_api_port }}#SSB-MVE-API-LB:version=1.7.0"
+    new_gateway_descriptor_cdp_proxy_api: "{{ gateway_descriptor_cdp_proxy_api }}#SSB-MVE-API-LB:url={{ ssb_protocol }}://{{ ssb_host }}:{{ ssb_api_port }}#SSB-MVE-API-LB:version=1.9.0"
 
 - name: Push new Knox config
   uri:

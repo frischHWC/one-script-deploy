@@ -8,6 +8,7 @@
       "triggerScaleDownDelay": {{ warehouse.scale_down_delay | default('20') }},
       "enableHA": {{ warehouse.enable_ha | default('true') }},
       "autoScaleMode": 0,
+      "disableAutoSuspend": {{ warehouse.disable_auto_suspend | default('false') }},
       "minClusters": {{ warehouse.min_nodes | default('1') }},
       "maxClusters": {{ warehouse.max_nodes | default('5') }}
     },

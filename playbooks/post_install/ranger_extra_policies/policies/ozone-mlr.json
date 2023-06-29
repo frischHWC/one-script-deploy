@@ -1,0 +1,111 @@
+{
+    "id": 1,
+    "guid": "...",
+    "isEnabled": true,
+    "version": 1,
+    "service": "cm_ozone",
+    "name": "Ozone policy for ML Registry",
+    "policyType": 0,
+    "policyPriority": 0,
+    "description": "Required policy for ML Registry if using PvC",
+    "isAuditEnabled": true,
+    "resources": {
+      "volume": {
+        "values": [
+          "s3v"
+        ],
+        "isExcludes": false
+      },
+      "bucket": {
+        "values": [
+          "ml*", "*"
+        ],
+        "isExcludes": false
+      },
+      "key": {
+        "values": [
+          "*"
+        ],
+        "isExcludes": false,
+        "isRecursive": false
+      }
+    },
+    "policyItems": [
+      {
+        "accesses": [
+          {
+            "type": "all",
+            "isAllowed": true
+          },
+          {
+            "type": "read",
+            "isAllowed": true
+          },
+          {
+            "type": "write",
+            "isAllowed": true
+          },
+          {
+            "type": "create",
+            "isAllowed": true
+          },
+          {
+            "type": "list",
+            "isAllowed": true
+          },
+          {
+            "type": "delete",
+            "isAllowed": true
+          },
+          {
+            "type": "write_acl",
+            "isAllowed": true
+          },
+          {
+            "type": "read_acl",
+            "isAllowed": true
+          }
+        ],
+        "users": [
+          "francois"
+        ],
+        "groups": [
+          
+        ],
+        "roles": [
+          
+        ],
+        "conditions": [
+          
+        ],
+        "delegateAdmin": true
+      }
+    ],
+    "denyPolicyItems": [
+      
+    ],
+    "allowExceptions": [
+      
+    ],
+    "denyExceptions": [
+      
+    ],
+    "dataMaskPolicyItems": [
+      
+    ],
+    "rowFilterPolicyItems": [
+      
+    ],
+    "serviceType": "ozone",
+    "options": {
+      
+    },
+    "validitySchedules": [
+      
+    ],
+    "policyLabels": [
+      
+    ],
+    "zoneName": "",
+    "isDenyAllElse": false
+  }

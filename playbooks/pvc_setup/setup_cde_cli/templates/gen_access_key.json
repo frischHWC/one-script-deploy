@@ -1,0 +1,4 @@
+{
+    "user": "{{ user_crn }}",
+    "type": "V2"
+}

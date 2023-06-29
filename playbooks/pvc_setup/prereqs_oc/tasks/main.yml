@@ -53,6 +53,7 @@
 - name: Insert KUBECONFIG & NO_PROXY vars to bashrc
   blockinfile:
     path: ~/.bashrc
+    marker: "# KUBECONFIG"
     block: |
       export KUBECONFIG=/root/kubeconfig
       export NO_PROXY=*.kcloud.cloudera.com

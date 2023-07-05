@@ -1,0 +1,95 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+- name: wait cloudera-scm-server
+  wait_for:
+    host: "{{ cloudera_manager_host }}"
+    port: "{{ cloudera_manager_port }}"
+    delay: 5
+    state: started
+    timeout: 300
+    
+- name: Check CM is no-TLS
+  uri:
+    url: "http://{{ cloudera_manager_host }}:7180/"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200, -1, 304
+    return_content: yes
+    validate_certs: no
+    dest: /tmp/cloudera_deployment.json
+  register: cluster_deployment
+
+- set_fact:
+    cloudera_manager_protocol: http
+    cloudera_manager_port: 7180
+  when: cluster_deployment.status == 200
+
+
+- name: Check CM is TLS
+  uri:
+    url: "https://{{ cloudera_manager_host }}:7183/"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200, -1, 304
+    return_content: yes
+    validate_certs: no
+  register: cluster_deployment
+
+- set_fact:
+    cloudera_manager_protocol: https
+    cloudera_manager_port: 7183
+  when: cluster_deployment.status == 200
+
+- set_fact:
+    cloudera_manager_url: "{{ cloudera_manager_protocol }}://{{ cloudera_manager_host }}:{{ cloudera_manager_port }}"
+
+- name: DEBUG - cloudera_manager_url
+  debug:
+    msg: "{{ cloudera_manager_url }}"
+  when: debug | default(false)
+
+- name: Get CM API Version
+  uri:
+    url: "{{ cloudera_manager_url }}/api/version"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_api_version_response
+
+- set_fact:
+    cloudera_manager_api_version: "{{ cloudera_manager_api_version_response.content }}"
+
+- set_fact:
+    cloudera_manager_api_url: "{{ cloudera_manager_url }}/api/{{ cloudera_manager_api_version }}"
+
+
+- name: DEBUG - cloudera_manager_api_url
+  debug:
+    msg: "{{ cloudera_manager_api_url }}"
+  when: debug | default(false)

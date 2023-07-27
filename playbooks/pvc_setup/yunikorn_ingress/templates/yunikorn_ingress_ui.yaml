@@ -1,0 +1,19 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: yunikorn-web
+  namespace: yunikorn
+spec:
+  rules:
+    - host: "yunikorn-web-yunikorn.apps.{{ pvc_app_domain }}"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: yunikorn-service
+                port:
+                  number: 9889
+status:
+  loadBalancer: {}

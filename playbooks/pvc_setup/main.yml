@@ -191,6 +191,13 @@
     - role: setup_cde_cli
       when: setup_pvc_tools and cde | default(false)
 
+- name: Install Yunikorn Ingess
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: true
+  roles: 
+    - role: yunikorn_ingress
+      when: setup_pvc_tools and cde | default(false)
+
 
 #### CML ####
 - name: Create Cloudera Machine Learning Registries

@@ -23,6 +23,7 @@
     url: https://dl.k8s.io/release/stable.txt
     return_content: yes
     follow_redirects: all
+    validate_certs: false
   register: kubectl_version
 
 - name: DEBUG - kubectl_version
@@ -36,6 +37,7 @@
     return_content: yes
     follow_redirects: all
     status_code: [200, 304]
+    validate_certs: false
     dest: ~/kubectl
 
 - name: Copy kubectl file to binary place 

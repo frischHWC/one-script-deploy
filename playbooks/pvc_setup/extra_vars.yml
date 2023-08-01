@@ -115,6 +115,7 @@ workspaces:
     enable_governance: true # default = false
     enable_model_metrics: true # default = false
     static_sub_domain: workspace1 # default = ''
+    nfs_disk_size: 100 # default = 1000 (It is in GiB, so 1000 = 1 TiB)
 
 ml_registries:
   - name: "mlr"

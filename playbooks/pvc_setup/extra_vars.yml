@@ -124,7 +124,7 @@ ml_registries:
 
 # CDE
 virtual_clusters:
-  - name: "spark3-{{ cluster_name }}"
+  - name: "spark-3-{{ cluster_name }}"
     env_name: "{{ cluster_name_pvc }}-env"
     cde_service_name: "cde-service-1"
     spark_version: "3.2.3" # From 1.5.1, it is 3.2.3, From 1.4.1, it is 3.2.1, before it is 3.2.0
@@ -139,7 +139,7 @@ virtual_clusters:
     vc_quota_min_cpu: 16 # default = 8
     vc_quota_min_mem: 48Gi # default = 24Gi
 
-  - name: "spark2-{{ cluster_name }}"
+  - name: "spark-2-{{ cluster_name }}"
     env_name: "{{ cluster_name_pvc }}-env"
     cde_service_name: "cde-service-1"
     spark_version: "2.4.7"
@@ -174,10 +174,10 @@ user_rights:
       - name: "{{ cluster_name_pvc }}-workspace-1" 
         env_name: "{{ cluster_name_pvc }}-env"
     virtual_clusters: # Optionnal: If not defined no keytab pushed to cde
-      - name: "spark3-{{ cluster_name }}"
+      - name: "spark-3-{{ cluster_name }}"
         env_name: "{{ cluster_name_pvc }}-env"
         cde_service_name: "cde-service-1"
-      - name: "spark2-{{ cluster_name }}"
+      - name: "spark-2-{{ cluster_name }}"
         env_name: "{{ cluster_name_pvc }}-env"
         cde_service_name: "cde-service-1"
   - name: batman
@@ -188,10 +188,10 @@ user_rights:
       - name: "{{ cluster_name_pvc }}-env"
         roles: [ "DEUser", "DWUser",  "MLUser" ]
     virtual_clusters: # Optionnal: If not defined no keytab pushed to cde
-      - name: "spark3-{{ cluster_name }}"
+      - name: "spark-3-{{ cluster_name }}"
         env_name: "{{ cluster_name_pvc }}-env"
         cde_service_name: "cde-service-1"
-      - name: "spark2-{{ cluster_name }}"
+      - name: "spark-2-{{ cluster_name }}"
         env_name: "{{ cluster_name_pvc }}-env"
         cde_service_name: "cde-service-1"
     

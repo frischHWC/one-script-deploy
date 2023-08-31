@@ -23,7 +23,7 @@
   strategy: free
   become: true
   roles: 
-    - etc_hosts_copy
+    - { role: etc_hosts_copy , when: set_etc_hosts }
     - { role: setup_hosts_key, when: set_hosts_key }
 
 - name: Create authorized_keys file from all hosts keys file locally 

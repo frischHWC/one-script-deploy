@@ -21,6 +21,7 @@ export NODE_USER="root"
 export NODE_KEY=""
 export NODE_PASSWORD=""
 export SETUP_HOSTS_KEYS="true"
+export SETUP_ETC_HOSTS="true"
 
 # Steps to do
 export PRE_INSTALL="true"
@@ -184,6 +185,7 @@ function usage()
     echo "  --node-key=$NODE_KEY : The key to connect to all nodes (Default) $NODE_KEY "
     echo "  --node-password=$NODE_PASSWORD : The password to connect to all nodes (Default) $NODE_PASSWORD "
     echo "  --setup-hosts-keys=$SETUP_HOSTS_KEYS : If needed to setup hosts keys between hosts (to allow passwordless connections) Set it to false on some Cloud Provider already setup machines (Default) $SETUP_HOSTS_KEYS "
+    echo "  --setup-etc-hosts=$SETUP_ETC_HOSTS : To push an /etc/hosts configured on all host, Set it to false generally for Cloud Provider as they use internal DNS (Default) $SETUP_ETC_HOSTS "
     echo ""
     echo "  --nodes-base=$NODES_BASE : A Space separated list of all nodes (Default) $NODES_BASE "
     echo "  --node-ipa=$NODE_IPA : Required only if using FreeIPA (Default) $NODE_IPA "
@@ -338,6 +340,9 @@ while [ "$1" != "" ]; do
             ;;
         --setup-hosts-keys)
             SETUP_HOSTS_KEYS=$VALUE
+            ;;
+        --setup-etc-hosts)
+            SETUP_ETC_HOSTS=$VALUE
             ;;
         --node-password)
             NODE_PASSWORD=$VALUE
@@ -1057,7 +1062,7 @@ fi
 # Setup of files to interact with the cluster
 ###############################
 
-export NODES_SORTED=$( echo ${NODES_BASE} | sort | uniq )
+export NODES_SORTED=$( echo ${NODES_BASE} | uniq )
 export NODES=( ${NODES_SORTED} )
 export HOSTS_FILE=$(mktemp)
 export HOSTS_ETC=$(mktemp)

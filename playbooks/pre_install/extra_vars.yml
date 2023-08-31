@@ -22,6 +22,7 @@ debug: ${DEBUG}
 free_ipa: ${FREE_IPA} 
 cluster_name: ${CLUSTER_NAME}
 etc_hosts_file: ${HOSTS_ETC}
+set_etc_hosts: ${SETUP_ETC_HOSTS}
 known_hosts: ${KNOWN_HOSTS}
 license_file: ${LICENSE_FILE}
 authorized_keys: ${AUTHORIZED_KEYS}

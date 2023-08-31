@@ -41,6 +41,48 @@ Many more configurations are available, see them all with:
         ./setup-cluster.sh --help
 
 
+### NEW: Script to create Instances and launch creation
+
+__It is only working with AWS as of now.__
+
+Note: This requires you to install Terraform and AWS CLI on the machine where you will launch this script.
+
+It will require also that you create in advance a key pair in AWS, get your private key locally, and also get AWS access key and secret access key:
+
+
+        export ACCESS_KEY="" # Your AWS Access Key 
+        export SECRET_ACCESS_KEY="" # Your AWS Secret Access Key
+        export KEY_PAIR_NAME="" # Name of a key pair in AWS that will be set to acess your machines
+        export PRIVATE_KEY_PATH="" # Local private key path to use to access your machines 
+        export WHITELIST_IP="" # Your IP, so only this IP will be able to access your machines
+
+        export PAYWALL_USER=  # Your Paywall User from Cloudera to access archive.cloduera.com
+        export PAYWALL_PASSWORD=  # Your Paywall password from Cloudera to access archive.cloduera.com
+        export LICENSE_FILE=   # Your Licence file from Cloudera
+        export CLUSTER_NAME=   # A name of your choice (ex: cloudera-test )
+
+        ./setup-cluster-on-cloud.sh \
+                --cloud-provider="AWS" \
+                --aws-access-key=${ACCESS_KEY} \
+                --aws-secret-access-key=${SECRET_ACCESS_KEY} \
+                --aws-key-pair-name=${KEY_PAIR_NAME} \
+                --private-key-path=${PRIVATE_KEY_PATH} \
+                --whitelist-ip=${WHITELIST_IP} \
+                --os-version=8.7 \
+                --setup-etc-hosts=false \
+                \
+                --cluster-name=${CLUSTER_NAME} \
+                --license-file=${LICENSE_FILE} \
+                --paywall-username=${PAYWALL_USER} \
+                --paywall-password=${PAYWALL_PASSWORD}
+
+
+All parameters above must be let like this, as they are appropriate to AWS machines.
+After these parameters, you can add all other parameters that worked with script: setup-cluster.sh.
+
+The script, will use terraform to provide your machines, setup connectivity and then launch setup-cluster.sh with pre-configured parameters to create the wanted cluster. 
+
+
 ### Examples
 
 #### !!! Special No license or Paywall Cluster : CDP 7 - Basic 6 nodes !!!

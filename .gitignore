@@ -2,3 +2,4 @@
 customer-*
 customer-*/*
 launch_*
+terraform.tfstate

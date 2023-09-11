@@ -53,13 +53,13 @@ export REALM="FRISCH.COM"
 export ENCRYPTION_ACTIVATED="false"
 
 # Versions
-export CM_VERSION="7.6.7"
-export CDH_VERSION="7.1.7.2026"
+export CM_VERSION="7.11.3"
+export CDH_VERSION="7.1.9.0"
+export CSA_VERSION="1.10.0.0"
+export CFM_VERSION="2.1.6.0"
+export SPARK3_VERSION="3.3.7180.0"
+export WXM_VERSION="2.3.0"
 export PVC_VERSION="1.5.1"
-export CSA_VERSION="1.9.0.0"
-export CFM_VERSION="2.1.4.2"
-export SPARK3_VERSION="3.2.7171000.1"
-export WXM_VERSION="2.2.2"
 export AMBARI_VERSION="2.7.5.0"
 export HDP_VERSION="3.1.5.6091"
 export HDF_VERSION="3.5.0.0"
@@ -1089,7 +1089,7 @@ do
         echo $SSHKey >> ~/.ssh/known_hosts
         echo $SSHKey >> ${KNOWN_HOSTS}
         IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES[$i]} | cut -d' ' -f1)
-        if [ -z ${IP_ADRESS_SOLVED} ]
+        if [ -z "${IP_ADRESS_SOLVED}" ]
         then
             IP_ADRESS_SOLVED=$( dig +short ${NODES[$i]} )
         fi

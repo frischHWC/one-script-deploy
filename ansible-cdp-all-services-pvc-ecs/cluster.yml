@@ -24,7 +24,7 @@ clusters:
       - "{{ cdh_repo }}"
 
   - name: "{{ cluster_name }}"
-    services: [ATLAS, CRUISE_CONTROL, DAS, FLINK, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, KS_INDEXER, KUDU, LIVY, LIVY_FOR_SPARK3, NIFI, NIFIREGISTRY, OMID, OOZIE, OZONE, PHOENIX, QUEUEMANAGER, RANGER, SCHEMAREGISTRY, SPARK_ON_YARN, SPARK3_ON_YARN, SOLR, SQL_STREAM_BUILDER, STREAMS_MESSAGING_MANAGER, TEZ, YARN, ZEPPELIN, ZOOKEEPER]
+    services: [ATLAS, CRUISE_CONTROL, FLINK, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, KS_INDEXER, KUDU, LIVY, LIVY_FOR_SPARK3, NIFI, NIFIREGISTRY, OMID, OOZIE, OZONE, PHOENIX, QUEUEMANAGER, RANGER, SCHEMAREGISTRY, SPARK_ON_YARN, SPARK3_ON_YARN, SOLR, SQL_STREAM_BUILDER, STREAMS_MESSAGING_MANAGER, TEZ, YARN, ZOOKEEPER]
     security:
       kerberos: "{{ kerberos_activated }}"
       hdfs_encryption: "{{ encryption_activated }}"
@@ -44,10 +44,6 @@ clusters:
           atlas_admin_password: "{{ default_password }}"
           atlas_authentication_method_file: true
           atlas_solr_replication_factor: 2
-
-      DAS:
-        DAS_WEBAPP:
-          data_analytics_studio_user_authentication: "{{ das_auth }}"
       
       FLINK:
         FLINK_HISTORY_SERVER:
@@ -233,11 +229,6 @@ clusters:
           mapred_submit_replication: 3
           mapred_reduce_tasks: 6   
 
-      ZEPPELIN:
-        ZEPPELIN_SERVER:
-          zeppelin.shiro.roles.block: admin=*\ndev=*
-          zeppelin.admin.group: dev 
-
       ZOOKEEPER:
         SERVICEWIDE:
           zookeeper_datadir_autocreate: true
@@ -260,7 +251,6 @@ clusters:
         SPARK3_ON_YARN: [GATEWAY]
         SQL_STREAM_BUILDER: [LOAD_BALANCER]
         YARN: [GATEWAY]
-        ZEPPELIN: [ZEPPELIN_SERVER]
 
       Master1:
         ATLAS: [ATLAS_SERVER]
@@ -287,7 +277,6 @@ clusters:
 
       Master2:
         ATLAS: [ATLAS_SERVER]
-        DAS: [DAS_EVENT_PROCESSOR, DAS_WEBAPP]
         FLINK: [GATEWAY]
         HBASE: [MASTER, HBASERESTSERVER, HBASETHRIFTSERVER, GATEWAY]
         HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]

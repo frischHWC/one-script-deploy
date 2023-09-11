@@ -20,7 +20,7 @@
 clusters:
   - name: "{{ cluster_name }}"
     # Remove undesired services below
-    services: [ATLAS, CRUISE_CONTROL, DAS, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, KUDU, LIVY, OMID, OOZIE, OZONE, PHOENIX, QUEUEMANAGER, RANGER, SCHEMAREGISTRY, SOLR, SPARK_ON_YARN, STREAMS_MESSAGING_MANAGER, TEZ, YARN, ZEPPELIN, ZOOKEEPER]
+    services: [ATLAS, CRUISE_CONTROL, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, KUDU, LIVY, OMID, OOZIE, OZONE, PHOENIX, QUEUEMANAGER, RANGER, SCHEMAREGISTRY, SOLR, SPARK_ON_YARN, STREAMS_MESSAGING_MANAGER, TEZ, YARN, ZOOKEEPER]
     security:
       kerberos: "{{ kerberos_activated }}"
     repositories:
@@ -38,10 +38,6 @@ clusters:
       #CRUISE_CONTROL:
       #  CRUISE_CONTROL_SERVER:
       #    security.protocol: "{{ kafka_protocol }}" 
-
-      DAS:
-        DAS_WEBAPP:
-          data_analytics_studio_user_authentication: "{{ das_auth }}"
 
       #FLINK:
       #  FLINK_HISTORY_SERVER:
@@ -189,11 +185,6 @@ clusters:
           mapred_submit_replication: 3
           mapred_reduce_tasks: 6    
 
-      ZEPPELIN:
-        ZEPPELIN_SERVER:
-          zeppelin.shiro.roles.block: admin=*\nfrancois=*
-          zeppelin.admin.group: francois
-
       ZOOKEEPER:
         SERVICEWIDE:
           zookeeper_datadir_autocreate: true
@@ -219,7 +210,6 @@ clusters:
       Master1:
         ATLAS: [ATLAS_SERVER]
         CRUISE_CONTROL: [CRUISE_CONTROL_SERVER]
-        DAS: [DAS_EVENT_PROCESSOR, DAS_WEBAPP]
         #FLINK: [FLINK_HISTORY_SERVER, GATEWAY]
         HBASE: [GATEWAY, HBASETHRIFTSERVER, HBASERESTSERVER]
         HDFS: [JOURNALNODE, GATEWAY, HTTPFS]
@@ -240,7 +230,6 @@ clusters:
         STREAMS_MESSAGING_MANAGER: [STREAMS_MESSAGING_MANAGER_UI, STREAMS_MESSAGING_MANAGER_SERVER]
         TEZ: [GATEWAY]
         YARN: [GATEWAY]
-        ZEPPELIN: [ZEPPELIN_SERVER]
         ZOOKEEPER: [SERVER]  
 
       Master2:

@@ -1,7 +1,4 @@
 {
-    "id": 1,
-    "guid": "...",
-    "isEnabled": true,
     "version": 1,
     "service": "cm_ozone",
     "name": "Ozone policy for ML Registry",
@@ -67,7 +64,7 @@
           }
         ],
         "users": [
-          "francois"
+          "{{ default_admin_user }}"
         ],
         "groups": [
           

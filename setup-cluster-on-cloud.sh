@@ -549,6 +549,11 @@ terraform init
 terraform validate
 terraform apply -auto-approve
 
+# TODO: Should we use internal names provided automatically by AWS ? (no renaming?)
+# TODO: Should we use a jumphost or keep using host where this is launched ? (Better is option 1)
+# TODO: Should we setup PTR records (publicly available?) ?
+# TODO: Should we setup wildcard for public route53 to point to ECS master ?
+
 # Get Terraform output
 export VPC_ID=$(terraform output -json vpc_id | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
 export BASE_MASTERS=$(terraform output -json masters | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
@@ -630,7 +635,7 @@ echo "Finish Provisionning Machines on the Cloud"
 # Sleep 5 secs to make sure all instances are well up and running
 sleep 5
 
-# TODO: Create DNS records for ALL machines
+# Create DNS records for ALL machines
 export FIRST_MASTER_IP=$(head -1 ${TF_INTERNAL_HOSTS_FILE} | cut -d ' ' -f 1)
 export FILE_CONTAINING_HOSTNAME_IP_MAP=$(mktemp)
 # Create a map in terraform style of hostname = IP for all nodes so it will be injected in route53 map

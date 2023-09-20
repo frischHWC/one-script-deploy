@@ -69,7 +69,7 @@
   template:
     src: gen_credentials_ipa_cm75.p
     dest: /tmp/gen_credentials_ipa.p
-  when: cm_version.split('.')[1] == '5' or cm_version.split('.')[1] == '6' or cm_version.split('.')[1] == '7' or cm_version.split('.')[1] == '8' or cm_version.split('.')[1] == '9' or cm_version.split('.')[1] == '10'
+  when: cm_version is version('7.5.0', '>=')
 
 - name: Apply patch remotely
   patch:

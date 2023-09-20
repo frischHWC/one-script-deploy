@@ -133,6 +133,29 @@ The script, will use terraform to provide your machines, setup connectivity and 
             --free-ipa=true \
             --node-ipa=<One node dedicated to IPA> \
             --nodes-base="${NODES}"
+            
+
+#### CDP 7 - Streaming cluster (6 nodes basic with Spark 3 and Flink + a VPC of 3 nodes of Kafka/Nifi) (Kerberos / TLS)
+
+        ./setup-cluster.sh \
+            --cluster-name=${CLUSTER_NAME} \
+            --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --cluster-type=streaming \
+            --nodes-base="${NODES}"
+
+#### CDP 7 - All Services (6 nodes basic with Spark 3 and Flink + 3 Nifi/Kafka nodes + 1 node for KTS ) (Kerberos / TLS)
+
+        ./setup-cluster.sh \
+            --cluster-name=${CLUSTER_NAME} \
+            --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --cluster-type=all-services \
+            --nodes-kts=<Dedicated Node for KTS> \
+            --nodes-base="${NODES}"
+
 
 #### CDP 7 - 9 nodes with 3 dedicated for PvC with ECS (Kerberos / TLS / FreeIPA)
 
@@ -159,17 +182,7 @@ The script, will use terraform to provide your machines, setup connectivity and 
             --node-ipa=<One node dedicated to IPA> \
             --nodes-base="${NODES}"
 
-#### CDP 7 - Streaming cluster (6 nodes basic with Spark 3 and Flink + a VPC of 3 nodes of Kafka/Nifi) (Kerberos / TLS)
-
-        ./setup-cluster.sh \
-            --cluster-name=${CLUSTER_NAME} \
-            --license-file=${LICENSE_FILE} \
-            --paywall-username=${PAYWALL_USER} \
-            --paywall-password=${PAYWALL_PASSWORD} \
-            --cluster-type=streaming \
-            --nodes-base="${NODES}"
-
-#### CDP 7 - All Services (6 nodes basic with Spark 3 and Flink + 3 Nifi/Kafka nodes + 1 node for KTS + Associated with an Openshift PVC) (Kerberos / TLS / FreeIPA)
+#### CDP 7 - All Services (6 nodes basic with Spark 3 and Flink + 3 Nifi/Kafka nodes + 1 node for KTS + Associated with a PvC ) (Kerberos / TLS / FreeIPA)
 
         ./setup-cluster.sh \
             --cluster-name=${CLUSTER_NAME} \
@@ -179,23 +192,9 @@ The script, will use terraform to provide your machines, setup connectivity and 
             --cluster-type=all-services-pvc \
             --nodes-kts=<Dedicated Node for KTS> \
             --node-ipa=<Dedicated Node for IPA> \
-            --kubeconfig-path=<Path to your kubeconfig file> \
-            --oc-tar-file-path=<Path to your oc.tar file downloaded from RedHat> \
+            --nodes-ecs=<Space separated list of 3 nodes> \
             --nodes-base="${NODES}"
 
-#### CDP 7 - Full of Full cluster (6 nodes basic with Spark 3 and Flink + a VPC of 3 nodes of Kafka/Nifi + 2 Nodes for KTS + Associated with an Openshift PVC) (Kerberos / TLS / FreeIPA)
-
-        ./setup-cluster.sh \
-            --cluster-name=${CLUSTER_NAME} \
-            --license-file=${LICENSE_FILE} \
-            --paywall-username=${PAYWALL_USER} \
-            --paywall-password=${PAYWALL_PASSWORD} \
-            --cluster-type=full-enc-pvc \
-            --nodes-kts=<Dedicated Node(s) for KTS> \
-            --node-ipa=<Dedicated Node for IPA> \
-            --kubeconfig-path=<Path to your kubeconfig file> \
-            --oc-tar-file-path=<Path to your oc.tar file downloaded from RedHat> \
-            --nodes-base="${NODES}"
 
 
 #### CDP 7 - Workload XM cluster (1 WXM cluster of 5 nodes associated with a base cluster (provided in command line) ) (Kerberos / TLS)

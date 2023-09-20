@@ -1,0 +1,97 @@
+{
+    "version": 1,
+    "service": "cm_atlas",
+    "name": "Atlas Classification Policy for user {{ user.name }}",
+    "policyType": 0,
+    "policyPriority": 0,
+    "description": "Admin Atlas Classification Policy for user {{ user.name }}",
+    "isAuditEnabled": true,
+    "resources": {
+      "entity-type": {
+        "values": [
+          "*"
+        ],
+        "isExcludes": false,
+        "isRecursive": false
+      },
+      "entity-classification": {
+        "values": [
+          "*"
+        ],
+        "isExcludes": false,
+        "isRecursive": false
+      },
+      "classification": {
+        "values": [
+          "*",
+          "{{ user }}"
+        ],
+        "isExcludes": false,
+        "isRecursive": false
+      },
+      "entity": {
+        "values": [
+          "*"
+        ],
+        "isExcludes": false,
+        "isRecursive": false
+      }
+    },
+    "policyItems": [
+      {
+        "accesses": [
+          {
+            "type": "entity-add-classification",
+            "isAllowed": true
+          },
+          {
+            "type": "entity-update-classification",
+            "isAllowed": true
+          },
+          {
+            "type": "entity-remove-classification",
+            "isAllowed": true
+          }
+        ],
+        "users": [
+          "{{ user.name }}"
+        ],
+        "groups": [
+        ],
+        "roles": [
+          
+        ],
+        "conditions": [
+          
+        ],
+        "delegateAdmin": true
+      }
+    ],
+    "denyPolicyItems": [
+      
+    ],
+    "allowExceptions": [
+      
+    ],
+    "denyExceptions": [
+      
+    ],
+    "dataMaskPolicyItems": [
+      
+    ],
+    "rowFilterPolicyItems": [
+      
+    ],
+    "serviceType": "atlas",
+    "options": {
+      
+    },
+    "validitySchedules": [
+      
+    ],
+    "policyLabels": [
+      
+    ],
+    "zoneName": "",
+    "isDenyAllElse": false
+  }

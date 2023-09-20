@@ -50,6 +50,7 @@ realm_user: ${REALM}
 
 # SECURITY
 default_password: ${DEFAULT_PASSWORD}
+default_admin_user: ${DEFAULT_ADMIN_USER}
 kerberos_activated: ${KERBEROS}
 encryption_activated: ${ENCRYPTION_ACTIVATED}
 auto_tls: ${TLS}

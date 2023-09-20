@@ -19,14 +19,22 @@
 ---
 default_password: ${DEFAULT_PASSWORD}
 free_ipa: ${FREE_IPA} 
+cloudera_manager_host: ${NODE_0} 
+cloudera_manager_user: admin 
+cloudera_manager_password: admin 
+ranger_user: admin 
+ranger_password: ${DEFAULT_PASSWORD} 
+auto_tls: ${TLS} 
 ipa_server: ${NODE_IPA} 
 cluster_name: ${CLUSTER_NAME} 
 debug: ${DEBUG}
+default_admin_user: ${DEFAULT_ADMIN_USER}
 
 users:
-  - name: francois
+  - name: ${DEFAULT_ADMIN_USER}
     password: ${DEFAULT_PASSWORD}
     group: admin_group
+    is_admin: true
   - name: superman
     password: ${DEFAULT_PASSWORD}
     group: hero

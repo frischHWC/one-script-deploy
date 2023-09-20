@@ -28,7 +28,7 @@
   when: debug | default(false)
 
 - set_fact:
-    hadoop_user: "francois"
+    hadoop_user: "{{ default_user }}"
   when: hadoop_user is not defined
 
 - name: DEBUG - hadoop_user

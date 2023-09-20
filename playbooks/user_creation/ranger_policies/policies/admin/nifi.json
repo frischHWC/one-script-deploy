@@ -1,0 +1,82 @@
+{
+    "version": 1,
+    "service": "{{ cluster_name }}_nifi",
+    "name": "Nifi admin for {{ user.name }}",
+    "policyType": 0,
+    "policyPriority": 0,
+    "description": "Admin Policy for user {{ user.name }}",
+    "isAuditEnabled": true,
+    "resources": {
+      "nifi-resource": {
+        "values": [
+          "/flow",
+          "/process-groups/*",
+          "/data/process-groups/*",
+          "/provenance-data/process-groups/*",
+          "/proxy",
+          "/parameter-contexts",
+          "/controller",
+          "/tenants",
+          "/provenance",
+          "/policies",
+          "/{{ user.name }}_*"
+        ],
+        "isExcludes": false,
+        "isRecursive": false
+      }
+    },
+    "policyItems": [
+      {
+        "accesses": [
+          {
+            "type": "READ",
+            "isAllowed": true
+          },
+          {
+            "type": "WRITE",
+            "isAllowed": true
+          }
+        ],
+        "users": [
+          "{{ user.name }}"
+        ],
+        "groups": [
+          
+        ],
+        "roles": [
+          
+        ],
+        "conditions": [
+          
+        ],
+        "delegateAdmin": true
+      }
+    ],
+    "denyPolicyItems": [
+      
+    ],
+    "allowExceptions": [
+      
+    ],
+    "denyExceptions": [
+      
+    ],
+    "dataMaskPolicyItems": [
+      
+    ],
+    "rowFilterPolicyItems": [
+      
+    ],
+    "serviceType": "nifi",
+    "options": {
+      
+    },
+    "validitySchedules": [
+      
+    ],
+    "policyLabels": [
+      
+    ],
+    "zoneName": "",
+    "isDenyAllElse": false
+  }

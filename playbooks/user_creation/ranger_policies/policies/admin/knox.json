@@ -1,0 +1,77 @@
+{
+    "version": 1,
+    "service": "cm_knox",
+    "name": "Knox Policy for {{ user.name }}",
+    "policyType": 0,
+    "policyPriority": 0,
+    "description": "Admin Policy for user {{ user.name }}",
+    "isAuditEnabled": true,
+    "resources": {
+      "topology": {
+        "values": [
+          "cdp-infra-proxy",
+          "*",
+          "{{ user.name }}_*"
+        ],
+        "isExcludes": false,
+        "isRecursive": false
+      },
+      "service": {
+        "values": [
+          "*"
+        ],
+        "isExcludes": false,
+        "isRecursive": false
+      }
+    },
+    "policyItems": [
+      {
+        "accesses": [
+          {
+            "type": "allow",
+            "isAllowed": true
+          }
+        ],
+        "users": [
+          "{{ user.name }}"
+        ],
+        "groups": [
+          
+        ],
+        "roles": [
+          
+        ],
+        "conditions": [
+          
+        ],
+        "delegateAdmin": true
+      }
+    ],
+    "denyPolicyItems": [
+      
+    ],
+    "allowExceptions": [
+      
+    ],
+    "denyExceptions": [
+      
+    ],
+    "dataMaskPolicyItems": [
+      
+    ],
+    "rowFilterPolicyItems": [
+      
+    ],
+    "serviceType": "knox",
+    "options": {
+      
+    },
+    "validitySchedules": [
+      
+    ],
+    "policyLabels": [
+      
+    ],
+    "zoneName": "",
+    "isDenyAllElse": false
+  }

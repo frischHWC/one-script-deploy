@@ -19,7 +19,7 @@
 ---
 clusters:
   - name: "{{ cluster_name }}"
-    services: [ATLAS, FLINK, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, INFRA_SOLR, KAFKA, KNOX, LIVY, LIVY_FOR_SPARK3, OOZIE, PHOENIX, QUEUEMANAGER, RANGER, SPARK_ON_YARN, SPARK3_ON_YARN, SQL_STREAM_BUILDER, TEZ, YARN, ZOOKEEPER]
+    services: [ATLAS, FLINK, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, INFRA_SOLR, KAFKA, KNOX, LIVY, LIVY_FOR_SPARK3, OOZIE, PHOENIX, QUERY_PROCESSOR, QUEUEMANAGER, RANGER, SPARK_ON_YARN, SPARK3_ON_YARN, SQL_STREAM_BUILDER, TEZ, YARN, ZOOKEEPER]
     security:
       kerberos: "{{ kerberos_activated }}"
     repositories:
@@ -46,7 +46,7 @@ clusters:
         SERVICEWIDE:
           hbase_restserver_security_authentication: "{{ hbase_auth }}"
           hadoop_secure_web_ui: "{{ kerberos_activated }}"
-          hbase_superuser: "francois"
+          hbase_superuser: "{{ default_admin_user }}"
         REGIONSERVER:  
           hbase_regionserver_wal_codec: org.apache.hadoop.hbase.regionserver.wal.IndexedWALEditCodec
       
@@ -82,6 +82,10 @@ clusters:
       HUE:
         SERVICEWIDE:
           auth_backend: desktop.auth.backend.KnoxSpnegoDjangoBackend
+
+      INFRA_SOLR:
+        SERVICEWIDE:
+          enable_ranger_authorization: true
 
       KNOX:
         SERVICEWIDE:
@@ -125,17 +129,13 @@ clusters:
           ranger.usersync.group.objectclass: "groupofnames"
           ranger.usersync.group.nameattribute: "cn"
           ranger.usersync.group.memberattributename: "member"
-          ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:u:admin_user&ROLE_SYS_ADMIN:u:francois"
+          ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:u:admin_group&ROLE_SYS_ADMIN:u:{{ default_admin_user }}"
 
       SPARK_ON_YARN:
         SERVICEWIDE:
           atlas_service: "atlas"
 
       SQL_STREAM_BUILDER:
-        SERVICEWIDE:
-          loadbalancer.url: "{{  groups.cloudera_manager | first | default(omit) }}"
-        LOAD_BALANCER:
-          loadbalancer.url: "{{  groups.cloudera_manager | first | default(omit) }}"
         STREAMING_SQL_ENGINE:
           default.admin.password: "{{ default_password }}" 
           ssb-conf/application.properties_role_safety_valve: log.sqlio.restapi = true
@@ -148,7 +148,7 @@ clusters:
 
       YARN:
         SERVICEWIDE:
-          yarn_admin_acl: "${yarn_user},francois"
+          yarn_admin_acl: "${yarn_user},{{ default_admin_user }}"
         RESOURCEMANAGER:
           yarn_scheduler_maximum_allocation_mb: 24576
           yarn_scheduler_maximum_allocation_vcores: 12
@@ -194,6 +194,7 @@ clusters:
         LIVY_FOR_SPARK3: [GATEWAY]
         LIVY: [GATEWAY]
         OOZIE: [OOZIE_SERVER]
+        QUERY_PROCESSOR: [QUERY_PROCESSOR]
         SPARK_ON_YARN: [GATEWAY]
         SPARK3_ON_YARN: [GATEWAY]
         TEZ: [GATEWAY]
@@ -254,7 +255,7 @@ clusters:
       
   - name: "{{ cluster_name }}-stream"
     type: compute
-    services: [CORE_SETTINGS, CRUISE_CONTROL, KAFKA, KNOX, NIFI, NIFIREGISTRY, SCHEMAREGISTRY, STREAMS_MESSAGING_MANAGER, ZOOKEEPER]
+    services: [CRUISE_CONTROL, KAFKA, KNOX, NIFI, NIFIREGISTRY, SCHEMAREGISTRY, STREAMS_MESSAGING_MANAGER, ZOOKEEPER]
     security:
       kerberos: "{{ kerberos_activated }}"
     repositories:
@@ -266,10 +267,6 @@ clusters:
       dataContext: SDX
 
     configs:
-      CORE_SETTINGS: 
-        SERVICEWIDE:
-          hadoop_rpc_protection: "authentication"
-
       KAFKA:
         KAFKA_CONNECT:  
           bootstrap.servers: "{{ bootstrap_servers }}"
@@ -294,6 +291,8 @@ clusters:
           nifi.autogen.node.identities.dn.suffix: " , ST=CA, C=US"
           nifi.security.identity.mapping.value.dn: $1
           nifi.web.https.port: 8080
+          java.arg.2: -Xms2048m
+          java.arg.3: -Xmx4096m
 
       SCHEMAREGISTRY:
         SERVICEWIDE:
@@ -310,9 +309,8 @@ clusters:
           smm_database_host: "{{ groups.db_server | first | default(omit) }}"
           smm_database_port: "{{ database_type | default_database_port }}"
         STREAMS_MESSAGING_MANAGER_SERVER:  
-          kafka.connect.host: "{{  groups.cluster_worker_no_hadoop | first | default(omit) }}"
           kafka.connect.protocol: "{{ kafka_connect_protocol }}"
-          kafka.connect.port: "{{ kafka_connect_port }}"
+          kafka.connect.hostports: "{{ groups.cluster_worker_no_hadoop | first | default(omit) }}:{{ kafka_connect_port }}"
 
       ZOOKEEPER:
         SERVICEWIDE:
@@ -320,7 +318,6 @@ clusters:
     
     host_templates:
       StreamMaster:
-        CORE_SETTINGS: [GATEWAY, STORAGEOPERATIONS]
         CRUISE_CONTROL: [CRUISE_CONTROL_SERVER]
         KAFKA: [KAFKA_BROKER, KAFKA_CONNECT, GATEWAY]
         NIFIREGISTRY: [NIFI_REGISTRY_SERVER]
@@ -331,7 +328,6 @@ clusters:
         ZOOKEEPER: [SERVER]
 
       StreamWorker:
-        CORE_SETTINGS: [GATEWAY]
         KAFKA: [KAFKA_BROKER, KAFKA_CONNECT, GATEWAY]
         NIFI: [NIFI_NODE]
         ZOOKEEPER: [SERVER]

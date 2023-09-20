@@ -12,9 +12,9 @@ ${NODE_5} host_template=Workers
 ${NODE_6} host_template=Workers
 
 [cluster_worker_no_hadoop]
-${NODE_7} host_template=StreamMaster
-${NODE_8} host_template=StreamWorker
-${NODE_9} host_template=StreamWorker
+${NODE_7} host_template=StreamWorkers
+${NODE_8} host_template=StreamWorkers
+${NODE_9} host_template=StreamWorkers
 
 [db_server]
 ${NODE_0}

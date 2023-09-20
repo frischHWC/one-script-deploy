@@ -31,8 +31,6 @@ cloudera_manager_csds:
   - ${CSA_SSB_CSD}
   - ${CFM_CSD}
   - ${CFM_REGISTRY_CSD}
-  - ${SPARK3_CSD}
-  - ${SPARK3_LIVY_CSD}
 cloudera_manager_options:
 # set values to null to delete (and revert to default)
   custom_banner_html: ""
@@ -52,6 +50,7 @@ realm_user: ${REALM}
 
 # SECURITY
 default_password: ${DEFAULT_PASSWORD}
+default_admin_user: ${DEFAULT_ADMIN_USER}
 kerberos_activated: ${KERBEROS}
 encryption_activated: ${ENCRYPTION_ACTIVATED}
 auto_tls: ${TLS}
@@ -86,6 +85,8 @@ kube_config_path: "/tmp/kubeconfig"
 install_python3: ${INSTALL_PYTHON3}
 oc_tar_file_path: ${OC_TAR_FILE_PATH}
 pvc_ecs_server_host: ${PVC_ECS_SERVER_HOST}
+configure_oc: ${CONFIGURE_OC}
+setup_dns_ecs: ${SETUP_DNS_ECS}
 
 # DATAGEN
 datagen_as_a_service: ${DATAGEN_AS_A_SERVICE}

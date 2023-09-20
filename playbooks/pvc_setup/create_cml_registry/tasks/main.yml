@@ -205,7 +205,7 @@
 # Get ozone S3 API key
 - name: Get ozone S3 API key
   shell: |
-    kinit -kt /home/francois/francois.keytab francois
+    "kinit -kt /home/{{ default_admin_user }}/{{ default_admin_user }}.keytab {{ default_admin_user }}"
     ozone s3 getsecret --om-service-id={{ ozone_service_id }}
   register: s3_api_output
 

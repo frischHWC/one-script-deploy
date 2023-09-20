@@ -1,7 +1,4 @@
 {
-    "id": "1",
-    "guid": "...",
-    "isEnabled": true,
     "version": 1,
     "service": "cm_hdfs",
     "name": "Audit and tmp policies for internal users",
@@ -45,8 +42,7 @@
           "knox",
           "yarn",
           "atlas",
-          "ozone",
-          "francois"
+          "ozone"
         ],
         "groups": [
           "hadoop"

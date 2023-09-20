@@ -34,6 +34,7 @@ export DEMO="false"
 
 # Auth & Log
 export DEFAULT_PASSWORD="Cloudera1234"
+export DEFAULT_ADMIN_USER="francois"
 export DEBUG="false"
 export LOG_DIR="/tmp/deploy_to_cloudcat_logs/"$(date +%m-%d-%Y-%H-%M-%S)
 
@@ -55,9 +56,9 @@ export ENCRYPTION_ACTIVATED="false"
 # Versions
 export CM_VERSION="7.11.3"
 export CDH_VERSION="7.1.9.0"
-export CSA_VERSION="1.10.0.0"
+export CSA_VERSION="1.11.0.0"
 export CFM_VERSION="2.1.6.0"
-export SPARK3_VERSION="3.3.7180.0"
+export SPARK3_VERSION="3.3.7180.14"
 export WXM_VERSION="2.3.0"
 export PVC_VERSION="1.5.1"
 export AMBARI_VERSION="2.7.5.0"
@@ -134,7 +135,7 @@ export DATAGEN_REPO_URL="https://github.com/frischHWC/datagen"
 export DATAGEN_REPO_BRANCH="main"
 export DATAGEN_REPO_PARCEL=""
 export DATAGEN_CSD_URL=""
-export DATAGEN_VERSION="0.4.9"
+export DATAGEN_VERSION="0.4.10"
 export EDGE_HOST=""
 
 # Demo
@@ -217,6 +218,7 @@ function usage()
     echo ""
     echo ""
     echo "  --default-password=$DEFAULT_PASSWORD : (Optional) Password used for UIs (Default) $DEFAULT_PASSWORD "
+    echo "  --default-admin-user=$DEFAULT_ADMIN_USER : (Optional) User setup with its keytab and rights on all services (It has default password) (Default) $DEFAULT_ADMIN_USER "
     echo ""
     echo "  --ansible-host-file=$ANSIBLE_HOST_FILE : (Optional) The path to ansible hosts file (Default) $ANSIBLE_HOST_FILE "
     echo "  --ansible-all-file=$ANSIBLE_ALL_FILE : (Optional) The path to ansible all file  (Default) $ANSIBLE_ALL_FILE"
@@ -398,6 +400,9 @@ while [ "$1" != "" ]; do
         --default-password)
             DEFAULT_PASSWORD=$VALUE
             ;;  
+        --default-admin-user)
+            DEFAULT_ADMIN_USER=$VALUE
+            ;; 
         --ansible-host-file)
             ANSIBLE_HOST_FILE=$VALUE
             ;;
@@ -720,6 +725,26 @@ then
         export ANSIBLE_ALL_FILE="ansible-cdp/all"
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp/extra_vars.yml"
+    elif [ "${CLUSTER_TYPE}" = "streaming" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdp-streaming/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-streaming/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-streaming/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-streaming/extra_vars.yml"
+        export USE_SPARK3="true"
+        export USE_CSA="true"
+        export USE_CFM="true"
+        export CLUSTER_NAME_STREAMING="${CLUSTER_NAME}-stream"
+    elif [ "${CLUSTER_TYPE}" = "all-services" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdp-all-services/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-all-services/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-all-services/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-all-services/extra_vars.yml"
+        export USE_CSA="true"
+        export USE_CFM="true"
+        export USE_SPARK3="true"
+        export ENCRYPTION_ACTIVATED="true"  
     elif [ "${CLUSTER_TYPE}" = "all-services-pvc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc/hosts"
@@ -733,21 +758,6 @@ then
         export FREE_IPA="true"
         export PVC_TYPE="OC"
         export ENCRYPTION_ACTIVATED="true"  
-        export CM_VERSION="7.10.1"
-    elif [ "${CLUSTER_TYPE}" = "all-services-pvc-no-stream" ]
-    then
-        export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc-no-stream/hosts"
-        export ANSIBLE_ALL_FILE="ansible-cdp-all-services-pvc-no-stream/all"
-        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-all-services-pvc-no-stream/cluster.yml"
-        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-all-services-pvc-no-stream/extra_vars.yml"
-        export USE_CSA="true"
-        export USE_CFM="true"
-        export USE_SPARK3="true"
-        export PVC="true"
-        export FREE_IPA="true"
-        export PVC_TYPE="OC"
-        export ENCRYPTION_ACTIVATED="true"  
-        export CM_VERSION="7.10.1"
     elif [ "${CLUSTER_TYPE}" = "all-services-pvc-ecs" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc-ecs/hosts"
@@ -761,7 +771,6 @@ then
         export FREE_IPA="true"
         export PVC_TYPE="ECS"
         export ENCRYPTION_ACTIVATED="true"
-        export CM_VERSION="7.10.1"
     elif [ "${CLUSTER_TYPE}" = "pvc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-pvc/hosts"
@@ -770,7 +779,6 @@ then
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-pvc/extra_vars.yml"
         export PVC="true"
         export FREE_IPA="true"
-        export CM_VERSION="7.10.1"
     elif [ "${CLUSTER_TYPE}" = "pvc-oc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-pvc-oc/hosts"
@@ -780,33 +788,6 @@ then
         export PVC="true"
         export PVC_TYPE="OC"
         export FREE_IPA="true"
-        export CM_VERSION="7.10.1"
-    elif [ "${CLUSTER_TYPE}" = "streaming" ]
-    then
-        export ANSIBLE_HOST_FILE="ansible-cdp-streaming/hosts"
-        export ANSIBLE_ALL_FILE="ansible-cdp-streaming/all"
-        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-streaming/cluster.yml"
-        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-streaming/extra_vars.yml"
-        export USE_SPARK3="true"
-        export USE_CSA="true"
-        export USE_CFM="true"
-        export CLUSTER_NAME_STREAMING="${CLUSTER_NAME}-stream"
-    elif [ "${CLUSTER_TYPE}" = "full-enc-pvc" ]
-    then
-        export ANSIBLE_HOST_FILE="ansible-cdp-full-enc-pvc/hosts"
-        export ANSIBLE_ALL_FILE="ansible-cdp-full-enc-pvc/all"
-        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-full-enc-pvc/cluster.yml"
-        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-full-enc-pvc/extra_vars.yml"
-        export USE_CSA="true"
-        export USE_CFM="true"
-        export USE_SPARK3="true"
-        export PVC="true"
-        export FREE_IPA="true"
-        export PVC_TYPE="OC"
-        export ENCRYPTION_ACTIVATED="true"
-        export ENCRYPTION_HA="true"
-        export CLUSTER_NAME_STREAMING="${CLUSTER_NAME}-stream"
-        export CM_VERSION="7.10.1"
     elif [ "${CLUSTER_TYPE}" = "wxm" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-wxm/hosts"
@@ -817,6 +798,8 @@ then
         export USER_CREATION="false"
         export DATA_LOAD="false"
         export FREE_IPA="false"
+        export CM_VERSION="7.7.1"
+        export CDH_VERSION="7.1.8.0"
     elif [ "${CLUSTER_TYPE}" = "cdh6" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdh-6/hosts"
@@ -1024,8 +1007,8 @@ fi
 if [ "${DISTRIBUTION_TO_DEPLOY}" = "CDP" ] && [ -z ${DATAGEN_CSD_URL} ] && [ -z ${DATAGEN_REPO_PARCEL} ]
 then
     echo " Will guess Datagen Parcel Repo and CSD from Version"
-    export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/parcels/${DATAGEN_VERSION}/${CDH_VERSION}/"
-    export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/csd/${DATAGEN_VERSION}/${CDH_VERSION}/DATAGEN-${DATAGEN_VERSION}.${CDH_VERSION}.jar"
+    export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/${DATAGEN_VERSION}/${CDH_VERSION}/parcels/"
+    export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/${DATAGEN_VERSION}/${CDH_VERSION}/csd/DATAGEN-${DATAGEN_VERSION}.${CDH_VERSION}.jar"
 fi
 
 # Set HDP/Ambari repository 
@@ -1902,9 +1885,9 @@ fi
 if [ "${KERBEROS}" = "true" ] && [ "${USER_CREATION}" = "true" ]
 then
     echo ""
-    echo " Some Kerberos users have been created and their keytabs are on all machines in /home/<username>/, such as /home/francois/ "
+    echo " Some Kerberos users have been created and their keytabs are on all machines in /home/<username>/, such as /home/${DEFAULT_ADMIN_USER}/ "
     echo " Their keytabs have been retrieved locally in ~/cluster-${CLUSTER_NAME}/ and the krb5.conf has been copied in ~/cluster-${CLUSTER_NAME}/ also, allowing you to directly kinit from your computer with: "
-    echo "      env KRB5_CONFIG=~/cluster-${CLUSTER_NAME}/krb5.conf kinit -kt ~/cluster-${CLUSTER_NAME}/francois.keytab francois"
+    echo "      env KRB5_CONFIG=~/cluster-${CLUSTER_NAME}/krb5.conf kinit -kt ~/cluster-${CLUSTER_NAME}/${DEFAULT_ADMIN_USER}.keytab ${DEFAULT_ADMIN_USER}"
     echo ""
 fi
 echo ""

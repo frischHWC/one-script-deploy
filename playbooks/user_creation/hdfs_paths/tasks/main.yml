@@ -17,8 +17,8 @@
 # under the License.
 #
 ---
-- name: Kinit as francois who is admin_user
-  shell: kinit -kt /home/francois/francois.keytab francois
+- name: Kinit as default admin_user
+  shell: "kinit -kt /home/{{ default_admin_user }}/{{ default_admin_user }}.keytab {{ default_admin_user }}"
 
 - name: Create HDFS paths
   shell: | 

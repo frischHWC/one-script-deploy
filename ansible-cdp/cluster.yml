@@ -20,7 +20,7 @@
 clusters:
   - name: "{{ cluster_name }}"
     # Remove undesired services below
-    services: [ATLAS, CRUISE_CONTROL, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, KUDU, LIVY, OMID, OOZIE, OZONE, PHOENIX, QUEUEMANAGER, RANGER, SCHEMAREGISTRY, SOLR, SPARK_ON_YARN, STREAMS_MESSAGING_MANAGER, TEZ, YARN, ZOOKEEPER]
+    services: [ATLAS, CRUISE_CONTROL, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, KUDU, LIVY, OMID, OOZIE, OZONE, PHOENIX, QUEUEMANAGER, QUERY_PROCESSOR, RANGER, SCHEMAREGISTRY, SOLR, SPARK_ON_YARN, STREAMS_MESSAGING_MANAGER, TEZ, YARN, ZOOKEEPER]
     security:
       kerberos: "{{ kerberos_activated }}"
     repositories:
@@ -47,7 +47,7 @@ clusters:
         SERVICEWIDE:
           hbase_restserver_security_authentication: "{{ hbase_auth }}"
           hadoop_secure_web_ui: "{{ kerberos_activated }}"
-          hbase_superuser: "francois"
+          hbase_superuser: "{{ default_admin_user }}"
         REGIONSERVER:  
           hbase_regionserver_wal_codec: org.apache.hadoop.hbase.regionserver.wal.IndexedWALEditCodec
 
@@ -88,6 +88,10 @@ clusters:
         IMPALAD:
           scratch_dirs: /tmp/impala
           enable_audit_event_log: true
+
+      INFRA_SOLR:
+        SERVICEWIDE:
+          enable_ranger_authorization: true
 
       KAFKA:
         KAFKA_CONNECT: # Change below accordingly to right name of servers 
@@ -151,7 +155,7 @@ clusters:
           ranger.usersync.group.objectclass: "groupofnames"
           ranger.usersync.group.nameattribute: "cn"
           ranger.usersync.group.memberattributename: "member"
-          ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:u:admin_user&ROLE_SYS_ADMIN:u:francois"
+          ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:u:admin_group&ROLE_SYS_ADMIN:u:{{ default_admin_user }}"
 
       SCHEMAREGISTRY:
         SERVICEWIDE:
@@ -159,6 +163,7 @@ clusters:
           database_host: "{{ groups.db_server | first | default(omit) }}"
           database_type: "{{ database_type }}"
           database_port: "{{ database_type | default_database_port }}" 
+          
       STREAMS_MESSAGING_MANAGER:
         SERVICEWIDE:
           smm_database_password: "{{ database_default_password }}"
@@ -166,13 +171,12 @@ clusters:
           smm_database_host: "{{ groups.db_server | first | default(omit) }}"
           smm_database_port: "{{ database_type | default_database_port }}"
         STREAMS_MESSAGING_MANAGER_SERVER:  
-          kafka.connect.host: "{{  groups.cluster_worker_no_hadoop | first | default(omit) }}"
           kafka.connect.protocol: "{{ kafka_connect_protocol }}"
-          kafka.connect.port: "{{ kafka_connect_port }}"
+          kafka.connect.hostports: "{{ groups.cluster_worker_no_hadoop | first | default(omit) }}:{{ kafka_connect_port }}"
 
       YARN:
         SERVICEWIDE:
-          yarn_admin_acl: "${yarn_user},francois"
+          yarn_admin_acl: "${yarn_user},{{ default_admin_user }}"
         RESOURCEMANAGER:
           yarn_scheduler_maximum_allocation_mb: 24576
           yarn_scheduler_maximum_allocation_vcores: 12
@@ -270,6 +274,7 @@ clusters:
         RANGER: [RANGER_TAGSYNC, RANGER_USERSYNC]
         SCHEMAREGISTRY: [GATEWAY]
         QUEUEMANAGER: [QUEUEMANAGER_STORE, QUEUEMANAGER_WEBAPP]
+        QUERY_PROCESSOR: [QUERY_PROCESSOR]
         SOLR: [GATEWAY]
         SPARK_ON_YARN: [GATEWAY]
         #SPARK3_ON_YARN: [SPARK3_YARN_HISTORY_SERVER, GATEWAY]

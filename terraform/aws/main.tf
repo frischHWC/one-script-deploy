@@ -80,8 +80,7 @@ resource "aws_security_group" "${CLUSTER_NAME}_external_security_group" {
   name_prefix = "${CLUSTER_NAME}-"
   
   vpc_id = aws_vpc.${CLUSTER_NAME}_vpc.id
-  
-  # TODO: Add a list of ports instead of all of them
+
    ingress {
     from_port   = 22
     to_port     = 22
@@ -89,12 +88,39 @@ resource "aws_security_group" "${CLUSTER_NAME}_external_security_group" {
     cidr_blocks = ["${WHITELIST_IP}/32"] 
   }
 
+  # For CM
   ingress {
     from_port   = 7183
     to_port     = 7183
     protocol    = "tcp"   
     cidr_blocks = ["${WHITELIST_IP}/32"] 
   }
+
+  # For Ranger
+  ingress {
+    from_port   = 6182
+    to_port     = 6182
+    protocol    = "tcp"   
+    cidr_blocks = ["${WHITELIST_IP}/32"] 
+  }
+
+  # For Knox
+  ingress {
+    from_port   = 8443
+    to_port     = 8443
+    protocol    = "tcp"   
+    cidr_blocks = ["${WHITELIST_IP}/32"] 
+  }
+
+  # For Datagen
+  ingress {
+    from_port   = 4242
+    to_port     = 4242
+    protocol    = "tcp"   
+    cidr_blocks = ["${WHITELIST_IP}/32"] 
+  }
+
+  # Add a list of ports instead of all of them
 
   egress {
     from_port   = 0

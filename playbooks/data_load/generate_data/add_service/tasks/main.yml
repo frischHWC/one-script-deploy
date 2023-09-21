@@ -40,6 +40,31 @@
     msg: "{{ edge_host_id }}"
   when: debug | default(false)
 
+
+- name: Get All services from CM
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_all_services
+
+- set_fact:
+    ranger_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'RANGER'].name | [0]"
+
+- name: DEBUG - ranger_service_name
+  debug:
+    msg: "{{ ranger_service_name }}"
+  when: debug | default(false)
+
+
 - name: Add Datagen service to CM
   uri:
     url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services"
@@ -180,6 +205,18 @@
 - name: Restart of CMS to acknowledge new service 
   uri:
     url: "{{ cloudera_manager_api_url }}/cm/service/commands/restart"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+
+
+- name: Restart of Ranger  
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ ranger_service_name }}/commands/restart"
     user: "{{ cloudera_manager_user }}"
     password: "{{ cloudera_manager_password }}"
     method: POST

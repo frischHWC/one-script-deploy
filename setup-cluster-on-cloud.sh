@@ -34,14 +34,14 @@ export AWS_ACCESS_KEY_ID=""
 export AWS_SECRET_ACCESS_KEY=""
 export KEY_PAIR_NAME=""
 export WHITELIST_IP=""
-export AMI_ID="ami-0341a0c9349e07252"
+export AMI_ID="ami-0618721d17eff62b0"
 export REGION="eu-west-3"
 
 # To get info on deployments to make (nodes, sizes)
 export FREE_IPA="false"
 export ENCRYPTION_ACTIVATED="false"
-export MASTER_COUNT=3
-export WORKER_COUNT=3
+export MASTER_COUNT=0
+export WORKER_COUNT=0
 export WORKER_STREAM_COUNT=0
 export ECS_MASTER_COUNT=0
 export ECS_WORKER_COUNT=0
@@ -59,6 +59,8 @@ export IPA_DISK_SIZE="64"
 export KTS_DISK_SIZE="32"
 export ECS_MASTER_DISK_SIZE="128"
 export ECS_WORKER_DISK_SIZE="256"
+export OS="rhel"
+export OS_VERSION="8.8"
 # TODO: Add configuration of Domain Name
 export DOMAIN_NAME=""
 
@@ -113,6 +115,8 @@ function usage()
     echo "  --kts-disk-size=$KTS_DISK_SIZE : (Optional)   (Default) $KTS_DISK_SIZE"
     echo "  --ecs-master-disk-size=$ECS_MASTER_DISK_SIZE : (Optional)   (Default) $ECS_MASTER_DISK_SIZE"
     echo "  --ecs-worker-disk-size=$ECS_WORKER_DISK_SIZE : (Optional)   (Default) $ECS_WORKER_DISK_SIZE"
+    echo "  --os=$OS : (Optional) OS to use (Default) $OS"
+    echo "  --os-version=$OS_VERSION : (Optional) OS version to use (Default) $OS_VERSION" 
     echo ""
     echo "  --debug=$DEBUG : (Optional) To activate debug "
     echo "  --apply-cloud-machine-prereqs=$APPLY_CLOUD_MACHINES_PREREQUISITES : (Optional) To apply or not cloud machiens prerequisites specific to each cloud provider (Default) $APPLY_CLOUD_MACHINES_PREREQUISITES"
@@ -236,7 +240,13 @@ while [ "$1" != "" ]; do
             ;;
         --ecs-worker-disk-size)
             ECS_WORKER_DISK_SIZE=$VALUE
-            ;;         
+            ;;
+        --os)
+            OS=$VALUE
+            ;;
+        --os-version)
+            OS_VERSION=$VALUE
+            ;;        
         *)
             ;;
     esac
@@ -284,7 +294,7 @@ then
     then
         if [ "${MASTER_COUNT}" = 0 ]
         then
-            export MASTER_COUNT=3
+            export MASTER_COUNT=4
         fi
         if [ "${WORKER_COUNT}" = 0 ]
         then
@@ -298,7 +308,7 @@ then
     then
         if [ "${MASTER_COUNT}" = 0 ]
         then
-            export MASTER_COUNT=3
+            export MASTER_COUNT=4
         fi
         if [ "${WORKER_COUNT}" = 0 ]
         then
@@ -321,7 +331,7 @@ then
     then
         if [ "${MASTER_COUNT}" = 0 ]
         then
-            export MASTER_COUNT=3
+            export MASTER_COUNT=4
         fi
         if [ "${WORKER_COUNT}" = 0 ]
         then
@@ -340,7 +350,7 @@ then
     then
         if [ "${MASTER_COUNT}" = 0 ]
         then
-            export MASTER_COUNT=3
+            export MASTER_COUNT=4
         fi
         if [ "${WORKER_COUNT}" = 0 ]
         then
@@ -393,7 +403,7 @@ then
     then
         if [ "${MASTER_COUNT}" = 0 ]
         then
-            export MASTER_COUNT=3
+            export MASTER_COUNT=4
         fi
         if [ "${WORKER_COUNT}" = 0 ]
         then
@@ -681,6 +691,11 @@ then
             # Setup /etc/hosts with new hostname
             scp -i ${PRIVATE_KEY_PATH} ${TF_INTERNAL_HOSTS_FILE} ${INITIAL_NODE_USER}@${NODES[$i]}:/tmp/internal_etc_hosts
             ssh -i ${PRIVATE_KEY_PATH} root@${NODES[$i]} "sudo cat /tmp/internal_etc_hosts >> /etc/hosts"
+            # Setup Fake rhel to avoid CM rejections of nodes
+            if [ "${OS_VERSION}" == "8.8" ] && [ "${OS}" == "rhel" ] ; then
+              ssh -i ${PRIVATE_KEY_PATH} root@${NODES[$i]} "sudo echo 'Red Hat Enterprise Linux release 8.8 (Ootpa)' > /etc/redhat-release"
+              ssh -i ${PRIVATE_KEY_PATH} root@${NODES[$i]} "sudo echo 'ID=\"rhel\"' >> /etc/os-release"
+            fi
         fi
 
     done
@@ -693,7 +708,7 @@ echo "Launching Setup of cluster"
 
 ./setup-cluster.sh ${ALL_PARAMETERS} \
   --node-user='root' \
-  --node-key=${PRIVATE_KEY_PATH} \
+  --node-key="${PRIVATE_KEY_PATH}" \
   --nodes-base="${BASE_MASTERS} ${BASE_WORKERS} ${BASE_WORKERS_STREAM}" \
   --node-ipa="${FREE_IPA_NODE}" \
   --nodes-kts="${KTS_NODE}" \

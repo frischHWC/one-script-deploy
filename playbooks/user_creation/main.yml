@@ -17,76 +17,76 @@
 # under the License.
 #
 ---
-# - name: Create Unix users on all machines
-#   hosts: cluster
-#   gather_facts: false
-#   strategy: free
-#   tasks: 
-#     - name: create Unix User
-#       include_role:
-#         name: unix_users
-#       with_items: "{{ users }}"
-#       vars:
-#         user: "{{ item }}"
-#       when: not free_ipa
+- name: Create Unix users on all machines
+  hosts: cluster
+  gather_facts: false
+  strategy: free
+  tasks: 
+    - name: create Unix User
+      include_role:
+        name: unix_users
+      with_items: "{{ users }}"
+      vars:
+        user: "{{ item }}"
+      when: not free_ipa
 
-# - name: Create Free IPA users 
-#   hosts: main
-#   gather_facts: false
-#   tasks: 
-#     - name: create FreeIPA User
-#       include_role:
-#         name: free_ipa_users
-#       with_items: "{{ users }}"
-#       vars:
-#         user: "{{ item }}"
-#       when: free_ipa
+- name: Create Free IPA users 
+  hosts: main
+  gather_facts: false
+  tasks: 
+    - name: create FreeIPA User
+      include_role:
+        name: free_ipa_users
+      with_items: "{{ users }}"
+      vars:
+        user: "{{ item }}"
+      when: free_ipa
 
-# - name: Create User's directories on all machines
-#   hosts: cluster
-#   gather_facts: false
-#   strategy: free
-#   tasks: 
-#     - name: create User's directory
-#       include_role:
-#         name: users_directories
-#       with_items: "{{ users }}"
-#       vars:
-#         user: "{{ item }}"
+- name: Create User's directories on all machines
+  hosts: cluster
+  gather_facts: false
+  strategy: free
+  tasks: 
+    - name: create User's directory
+      include_role:
+        name: users_directories
+      with_items: "{{ users }}"
+      vars:
+        user: "{{ item }}"
 
-# - name: Create keytab for user & fetch them to local machine
-#   hosts: main
-#   gather_facts: false
-#   tasks: 
-#     - name: create User's keytab
-#       include_role:
-#         name: users_keytabs
-#       with_items: "{{ users }}"
-#       vars:
-#         user: "{{ item }}"
+- name: Create keytab for user & fetch them to local machine
+  hosts: main
+  gather_facts: false
+  tasks: 
+    - name: create User's keytab
+      include_role:
+        name: users_keytabs
+      with_items: "{{ users }}"
+      vars:
+        user: "{{ item }}"
 
-# - name: Push created keytabs to all machines
-#   hosts: cluster
-#   gather_facts: false
-#   strategy: free
-#   tasks: 
-#     - name: Push keytab to all machines
-#       include_role:
-#         name: push_users_keytab
-#       with_items: "{{ users }}"
-#       vars:
-#         user: "{{ item }}"
+- name: Push created keytabs to all machines
+  hosts: cluster
+  gather_facts: false
+  strategy: free
+  tasks: 
+    - name: Push keytab to all machines
+      include_role:
+        name: push_users_keytab
+      with_items: "{{ users }}"
+      vars:
+        user: "{{ item }}"
 
-# - name: Create users environment
-#   hosts: edge
-#   gather_facts: false
-#   tasks: 
-#     - name: create User's env
-#       include_role:
-#         name: hdfs_paths
-#       with_items: "{{ users }}"
-#       vars:
-#         user: "{{ item }}"
+- name: Create users environment
+  hosts: edge
+  gather_facts: false
+  tasks: 
+    - name: create User's env
+      include_role:
+        name: hdfs_paths
+      with_items: "{{ users }}"
+      vars:
+        user: "{{ item }}"
 
 - name: Create users' Ranger Policies
   hosts: edge

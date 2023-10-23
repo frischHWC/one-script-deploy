@@ -1071,7 +1071,7 @@ do
         SSHKey=`ssh-keyscan ${NODES[$i]} 2> /dev/null`
         echo $SSHKey >> ~/.ssh/known_hosts
         echo $SSHKey >> ${KNOWN_HOSTS}
-        IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES[$i]} | cut -d' ' -f1)
+        IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES[$i]} | head -n1 | cut -d' ' -f1)
         if [ -z "${IP_ADRESS_SOLVED}" ]
         then
             IP_ADRESS_SOLVED=$( dig +short ${NODES[$i]} )
@@ -1092,7 +1092,7 @@ then
         SSHKey=`ssh-keyscan ${NODE_IPA} 2> /dev/null`
         echo $SSHKey >> ~/.ssh/known_hosts
         echo $SSHKey >> ${KNOWN_HOSTS}
-        IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODE_IPA} | cut -d' ' -f1)
+        IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODE_IPA} | head -n1 | cut -d' ' -f1)
         if [ -z ${IP_ADRESS_SOLVED} ]
         then
             IP_ADRESS_SOLVED=$( dig +short ${NODE_IPA} )
@@ -1121,7 +1121,7 @@ then
             SSHKey=`ssh-keyscan ${NODES_KTS_SORTED[$i]} 2> /dev/null`
             echo $SSHKey >> ~/.ssh/known_hosts
             echo $SSHKey >> ${KNOWN_HOSTS}
-            IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES_KTS_SORTED[$i]} | cut -d' ' -f1)
+            IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES_KTS_SORTED[$i]} | head -n1 | cut -d' ' -f1)
             if [ -z ${IP_ADRESS_SOLVED} ]
             then
                 IP_ADRESS_SOLVED=$( dig +short ${NODES_KTS_SORTED[$i]} )
@@ -1146,7 +1146,7 @@ then
             SSHKey=`ssh-keyscan ${NODES_PVC_ECS_SORTED[$i]} 2> /dev/null`
             echo $SSHKey >> ~/.ssh/known_hosts
             echo $SSHKey >> ${KNOWN_HOSTS}
-            IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES_PVC_ECS_SORTED[$i]} | cut -d' ' -f1)
+            IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES_PVC_ECS_SORTED[$i]} | head -n1 | cut -d' ' -f1)
             if [ -z ${IP_ADRESS_SOLVED} ]
             then
                 IP_ADRESS_SOLVED=$( dig +short ${NODES_PVC_ECS_SORTED[$i]} )

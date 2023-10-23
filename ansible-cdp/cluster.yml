@@ -75,6 +75,8 @@ clusters:
         HIVEMETASTORE:
           hive_enable_db_notification: true
           hive_metastore_delegation_token_store: org.apache.hadoop.hive.thrift.DBTokenStore
+        SERVICEWIDE:
+          ranger_security_safety_valve: "<property><name>xasecure.hive.uri.permission.coarse.check</name><value>true</value></property>"
 
       HIVE_ON_TEZ:
         HIVESERVER2:
@@ -101,6 +103,7 @@ clusters:
         SERVICEWIDE:
           knox_encryptquerystring_secret: "{{ default_password }}"
           knox_hadoop_auth_config_signature_secret: "{{ default_password }}"
+          conf/gateway-site.xml_service_safety_valve: <property><name>knox.homepage.logout.enabled</name><value>true</value></property>
         KNOX_GATEWAY:
           gateway_knox_admin_groups: admin_group
           gateway_master_secret: "{{ default_password }}"

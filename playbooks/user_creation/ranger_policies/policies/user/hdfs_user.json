@@ -9,7 +9,7 @@
     "resources": {
       "path": {
         "values": [
-          "/user/{{ user }}",
+          "/user/{{ user.name }}",
           "/tmp"
         ],
         "isExcludes": false,
@@ -33,7 +33,7 @@
           }
         ],
         "users": [
-          "{{ user }}"
+          "{{ user.name }}"
         ],
         "groups": [
         ],

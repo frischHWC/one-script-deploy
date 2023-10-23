@@ -56,7 +56,7 @@ export MASTER_DISK_SIZE="128"
 export WORKER_DISK_SIZE="512"
 export WORKER_STREAM_DISK_SIZE="128"
 export IPA_DISK_SIZE="64"
-export KTS_DISK_SIZE="32"
+export KTS_DISK_SIZE="64"
 export ECS_MASTER_DISK_SIZE="128"
 export ECS_WORKER_DISK_SIZE="256"
 export OS="rhel"
@@ -304,6 +304,21 @@ then
         then
             export WORKER_STREAM_COUNT=3
         fi
+    elif [ "${CLUSTER_TYPE}" = "all-services" ]
+    then
+        if [ "${MASTER_COUNT}" = 0 ]
+        then
+            export MASTER_COUNT=4
+        fi
+        if [ "${WORKER_COUNT}" = 0 ]
+        then
+            export WORKER_COUNT=3
+        fi
+        if [ "${WORKER_STREAM_COUNT}" = 0 ]
+        then
+            export WORKER_STREAM_COUNT=3
+        fi
+        export ENCRYPTION_ACTIVATED="true"
     elif [ "${CLUSTER_TYPE}" = "all-services-pvc" ]
     then
         if [ "${MASTER_COUNT}" = 0 ]
@@ -314,38 +329,12 @@ then
         then
             export WORKER_COUNT=3
         fi
-        export FREE_IPA="true"
-        if [ "${ECS_MASTER_COUNT}" = 0 ]
-        then
-            export ECS_MASTER_COUNT=1
-        fi
-        if [ "${ECS_WORKER_COUNT}" = 0 ]
-        then
-            export ECS_WORKER_COUNT=2
-        fi
         if [ "${WORKER_STREAM_COUNT}" = 0 ]
         then
             export WORKER_STREAM_COUNT=3
         fi
-    elif [ "${CLUSTER_TYPE}" = "all-services-pvc-no-stream" ]
-    then
-        if [ "${MASTER_COUNT}" = 0 ]
-        then
-            export MASTER_COUNT=4
-        fi
-        if [ "${WORKER_COUNT}" = 0 ]
-        then
-            export WORKER_COUNT=3
-        fi
+        export ENCRYPTION_ACTIVATED="true"
         export FREE_IPA="true"
-        if [ "${ECS_MASTER_COUNT}" = 0 ]
-        then
-            export ECS_MASTER_COUNT=1
-        fi
-        if [ "${ECS_WORKER_COUNT}" = 0 ]
-        then
-            export ECS_WORKER_COUNT=2
-        fi
     elif [ "${CLUSTER_TYPE}" = "all-services-pvc-ecs" ]
     then
         if [ "${MASTER_COUNT}" = 0 ]
@@ -360,6 +349,7 @@ then
         then
             export WORKER_STREAM_COUNT=3
         fi
+        export ENCRYPTION_ACTIVATED="true"
         export FREE_IPA="true"
         if [ "${ECS_MASTER_COUNT}" = 0 ]
         then
@@ -408,30 +398,6 @@ then
         if [ "${WORKER_COUNT}" = 0 ]
         then
             export WORKER_COUNT=3
-        fi
-        if [ "${WORKER_STREAM_COUNT}" = 0 ]
-        then
-            export WORKER_STREAM_COUNT=3
-        fi
-    elif [ "${CLUSTER_TYPE}" = "full-enc-pvc" ]
-    then
-        if [ "${MASTER_COUNT}" = 0 ]
-        then
-            export MASTER_COUNT=3
-        fi
-        if [ "${WORKER_COUNT}" = 0 ]
-        then
-            export WORKER_COUNT=3
-        fi
-        export ENCRYPTION_ACTIVATED="true"
-        export FREE_IPA="true"
-        if [ "${ECS_MASTER_COUNT}" = 0 ]
-        then
-            export ECS_MASTER_COUNT=1
-        fi
-        if [ "${ECS_WORKER_COUNT}" = 0 ]
-        then
-            export ECS_WORKER_COUNT=2
         fi
         if [ "${WORKER_STREAM_COUNT}" = 0 ]
         then

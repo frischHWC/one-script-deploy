@@ -17,6 +17,12 @@
 # under the License.
 #
 ---
+# Pre-requisites for DATAGEN (installation of jq)
+- name: Install jq (required package)
+  package:
+    name: jq
+    state: present
+
 
 # CSD
 

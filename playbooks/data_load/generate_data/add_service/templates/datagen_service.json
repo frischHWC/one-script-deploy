@@ -5,7 +5,7 @@
                 "tags" : [ ],
                 "name" : "datagen",
                 "type" : "DATAGEN",
-                "serviceVersion" : "CDH {{ cdp_version }}",
+                "serviceVersion" : "CDH {{ cdp_version[:5] }}",
                 "displayName" : "Datagen",
                 "roles": [
                     {

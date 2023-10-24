@@ -67,6 +67,7 @@ export DOMAIN_NAME=""
 # For Debugging
 export DEBUG="false"
 export APPLY_CLOUD_MACHINES_PREREQUISITES="true"
+export TF_BASE_WORK_DIR="/tmp"
 
 
 function usage()
@@ -120,6 +121,7 @@ function usage()
     echo ""
     echo "  --debug=$DEBUG : (Optional) To activate debug "
     echo "  --apply-cloud-machine-prereqs=$APPLY_CLOUD_MACHINES_PREREQUISITES : (Optional) To apply or not cloud machiens prerequisites specific to each cloud provider (Default) $APPLY_CLOUD_MACHINES_PREREQUISITES"
+    echo "  --tf-base-work-dir=$TF_BASE_WORK_DIR : (Optional) To change the default base working directory of terraform (Default) ${TF_BASE_WORK_DIR} "
     echo ""
     echo " <ALL_OTHER_PARAMETERS_TO_SETUP_CLUSTER_SCRIPT> : Add all other Parameters "
     echo ""
@@ -246,6 +248,9 @@ while [ "$1" != "" ]; do
             ;;
         --os-version)
             OS_VERSION=$VALUE
+            ;; 
+        --tf-base-work-dir)
+            TF_BASE_WORK_DIR=$VALUE
             ;;        
         *)
             ;;
@@ -486,7 +491,7 @@ export TF_FILE_TEMPLATE_PATH="terraform/${TF_FILE_TEMPLATE_NAME}"
 export TF_TEMPLATE_HOSTS_FILE_PATH="terraform/${TF_FILE_TEMPLATE_NAME}/hosts.tpl"
 export TF_TEMPLATE_INTERNAL_HOSTS_FILE_PATH="terraform/${TF_FILE_TEMPLATE_NAME}/hosts_internal.tpl"
 
-export TF_WORK_DIR="/tmp/terraform_${CLUSTER_NAME}"
+export TF_WORK_DIR="${TF_BASE_WORK_DIR}/terraform_${CLUSTER_NAME}"
 export TF_HOSTS_FILE=${TF_WORK_DIR}/etc_hosts
 export TF_INTERNAL_HOSTS_FILE=${TF_WORK_DIR}/internal_etc_hosts
 export CURRENT_DIR=$(pwd)

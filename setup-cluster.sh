@@ -135,7 +135,7 @@ export DATAGEN_REPO_URL="https://github.com/frischHWC/datagen"
 export DATAGEN_REPO_BRANCH="main"
 export DATAGEN_REPO_PARCEL=""
 export DATAGEN_CSD_URL=""
-export DATAGEN_VERSION="0.4.10"
+export DATAGEN_VERSION="0.4.11"
 export EDGE_HOST=""
 
 # Demo
@@ -811,7 +811,7 @@ then
         export CDH_VERSION="6.3.4"
         export TLS="false"
         export DATA_LOAD="false"
-        export DATABASE_VERSION="10"
+        export DATABASE_VERSION="12"
     elif [ "${CLUSTER_TYPE}" = "cdh6-enc-stream" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdh6-enc-stream/hosts"
@@ -824,7 +824,7 @@ then
         export TLS="true"
         export ENCRYPTION_ACTIVATED="true"
         export DATA_LOAD="false"
-        export DATABASE_VERSION="10"
+        export DATABASE_VERSION="12"
     elif [ "${CLUSTER_TYPE}" = "cdh5" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdh-5/hosts"
@@ -837,7 +837,7 @@ then
         export TLS="false"
         export DATA_LOAD="false"
         export POST_INSTALL="false"
-        export DATABASE_VERSION="10"
+        export DATABASE_VERSION="12"
     elif [ "${CLUSTER_TYPE}" = "hdp2" ]
     then
         export ANSIBLE_HOST_FILE="ansible-hdp-2/hosts"

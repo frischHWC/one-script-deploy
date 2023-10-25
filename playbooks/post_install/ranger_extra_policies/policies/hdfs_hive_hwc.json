@@ -1,0 +1,75 @@
+{
+    "version": 1,
+    "service": "cm_hdfs",
+    "name": "Policy fo Users on HWC staging Directory",
+    "policyType": 0,
+    "policyPriority": 0,
+    "description": "",
+    "isAuditEnabled": true,
+    "resources": {
+      "path": {
+        "values": [
+          "/tmp/staging/hwc/*/{USER}"
+        ],
+        "isExcludes": false,
+        "isRecursive": true
+      }
+    },
+    "policyItems": [
+      {
+        "accesses": [
+          {
+            "type": "read",
+            "isAllowed": true
+          },
+          {
+            "type": "write",
+            "isAllowed": true
+          },
+          {
+            "type": "execute",
+            "isAllowed": true
+          }
+        ],
+        "users": [
+          "{USER}"
+        ],
+        "groups": [
+        ],
+        "roles": [
+          
+        ],
+        "conditions": [
+          
+        ],
+        "delegateAdmin": true
+      }
+    ],
+    "denyPolicyItems": [
+      
+    ],
+    "allowExceptions": [
+      
+    ],
+    "denyExceptions": [
+      
+    ],
+    "dataMaskPolicyItems": [
+      
+    ],
+    "rowFilterPolicyItems": [
+      
+    ],
+    "serviceType": "hdfs",
+    "options": {
+      
+    },
+    "validitySchedules": [
+      
+    ],
+    "policyLabels": [
+      
+    ],
+    "zoneName": "",
+    "isDenyAllElse": false
+  }

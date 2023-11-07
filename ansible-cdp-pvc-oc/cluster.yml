@@ -30,6 +30,7 @@ clusters:
         ATLAS_SERVER:
           atlas_admin_password: "{{ default_password }}"
           atlas_authentication_method_file: true
+          conf/atlas-application.properties_role_safety_valve: "atlas.proxyuser.dpprofiler.hosts=*\natlas.proxyuser.dpprofiler.users=*\natlas.proxyuser.dpprofiler.groups=*"
       HBASE:
         SERVICEWIDE:
           hbase_restserver_security_authentication: "{{ hbase_auth }}"
@@ -106,6 +107,8 @@ clusters:
           ranger.usersync.group.nameattribute: "cn"
           ranger.usersync.group.memberattributename: "member"
           ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:u:admin_group&ROLE_SYS_ADMIN:u:{{ default_admin_user }}"
+        RANGER_ADMIN:
+          conf/ranger-admin-site.xml_role_safety_valve: "<property><name>ranger.proxyuser.dpprofiler.hosts</name><value>*</value></property><property><name>ranger.proxyuser.dpprofiler.users</name><value>*</value></property><property><name>ranger.proxyuser.dpprofiler.groups</name><value>*</value></property>"
       SPARK_ON_YARN:
         SERVICEWIDE:
           atlas_service: "atlas"

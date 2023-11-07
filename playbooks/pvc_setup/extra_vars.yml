@@ -170,7 +170,7 @@ user_rights:
     roles: [ "EnvironmentAdmin", "EnvironmentUser", "IamUser", "IamViewer", "PowerUser" ] # Optionnal: Used to define "admin" roles on CP for this user
     envs: 
       - name: "{{ cluster_name_pvc }}-env"
-        roles: [ "DEAdmin", "DEUser", "DWAdmin", "DWUser", "MLAdmin", "MLUser" ]
+        roles: [ "DEAdmin", "DEUser", "DWAdmin", "DWUser", "MLAdmin", "MLUser", "DataCatalogCspRuleManager", "DataCatalogCspRuleViewer" ]
     workspaces: # Optionnal: If not defined no keytab pushed to workspace
       - name: "{{ cluster_name_pvc }}-workspace-1" 
         env_name: "{{ cluster_name_pvc }}-env"

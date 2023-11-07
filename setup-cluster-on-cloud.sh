@@ -530,19 +530,18 @@ terraform init
 terraform validate
 terraform apply -auto-approve
 
-# TODO: Should we use internal names provided automatically by AWS ? (no renaming?)
-# TODO: Should we use a jumphost or keep using host where this is launched ? (Better is option 1)
-# TODO: Should we setup PTR records (publicly available?) ?
-# TODO: Should we setup wildcard for public route53 to point to ECS master ?
 
 # Get Terraform output
 export VPC_ID=$(terraform output -json vpc_id | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
 export BASE_MASTERS=$(terraform output -json masters | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
 terraform output ip_hosts_masters >> ${TF_HOSTS_FILE}
 terraform output ip_internal_hosts_masters >> ${TF_INTERNAL_HOSTS_FILE}
+export MASTER_IDS=$(terraform output -json masters_ids | jq -r '.[0] | @sh ' | sort | uniq)
 export BASE_WORKERS=$(terraform output -json workers | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
 terraform output ip_hosts_workers >> ${TF_HOSTS_FILE}
 terraform output ip_internal_hosts_workers >> ${TF_INTERNAL_HOSTS_FILE}
+export WORKER_IDS=$(terraform output -json workers_ids | jq -r '.[0] | @sh ' | sort | uniq)
+
 
 export FREE_IPA_NODE=""
 if [ ${FREE_IPA} = "true" ]
@@ -550,6 +549,7 @@ then
     export FREE_IPA_NODE=$(terraform output -json ipa | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
     terraform output ip_hosts_ipa >> ${TF_HOSTS_FILE}
     terraform output ip_internal_hosts_ipa >> ${TF_INTERNAL_HOSTS_FILE}
+    export IPA_IDS=$(terraform output -json ipa_ids | jq -r '.[0] | @sh ' | sort | uniq)
 fi
 
 export KTS_NODE=""
@@ -558,6 +558,7 @@ then
     export KTS_NODE=$(terraform output -json kts | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
     terraform output ip_hosts_kts >> ${TF_HOSTS_FILE}
     terraform output ip_internal_hosts_kts >> ${TF_INTERNAL_HOSTS_FILE}
+    export KTS_IDS=$(terraform output -json kts_ids | jq -r '.[0] | @sh ' | sort | uniq)
 fi
 
 export BASE_WORKERS_STREAM=""
@@ -566,6 +567,7 @@ then
     export BASE_WORKERS_STREAM=$(terraform output -json workers-stream | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
     terraform output ip_hosts_worker_stream >> ${TF_HOSTS_FILE}
     terraform output ip_internal_hosts_worker_stream >> ${TF_INTERNAL_HOSTS_FILE}
+    export WORKER_STREAM_IDS=$(terraform output -json workers-stream_ids | jq -r '.[0] | @sh ' | sort | uniq)
 fi
 
 export ECS_MASTER_NODES=""
@@ -574,6 +576,7 @@ then
     export ECS_MASTER_NODES=$(terraform output -json ecs-master | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
     terraform output ip_hosts_ecs_master >> ${TF_HOSTS_FILE}
     terraform output ip_internal_hosts_ecs_master >> ${TF_INTERNAL_HOSTS_FILE}
+    export ECS_MASTER_IDS=$(terraform output -json ecs-master_ids | jq -r '.[0] | @sh ' | sort | uniq)
 fi
 
 export ECS_WORKER_NODES=""
@@ -582,7 +585,12 @@ then
     export ECS_WORKER_NODES=$(terraform output -json ecs-worker | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
     terraform output ip_hosts_ecs_worker >> ${TF_HOSTS_FILE}
     terraform output ip_internal_hosts_ecs_worker >> ${TF_INTERNAL_HOSTS_FILE}
+    export ECS_WORKER_IDS=$(terraform output -json ecs-worker_ids | jq -r '.[0] | @sh ' | sort | uniq)
 fi
+
+export MACHINE_IDS_SUM="${MASTER_IDS} ${WORKER_IDS} ${IPA_IDS} ${KTS_IDS} ${WORKER_STREAM_IDS} ${ECS_MASTER_IDS} ${ECS_WORKER_IDS}"
+export MACHINES_IDS=$(echo $MACHINE_IDS_SUM | awk '{$1=$1};1' | sed 's/ /, /g' | sed s/\'/\"/g )
+echo $MACHINES_IDS
 
 # Clean hosts file
 sed -i'' -e 's/EOT//g' ${TF_HOSTS_FILE}
@@ -593,28 +601,31 @@ sed -i'' -e 's/EOT//g' ${TF_INTERNAL_HOSTS_FILE}
 sed -i'' -e 's/\"//g' ${TF_INTERNAL_HOSTS_FILE}
 sed -i'' -e 's/\<//g' ${TF_INTERNAL_HOSTS_FILE}
 sed -i'' -e '/^$/d' ${TF_INTERNAL_HOSTS_FILE}
-export MACHINES_WITH_IPS=$(cat ${TF_HOSTS_FILE}) 
 
-if pcregrep -q -M "$MACHINES_WITH_IPS" /etc/hosts;
-then
-    echo "Cluster already exists in /etc/hosts, continuing...";
-else
-    echo ""
-    echo " Copy this to your /etc/hosts file (this requires root privileges): "
-    echo ""
-    echo "## Cluster ${CLUSTER_NAME} ##"
-    echo "${MACHINES_WITH_IPS}"
-    echo "##"
-    echo ""
-    read -p "Press Enter to continue:"
-fi
+# TODO: Remove HOSTS_FILE and use Elastic IP after
+#
+# export MACHINES_WITH_IPS=$(cat ${TF_HOSTS_FILE}) 
+
+# if pcregrep -q -M "$MACHINES_WITH_IPS" /etc/hosts;
+# then
+#     echo "Cluster already exists in /etc/hosts, continuing...";
+# else
+#     echo ""
+#     echo " Copy this to your /etc/hosts file (this requires root privileges): "
+#     echo ""
+#     echo "## Cluster ${CLUSTER_NAME} ##"
+#     echo "${MACHINES_WITH_IPS}"
+#     echo "##"
+#     echo ""
+#     read -p "Press Enter to continue:"
+# fi
 
 cd ${CURRENT_DIR}
 
 echo "Finish Provisionning Machines on the Cloud"
 
-# Sleep 5 secs to make sure all instances are well up and running
-sleep 5
+# TODO: Remove  Sleep 5 secs to make sure all instances are well up and running
+# sleep 5
 
 # Create DNS records for ALL machines
 export FIRST_MASTER_IP=$(head -1 ${TF_INTERNAL_HOSTS_FILE} | cut -d ' ' -f 1)
@@ -635,6 +646,12 @@ terraform init
 terraform validate
 terraform apply -auto-approve
 cd ${CURRENT_DIR}
+
+# TODO: Get ElasticIP and create map elasticIP -> hostname 
+exit
+
+
+
 
 # Sleep 5 secs to make sure dns records propagates
 sleep 5
@@ -667,10 +684,15 @@ then
               ssh -i ${PRIVATE_KEY_PATH} root@${NODES[$i]} "sudo echo 'Red Hat Enterprise Linux release 8.8 (Ootpa)' > /etc/redhat-release"
               ssh -i ${PRIVATE_KEY_PATH} root@${NODES[$i]} "sudo echo 'ID=\"rhel\"' >> /etc/os-release"
             fi
+            # Make a reboot of machines to make sure all previous prereqs are applied
+            ssh -i ${PRIVATE_KEY_PATH} root@${NODES[$i]} "sudo reboot"
         fi
 
     done
 fi
+
+# Sleep 10 secs to make sure all machines are up again
+sleep 10
 
 echo " Finished applying prerequisites"
 

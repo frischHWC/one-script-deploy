@@ -101,9 +101,23 @@
   when: dwx_env_status != 'Running'
 
 #  Wait for Environment to be running
+- name: Set env request query for url for PVC 1.5.1 and less
+  set_fact:
+    dwx_env_request_query_url: "/{{ dwx_env_id }}"
+  when: pvc_version is version('1.5.2', '<')
+
+- name: Set env request query for url for PVC 1.5.2+
+  set_fact:
+    dwx_env_request_query_url: "?environmentCrn={{ dwx_env_id }}"
+  when: pvc_version is version('1.5.2', '>=')
+
+- name: DEBUG - dwx_env_request_query_url
+  debug:
+    msg: "{{ dwx_env_request_query_url }}"
+
 - name: Check Environment running
   uri:
-    url: "{{ dwx_endpoint_api }}/environments/{{ dwx_env_id }}"
+    url: "{{ dwx_endpoint_api }}/environments{{ dwx_env_request_query_url }}"
     method: GET
     headers: 
       Content-Type: application/json

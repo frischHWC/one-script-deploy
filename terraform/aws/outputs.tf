@@ -40,6 +40,43 @@ output "ecs-worker" {
   description = "Hostname of ECS Workers"
 }
 
+# Machines Ids
+output "masters_ids" {
+  value       = [aws_instance.${CLUSTER_NAME}-master.*.id]
+  description = "Ids of masters"
+}
+
+output "workers_ids" {
+  value       = [aws_instance.${CLUSTER_NAME}-worker.*.id]
+  description = "Ids of workers"
+}
+
+output "workers-stream_ids" {
+  value       = [aws_instance.${CLUSTER_NAME}-worker-stream.*.id]
+  description = "Ids of workers"
+}
+
+output "ipa_ids" {
+  value       = [aws_instance.${CLUSTER_NAME}-ipa.*.id]
+  description = "Ids of IPA"
+}
+
+output "kts_ids" {
+  value       = [aws_instance.${CLUSTER_NAME}-kts.*.id]
+  description = "Ids of KTS"
+}
+
+output "ecs-master_ids" {
+  value       = [aws_instance.${CLUSTER_NAME}-ecs-master.*.id]
+  description = "Ids of ECS Masters"
+}
+
+output "ecs-worker_ids" {
+  value       = [aws_instance.${CLUSTER_NAME}-ecs-worker.*.id]
+  description = "Ids of ECS Workers"
+}
+
+
 
 # For external /etc/hosts file use
 output "ip_hosts_masters" {

@@ -31,6 +31,7 @@ export AWS_SECRET_ACCESS_KEY=""
 
 # For Debugging
 export DEBUG="false"
+export TF_BASE_WORK_DIR="/tmp"
 
 
 function usage()
@@ -49,6 +50,7 @@ function usage()
     echo "  --aws-secret-access-key=$AWS_SECRET_ACCESS_KEY : Mandatory to get access to AWS account"
     echo ""
     echo "  --debug=$DEBUG : (Optional) To activate debug "
+    echo "  --tf-base-work-dir=$TF_BASE_WORK_DIR : (Optional) To change the default base working directory of terraform (Default) ${TF_BASE_WORK_DIR} "
     echo ""
 }
 
@@ -81,6 +83,9 @@ while [ "$1" != "" ]; do
         --aws-secret-access-key)
             AWS_SECRET_ACCESS_KEY=$VALUE
             ;;
+        --tf-base-work-dir)
+            TF_BASE_WORK_DIR=$VALUE
+            ;;
         *)
             ;;
     esac
@@ -88,7 +93,7 @@ while [ "$1" != "" ]; do
 done
 
 # Setup Variables for execution of terraform
-export TF_WORK_DIR="/tmp/terraform_${CLUSTER_NAME}"
+export TF_WORK_DIR="${TF_BASE_WORK_DIR}/terraform_${CLUSTER_NAME}"
 export CURRENT_DIR=$(pwd)
 
 # Print Env variables

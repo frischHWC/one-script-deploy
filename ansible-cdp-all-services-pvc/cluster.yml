@@ -44,6 +44,7 @@ clusters:
           atlas_admin_password: "{{ default_password }}"
           atlas_authentication_method_file: true
           atlas_solr_replication_factor: 2
+          conf/atlas-application.properties_role_safety_valve: "atlas.proxyuser.dpprofiler.hosts=*\natlas.proxyuser.dpprofiler.users=*\natlas.proxyuser.dpprofiler.groups=*"
       
       FLINK:
         FLINK_HISTORY_SERVER:
@@ -172,6 +173,7 @@ clusters:
           rangertagsync_user_password: "{{ default_password }}"
           rangerusersync_user_password: "{{ default_password }}"
         RANGER_ADMIN:
+          conf/ranger-admin-site.xml_role_safety_valve: "<property><name>ranger.proxyuser.dpprofiler.hosts</name><value>*</value></property><property><name>ranger.proxyuser.dpprofiler.users</name><value>*</value></property><property><name>ranger.proxyuser.dpprofiler.groups</name><value>*</value></property>"
           ranger.audit.solr.no.replica: 2
           ranger.audit.solr.max.shards.per.node: 2
         RANGER_USERSYNC:

@@ -4,6 +4,32 @@ One script to rule them all: CDP / CDP Private Cloud / CDH / HDP !
 
 Given some machines, this script will **setup** all pre-requisites, **Install**, **Configure** a fully **secure** cluster and **Load Data** into it.
 
+## Table of tested Deployments
+
+[.stripes-even, cols="1,1,2,1,1,1,1,4"]
+|===
+|SUCCESS |Cluster-Type |Cluster Version |OS Version |Database |KDC |TLS |Comment 
+
+| &#10003;
+| cdh-5
+| CDH 5.16 & CM 5.16.2
+| CENTOS 7.6
+| Postgres 12
+| MIT KDC
+| False
+| 
+
+| &#10003;
+| cdh-6
+| CDH 6.3.4 & CM 6.3.4
+| CENTOS 7.6
+| Postgres 12
+| MIT KDC
+| False
+| 
+
+|===
+
 ## Requirements
 
 Launch the script ```requirements.sh``` to enable all requirements before launching the full script.

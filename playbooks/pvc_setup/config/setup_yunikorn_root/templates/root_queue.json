@@ -1,0 +1,42 @@
+{
+  "pool": {
+    "path": "root.default",
+    "quota": {
+      "memory": "{{ yunikorn_root_queue.mem }}",
+      "cpu": "{{ yunikorn_root_queue.cpu }}",
+      "nvidia.com/gpu": "{{ yunikorn_root_queue.gpu }}"
+    },
+    "guaranteedResources": {
+      
+    },
+    "owners": [
+      
+    ],
+    "admins": [
+      
+    ],
+    "policy": {
+      "validity": "NEVER EXPIRES",
+      "allocation": {
+        "distribution": "ELASTIC",
+        "order": "FIFO",
+        "queueing": false
+      }
+    },
+    "metadata": {
+      
+    },
+    "scheduling": {
+      "preemption": {
+        "enabled": true,
+        "fence": false,
+        "delay": 30
+      },
+      "priority": {
+        "enabled": true,
+        "fence": false,
+        "offset": 0
+      }
+    }
+  }
+}

@@ -106,6 +106,8 @@ export SETUP_DNS_ECS="true"
 export PVC_APP_DOMAIN=""
 export PVC_ECO_RESOURCES="false"
 export SETUP_PVC_TOOLS="false"
+export ECS_SSD_DEDICATED_NODES=""
+export ECS_GPU_DEDICATED_NODES=""
 
 # External CSD
 export USE_CSA="false"
@@ -281,6 +283,8 @@ function usage()
     echo "  --create-cml-registry=$CREATE_CML_REGISTRY Optional, used to auto setup a CML Registry if PVC is deployed (Default) $CREATE_CML_REGISTRY"
     echo "  --create-viz=$CREATE_VIZ Optional, used to auto setup a Data Viz if PVC is deployed (Default) $CREATE_VIZ"
     echo "  --pvc-eco-resources=$PVC_ECO_RESOURCES : (Optional) To reduce footprint of pvc deployment by making a mini-small cluster (Default) $PVC_ECO_RESOURCES"
+    echo "  --ecs-gpu-dedicated-nodes=$ECS_GPU_DEDICATED_NODES : (Optional) To specify an ECS node that will be tainted for only GPU Use (assuming it has GPU) (Default) $ECS_GPU_DEDICATED_NODES"
+    echo "  --ecs-ssd-dedicated-nodes=$ECS_SSD_DEDICATED_NODES : (Optional) To specify an ECS node that will be tainted for only SSD Use for CDW (isolating CDW workloads also) (Default) $ECS_SSD_DEDICATED_NODES"
     echo ""
     echo "  --install-repo-url=$INSTALL_REPO_URL : (Optional) Install repo URL (Default) $INSTALL_REPO_URL  "
     echo "  --ansible-repo-dir=$ANSIBLE_REPO_DIR : (Optional) Directory where install repo will be deployed (Default) $ANSIBLE_REPO_DIR "
@@ -565,6 +569,12 @@ while [ "$1" != "" ]; do
         --pvc-eco-resources)
             PVC_ECO_RESOURCES=$VALUE
             ;;  
+        --ecs-gpu-dedicated-nodes)
+            ECS_GPU_DEDICATED_NODES=$VALUE
+            ;;
+        --ecs-ssd-dedicated-nodes)
+            ECS_SSD_DEDICATED_NODES=$VALUE
+            ;;
         --setup-pvc-tools)
             SETUP_PVC_TOOLS=$VALUE
             ;;  
@@ -1449,8 +1459,13 @@ then
         ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; export CLOUD_TO_USE=static ; export INVENTORY_TO_USE=hosts ; bash install_cluster.sh' > ${LOG_DIR}/deployment.log
     else
         echo "******* Installing required packages *******"
-        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-galaxy install -r requirements.yml --force ; ansible-galaxy collection install -r requirements.yml --force" > ${LOG_DIR}/deployment.log 2>&1
-        
+        if [ "${USE_ANSIBLE_PYTHON_3}" == "true" ]
+        then
+            ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; export PYTHON_PATH=/usr/bin/python3 ; ansible-galaxy install -r requirements.yml --force ; ansible-galaxy collection install -r requirements.yml --force" > ${LOG_DIR}/deployment.log 2>&1
+        else
+            ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-galaxy install -r requirements.yml --force ; ansible-galaxy collection install -r requirements.yml --force" > ${LOG_DIR}/deployment.log 2>&1
+        fi
+
         ################################################
         ######## Installation of CDP step by step in order to be able to track installation #######
         ################################################
@@ -1722,6 +1737,10 @@ fi
 if [ "${PVC}" = "true" ] && [ "${INSTALL_PVC}" = "true" ]
 then
     echo "############ Creating PvC cluster ############" 
+    if [ "${DEBUG}" = "true" ]
+    then
+        echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml pvc.yml ${ANSIBLE_PYTHON_3_PARAMS}"
+    fi
     echo " Follow progression in: ${LOG_DIR}/pvc_deployment.log "
     ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml pvc.yml ${ANSIBLE_PYTHON_3_PARAMS}" > ${LOG_DIR}/pvc_deployment.log 2>&1
     OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/pvc_deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)

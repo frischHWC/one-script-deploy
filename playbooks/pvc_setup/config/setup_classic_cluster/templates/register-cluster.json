@@ -1,0 +1,28 @@
+[
+    {
+      "isWaiting": false,
+      "connectivityVersion": null,
+      "isUpgradeInProgress": false,
+      "newKeyId": null,
+      "belongsToMultiClusterManager": false,
+      "dcName": "data-center",
+      "managerUri": "{{ classic_cluster.cm_url }}",
+      "locationId": 2612,
+      "name": "{{ cluster_name }}",
+      "description": "",
+      "state": "TO_SYNC",
+      "managerAddress": "{{ cluster_cm_ip }}",
+      "allowUntrusted": true,
+      "behindGateway": false,
+      "clusterType": "CDPDC",
+      "managerType": "cloudera-manager",
+      "knoxEnabled": false,
+      "createdBy": "{{ user_to_register_crn }}",
+      "accountId": "{{ user_to_register_crn.split(':')[4] }}",
+      "properties": {
+        "tags": []
+      },
+      "username": "{{ classic_cluster.cm_user }}",
+      "password": "{{ classic_cluster.cm_password }}"
+    }
+  ]

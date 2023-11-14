@@ -1,0 +1,30 @@
+{
+  "name": "{{ virtual_cluster.name }}",
+  "config": {
+    "properties": {
+      "livy.ingress.enabled": "true",
+      "iceberg.enabled": "{{ virtual_cluster.iceberg_enabled | default('false') }}",
+      "spark.version":"{{ virtual_cluster.spark_version }}",
+      "dexapp.appTier":"{{ virtual_cluster.tier | default('tier2') }}",
+      "session.timeout":"{{ virtual_cluster.session_timeout | default('8h') }}"
+    },
+    "resources": {
+      "cpu_requests": "{{ virtual_cluster.vc_quota_cpu | default('12') }}",
+      "mem_requests": "{{ virtual_cluster.vc_quota_mem | default('32Gi') }}",
+      "gpu_requests": "{{ virtual_cluster.vc_quota_gpu | default('0') }}",
+      "gcpu_requests": "{{ virtual_cluster.vc_quota_min_cpu | default('8') }}",
+      "gmem_requests": "{{ virtual_cluster.vc_quota_min_mem | default('24Gi') }}",
+      "ggpu_requests": "{{ virtual_cluster.vc_quota_min_gpu | default('0') }}"
+    },
+    "logRetention": {
+      "enabled": {{ virtual_cluster.log_retention_enabled | default('true') }},
+      "retentionPeriod": {{ virtual_cluster.log_retention_days | default('10') }},
+      "retentionUnit": "days"
+    },
+    "chartValueOverrides":
+    {
+      "dex-app":
+        {"pipelines.enabled":"true"}
+    }
+  }
+}

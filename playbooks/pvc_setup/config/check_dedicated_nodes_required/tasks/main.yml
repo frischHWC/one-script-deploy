@@ -1,0 +1,68 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+- name: DEBUG - ecs_ssd_dedicated_nodes
+  debug:
+    msg: "{{ ecs_ssd_dedicated_nodes }}"
+  when: debug | default(false)
+
+- name: Set setup ecs ssd
+  set_fact:
+    setup_ecs_ssd: "{{ true if ecs_ssd_dedicated_nodes!=None else false }}"
+
+- name: DEBUG - setup_ecs_ssd
+  debug:
+    msg: "{{ setup_ecs_ssd }}"
+  when: debug | default(false)
+
+- name: Set ecs ssd nodes list
+  set_fact:
+    ecs_ssd_nodes_list: "{{ ecs_ssd_dedicated_nodes.split(' ') }}"
+  when: setup_ecs_ssd
+
+- name: DEBUG - ecs_ssd_nodes_list
+  debug:
+    msg: "{{ ecs_ssd_nodes_list }}"
+  when: setup_ecs_ssd and debug | default(false)
+
+
+- name: DEBUG - ecs_gpu_dedicated_nodes
+  debug:
+    msg: "{{ ecs_gpu_dedicated_nodes }}"
+  when: debug | default(false)
+
+- name: Set setup ecs gpu
+  set_fact:
+    setup_ecs_gpu: "{{ true if ecs_gpu_dedicated_nodes!=None else false }}"
+
+- name: DEBUG - setup_ecs_gpu
+  debug:
+    msg: "{{ setup_ecs_gpu }}"
+  when: debug | default(false)
+
+- name: Set ecs gpu nodes list
+  set_fact:
+    ecs_gpu_nodes_list: "{{ ecs_gpu_dedicated_nodes.split(' ') }}"
+  when: setup_ecs_gpu
+
+- name: DEBUG - ecs_gpu_nodes_list
+  debug:
+    msg: "{{ ecs_gpu_nodes_list }}"
+  when: setup_ecs_gpu and debug | default(false)
+

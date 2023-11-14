@@ -56,8 +56,13 @@ pvc_eco_resources: ${PVC_ECO_RESOURCES}
 setup_pvc_tools: ${SETUP_PVC_TOOLS}
 pvc_app_domain: ${PVC_APP_DOMAIN}
 default_admin_user: ${DEFAULT_ADMIN_USER}
+ecs_ssd_dedicated_nodes: ${ECS_SSD_DEDICATED_NODES}
+ecs_gpu_dedicated_nodes: ${ECS_GPU_DEDICATED_NODES}
 
+
+##################### 
 # Environments
+##################### 
 environments:
   - name: "{{ cluster_name_pvc }}-env"
     cm_address: "https://{{ cloudera_manager_host }}:{{ cloudera_manager_port }}/"
@@ -66,10 +71,13 @@ environments:
     cluster_names: "{{ cluster_name }}"
     to_delete: false
 
+##################### 
 # CDW
+##################### 
 local_block_storage_class: ocs-storagecluster-ceph-rbd
 delegation_username: admin
 delegation_password: "{{ ipa_bind_password }}"
+setup_server_settings: true
 
 warehouses: 
   - name: "hive-1-{{ cluster_name }}"
@@ -77,21 +85,38 @@ warehouses:
     env_name: "{{ cluster_name_pvc }}-env"
     low_resource_mode: true
     type: "hive" 
+    # Optional
     size: "xsmall" # default = xsmall
+    dbc_queue: root.default.finance # default = root.default
+    vw_queue: root.default.finance # default = root.default
     min_nodes: 1 # default = 1
     max_nodes: 5 # default = 5
+    # Advanced
     auto_suspend_timeout: 300 # default = 300
     wait_time: 60 # default = 60
     disable_auto_suspend: false # default = false
+    use_dedicated_nodes: false # default = false
+    max_queries: 2 # default = 2
+    max_nodes_per_query: 4 # default = 4
+    node_count: 3 # default = 3
+    enable_query_isolation: false # default = false
+    auto_scale_type: "Wait Time" # default = Wait Time
+    query_isolation_max_queries: 0 # default = 0
+    query_isolation_max_nodes_per_query: 0 # default = 0
+    allowed_group: "admin_group" # default = ''
 
   - name: "impala-1-{{ cluster_name }}"
     database_catalog_name: "{{ cluster_name_pvc }}-env" # Since 1.5.1, DBC name should be the same than Env name
     env_name: "{{ cluster_name_pvc }}-env"
     low_resource_mode: true
     type: "impala"
+    # Optional
     size: "xsmall" # default = xsmall
+    dbc_queue: root.default.finance # default = root.default
+    vw_queue: root.default.finance # default = root.default
     min_nodes: 1 # default = 1
     max_nodes: 5 # default = 5
+    # Advanced
     auto_suspend_timeout: 300 # default = 300
     enable_ha: true # default = true
     scale_up_delay: 20 # default = 20
@@ -99,61 +124,94 @@ warehouses:
     wait_time: 60 # default = 60
     disable_auto_suspend: false # default = false
     legacy_multithreading: false # default = false
+    query_isolation_max_queries: 0 # default = 0
+    query_isolation_max_nodes_per_query: 0 # default = 0
+    allowed_group: "admin_group" # default = ''
+    ha_type: "activepassive" # default = activepassive
+    enable_catalog_ha: true # default = true
+    enable_proxy: false # default = false
+    enable_shutdown: false # default = false
+    shutdown_delay: 300 # default = 300
+    all_coordinators_active: false # default = false
+    num_active_coordinators: 2 # default = 2
 
+
+##################### 
 # Data Viz
+##################### 
 vizs:
   - name: "viz-1-{{ cluster_name }}"
     env_name: "{{ cluster_name_pvc }}-env"
     size: "small" # default = small 
-    admin_group: "admin_group" # Group that will be added to be admin and access data viz
+    queue: root.default.finance # default = root.default
+    admin_group: "admin_group" # (WARNING: It must exists in Control Plane) Group that will be added to be admin and access data viz
+    user_group: "admin_group" # (WARNING: It must exists in Control Plane) Group that will be added to access data viz
 
+##################### 
 # CML
+##################### 
+oc_nfs_storage_class: ocs-storagecluster-cephfs
 workspaces:
   - name: "{{ cluster_name_pvc }}-workspace-1"
     env_name: "{{ cluster_name_pvc }}-env"
+    # Optional
     disable_tls: false # default = false
     enable_monitoring: true # default = true
     enable_governance: true # default = false
     enable_model_metrics: true # default = false
     static_sub_domain: workspace1 # default = ''
     nfs_disk_size: 100 # default = 1000 (It is in GiB, so 1000 = 1 TiB)
+    nfs_storage_class: longhorn # default = longhorn (change it if running on OC)
+    ml_gov_principal: mlgov # default = mlgov
 
 ml_registries:
   - name: "mlr"
     env_name: "{{ cluster_name_pvc }}-env"
 
 
+##################### 
 # CDE
+##################### 
 virtual_clusters:
   - name: "spark-3-{{ cluster_name }}"
     env_name: "{{ cluster_name_pvc }}-env"
     cde_service_name: "cde-service-1"
     spark_version: "3.2.3" # From 1.5.1, it is 3.2.3, From 1.4.1, it is 3.2.1, before it is 3.2.0
+    # Optional
     tier: tier-2 # default = tier-2
     session_timeout: 8h # default = 8h
+    iceberg_enabled: true # default = false
+    queue: root.default.industry # default = root.default
     service_pool_quota_cpu: 32 # default = 32
     service_pool_quota_mem: 100Gi # default = 100Gi
+    service_pool_quota_gpu: 0 # default = 0
     service_base_quota_cpu: 8 # default = 8
     service_base_quota_mem: 20Gi # default = 20Gi
+    service_base_quota_gpu: 0 # default = 0
     vc_quota_cpu: 24 # default = 12
     vc_quota_mem: 96Gi # default = 32Gi
+    vc_quota_gpu: 0 # default = 0
     vc_quota_min_cpu: 16 # default = 8
     vc_quota_min_mem: 48Gi # default = 24Gi
+    vc_quota_min_gpu: 0 # default = 0
+    log_retention_enabled: true # default = true
+    log_retention_days: 30 # default = 10
 
   - name: "spark-2-{{ cluster_name }}"
     env_name: "{{ cluster_name_pvc }}-env"
     cde_service_name: "cde-service-1"
     spark_version: "2.4.7"
-    tier: tier-2 # default = tier-2
-    session_timeout: 8h # default = 8h
-    service_pool_quota_cpu: 32 # default = 32
-    service_pool_quota_mem: 100Gi # default = 100Gi
-    service_base_quota_cpu: 8 # default = 8
-    service_base_quota_mem: 20Gi # default = 20Gi
-    vc_quota_cpu: 16 # default = 12
-    vc_quota_mem: 48Gi # default = 32Gi
-    vc_quota_min_cpu: 8 # default = 8 
-    vc_quota_min_mem: 32Gi # default = 24Gi
+    tier: tier-2 
+    session_timeout: 8h 
+    queue: root.default.customer
+    service_pool_quota_cpu: 32 
+    service_pool_quota_mem: 100Gi
+    service_base_quota_cpu: 8
+    service_base_quota_mem: 20Gi
+    vc_quota_cpu: 16
+    vc_quota_mem: 48Gi
+    vc_quota_min_cpu: 8
+    vc_quota_min_mem: 32Gi
 
 # Below user/password is used to authentify against a CDE Service to download CDE tools (it only needs to be a valid LDAP user)
 cde_user: ${DEFAULT_ADMIN_USER} 
@@ -162,15 +220,17 @@ cde_password: ${DEFAULT_PASSWORD}
 ozone_user_keytab: /home/${DEFAULT_ADMIN_USER}/${DEFAULT_ADMIN_USER}.keytab
 ozone_user: ${DEFAULT_ADMIN_USER}
 
-# Rights
+##################### 
+# User's Rights
+##################### 
 user_rights:
   - name: ${DEFAULT_ADMIN_USER}
     keytab: /home/${DEFAULT_ADMIN_USER}/${DEFAULT_ADMIN_USER}.keytab # Used if defined to push keytab to CML and CDE
     password: ${DEFAULT_PASSWORD}
-    roles: [ "EnvironmentAdmin", "EnvironmentUser", "IamUser", "IamViewer", "PowerUser" ] # Optionnal: Used to define "admin" roles on CP for this user
+    roles: [ "EnvironmentAdmin", "EnvironmentUser", "IamUser", "IamViewer", "DataCatalogCspRuleManager", "DataCatalogCspRuleViewer", "PowerUser" ] # Optionnal: Used to define "admin" roles on CP for this user
     envs: 
       - name: "{{ cluster_name_pvc }}-env"
-        roles: [ "DEAdmin", "DEUser", "DWAdmin", "DWUser", "MLAdmin", "MLUser", "DataCatalogCspRuleManager", "DataCatalogCspRuleViewer" ]
+        roles: [ "DEAdmin", "DEUser", "DWAdmin", "DWUser", "MLAdmin", "MLUser"]
     workspaces: # Optionnal: If not defined no keytab pushed to workspace
       - name: "{{ cluster_name_pvc }}-workspace-1" 
         env_name: "{{ cluster_name_pvc }}-env"
@@ -182,18 +242,68 @@ user_rights:
         env_name: "{{ cluster_name_pvc }}-env"
         cde_service_name: "cde-service-1"
   - name: batman
-    keytab: /home/batman/batman.keytab # Used if defined to push keytab to CML and CDE
+    keytab: /home/batman/batman.keytab 
     password: ${DEFAULT_PASSWORD}
     roles: [ "EnvironmentUser", "IamUser" ]
     envs: 
       - name: "{{ cluster_name_pvc }}-env"
         roles: [ "DEUser", "DWUser",  "MLUser" ]
-    virtual_clusters: # Optionnal: If not defined no keytab pushed to cde
+    virtual_clusters:
       - name: "spark-3-{{ cluster_name }}"
         env_name: "{{ cluster_name_pvc }}-env"
         cde_service_name: "cde-service-1"
       - name: "spark-2-{{ cluster_name }}"
         env_name: "{{ cluster_name_pvc }}-env"
         cde_service_name: "cde-service-1"
-    
-    
+
+#####################   
+# Yunikorn Queues
+#####################  
+setup_yunikorn_queues: true
+yunikorn_root_queue:
+  mem: 1T
+  cpu: 1000
+  gpu: 0
+
+yunikorn_child_queues:
+  - name: finance # Required
+    # Optional
+    mem_max: 500G # Optionnal default to 100G
+    cpu_max: 250 # Optionnal defautl to 25
+    gpu_max: 0 # Optionnal defautl to 0
+    mem_guaranteed: 200G # Optionnal defautl to 100G
+    cpu_guaranteed: 100 # Optionnal defautl to 25
+    gpu_guaranteed: 0 # Optionnal defautl to 0
+    # Advanced
+    validity: NEVER EXPIRES # Optionnal defautl to NEVER EXPIRES
+    elasticity: INELASTIC # Optionnal defautl to INELASTIC
+    preemption: true # Optionnal defautl to true
+    preemption_fencing: false # Optionnal defautl to false
+    preemption_delay: 30 # Optionnal defautl to 30
+    priority: true # Optionnal defautl to true
+    priority_fencing: false # Optionnal defautl to false
+    priority_offset: 0 # Optionnal defautl to 0
+
+  - name: customer
+    mem_max: 250G
+    cpu_max: 150
+    mem_guaranteed: 100G
+    cpu_guaranteed: 50 
+
+  - name: industry
+    mem_max: 350G
+    cpu_max: 300
+    mem_guaranteed: 150G
+    cpu_guaranteed: 100 
+
+
+#####################   
+# Classic Clusters
+#####################  
+setup_classic_clusters: true
+
+classic_clusters:
+ - cm_url: "https://${NODE_0}:7183"
+   cm_user: admin
+   cm_password: admin
+   user_to_register: admin 

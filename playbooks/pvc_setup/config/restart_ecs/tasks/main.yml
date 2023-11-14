@@ -1,0 +1,83 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+- name: Get All Services
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name_pvc }}/services/"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: pvc_all_services
+
+- set_fact:
+    ecs_service_name: "{{ pvc_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'ECS'].name | [0]"
+
+- name: DEBUG - ecs_service_name
+  debug:
+    msg: "{{ ecs_service_name }}"
+  when: debug | default(false)
+
+- name: Restart ECS cluster
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name_pvc }}/services/{{ ecs_service_name }}/commands/restart"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: ecs_answer_command
+
+- name: DEBUG - ecs_answer_command
+  debug:
+    msg: "{{ ecs_answer_command }}"
+  when: debug | default(false)
+
+- set_fact:
+    restart_command_id: "{{ ecs_answer_command.json | community.general.json_query(query) }}"
+  vars:
+    query: "id"
+
+- name: DEBUG - restart_command_id
+  debug:
+    msg: "{{ restart_command_id }}"
+  when: debug | default(false)
+
+- name: Check ECS restart finished
+  uri:
+    url: "{{ cloudera_manager_api_url }}/commands/{{ restart_command_id }}"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    method: GET
+  register: command_status
+  until: command_status.json.active == false
+  retries: 120
+  delay: 30

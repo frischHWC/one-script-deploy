@@ -6,11 +6,147 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 
 ## Table of tested Deployments
 
-[.stripes-even, cols="1,1,2,1,1,1,1,4"]
+[.stripes-even, cols="1,1,4,1,1,1,1,4"]
 |===
-|SUCCESS |Cluster-Type |Cluster Version |OS Version |Database |KDC |TLS |Comment 
+|SUCCESS |Type |Versions |OS |DB |KDC |TLS |Comment 
 
-| &#10003;
+| 
+| cdp-basic
+| CDH 7.1.9.2 & CM 7.11.3.2
+| CENTOS 7.9
+| Postgres 14
+| MIT KDC
+| True
+| 
+
+| 
+| cdp-basic-enc
+| CDH 7.1.9.2 & CM 7.11.3.2
+| CENTOS 7.9
+| Postgres 14
+| MIT KDC
+| True
+| 
+
+| 
+| cdp-all-services
+| CDH 7.1.9.2 & CM 7.11.3.2
+| CENTOS 7.9
+| Postgres 14
+| MIT KDC
+| True
+| 
+
+| 
+| cdp-streaming
+| CDH 7.1.9.2 & CM 7.11.3.2
+| CENTOS 7.9
+| Postgres 14
+| MIT KDC
+| True
+| 
+
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+
+| 
+| cdp-pvc
+| CDH 7.1.9.2 & CM 7.11.3.2
+| CENTOS 7.9
+| Postgres 14
+| Free IPA
+| True
+| 
+
+| 
+| cdp-all-services-pvc
+| CDH 7.1.9.2 & CM 7.11.3.2
+| CENTOS 7.9
+| Postgres 14
+| Free IPA
+| True
+| 
+
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+
+| 
+| cdp-pvc-oc
+| CDH 7.1.9.2 & CM 7.11.3.2
+| CENTOS 7.9
+| Postgres 14
+| Free IPA
+| True
+| 
+
+| 
+| cdp-all-services-pvc-oc
+| CDH 7.1.9.2 & CM 7.11.3.2
+| CENTOS 7.9
+| Postgres 14
+| Free IPA
+| True
+| 
+
+
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+
+| 
+| cdp-wxm
+| CDH 7.1.8.0 & CM 7.7.1
+| CENTOS 7.9
+| Postgres 14
+| MIT KDC
+| True
+| 
+
+| 
+| cdp-717
+| CDH 7.1.7.2026 & CM 7.6.7
+| CENTOS 7.9
+| Postgres 14
+| MIT KDC
+| True
+| 
+
+| 
+| hdp-2
+| HDP 2.6.5.0 & Ambari 2.6.2.2
+| CENTOS 7.6
+| Postgres 12
+| MIT KDC
+| False
+| 
+
+| 
+| hdp-3
+| HDP 3.1.5.6091 & Ambari 2.7.5.0
+| CENTOS 7.6
+| MySQL
+| MIT KDC
+| False
+| 
+
+| 
 | cdh-5
 | CDH 5.16 & CM 5.16.2
 | CENTOS 7.6
@@ -19,7 +155,7 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | False
 | 
 
-| &#10003;
+| 
 | cdh-6
 | CDH 6.3.4 & CM 6.3.4
 | CENTOS 7.6
@@ -29,6 +165,9 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | 
 
 |===
+
+__Successful installation are marked with a &#10003; in SUCCESS column__
+
 
 ## Requirements
 

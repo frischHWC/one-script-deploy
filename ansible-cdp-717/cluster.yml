@@ -20,7 +20,7 @@
 clusters:
   - name: "{{ cluster_name }}"
     # Remove undesired services below
-    services: [ATLAS, CRUISE_CONTROL, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, KUDU, LIVY, OMID, OOZIE, OZONE, PHOENIX, QUEUEMANAGER, QUERY_PROCESSOR, RANGER, SCHEMAREGISTRY, SOLR, SPARK_ON_YARN, STREAMS_MESSAGING_MANAGER, TEZ, YARN, ZOOKEEPER]
+    services: [ATLAS, CRUISE_CONTROL, DAS, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, KUDU, LIVY, OMID, OOZIE, OZONE, PHOENIX, QUEUEMANAGER, RANGER, SCHEMAREGISTRY, SOLR, SPARK_ON_YARN, STREAMS_MESSAGING_MANAGER, TEZ, YARN, ZEPPELIN, ZOOKEEPER]
     security:
       kerberos: "{{ kerberos_activated }}"
     repositories:
@@ -39,6 +39,10 @@ clusters:
       #  CRUISE_CONTROL_SERVER:
       #    security.protocol: "{{ kafka_protocol }}" 
 
+      DAS:
+        DAS_WEBAPP:
+          data_analytics_studio_user_authentication: "{{ das_auth }}"
+
       #FLINK:
       #  FLINK_HISTORY_SERVER:
       #    historyserver_web_port: 8182    
@@ -47,7 +51,7 @@ clusters:
         SERVICEWIDE:
           hbase_restserver_security_authentication: "{{ hbase_auth }}"
           hadoop_secure_web_ui: "{{ kerberos_activated }}"
-          hbase_superuser: "{{ default_admin_user }}"
+          hbase_superuser: "francois"
         REGIONSERVER:  
           hbase_regionserver_wal_codec: org.apache.hadoop.hbase.regionserver.wal.IndexedWALEditCodec
 
@@ -75,8 +79,6 @@ clusters:
         HIVEMETASTORE:
           hive_enable_db_notification: true
           hive_metastore_delegation_token_store: org.apache.hadoop.hive.thrift.DBTokenStore
-        SERVICEWIDE:
-          ranger_security_safety_valve: "<property><name>xasecure.hive.uri.permission.coarse.check</name><value>true</value></property>"
 
       HIVE_ON_TEZ:
         HIVESERVER2:
@@ -91,10 +93,6 @@ clusters:
           scratch_dirs: /tmp/impala
           enable_audit_event_log: true
 
-      INFRA_SOLR:
-        SERVICEWIDE:
-          enable_ranger_authorization: true
-
       KAFKA:
         KAFKA_CONNECT: # Change below accordingly to right name of servers 
           bootstrap.servers: "{{ bootstrap_servers }}"
@@ -103,7 +101,6 @@ clusters:
         SERVICEWIDE:
           knox_encryptquerystring_secret: "{{ default_password }}"
           knox_hadoop_auth_config_signature_secret: "{{ default_password }}"
-          conf/gateway-site.xml_service_safety_valve: <property><name>knox.homepage.logout.enabled</name><value>true</value></property>
         KNOX_GATEWAY:
           gateway_knox_admin_groups: admin_group
           gateway_master_secret: "{{ default_password }}"
@@ -158,7 +155,7 @@ clusters:
           ranger.usersync.group.objectclass: "groupofnames"
           ranger.usersync.group.nameattribute: "cn"
           ranger.usersync.group.memberattributename: "member"
-          ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:u:admin_group&ROLE_SYS_ADMIN:u:{{ default_admin_user }}"
+          ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:u:admin_user&ROLE_SYS_ADMIN:u:francois"
 
       SCHEMAREGISTRY:
         SERVICEWIDE:
@@ -166,7 +163,6 @@ clusters:
           database_host: "{{ groups.db_server | first | default(omit) }}"
           database_type: "{{ database_type }}"
           database_port: "{{ database_type | default_database_port }}" 
-          
       STREAMS_MESSAGING_MANAGER:
         SERVICEWIDE:
           smm_database_password: "{{ database_default_password }}"
@@ -174,12 +170,13 @@ clusters:
           smm_database_host: "{{ groups.db_server | first | default(omit) }}"
           smm_database_port: "{{ database_type | default_database_port }}"
         STREAMS_MESSAGING_MANAGER_SERVER:  
+          kafka.connect.host: "{{  groups.cluster_worker_no_hadoop | first | default(omit) }}"
           kafka.connect.protocol: "{{ kafka_connect_protocol }}"
-          kafka.connect.hostports: "{{ groups.cluster_worker_no_hadoop | first | default(omit) }}:{{ kafka_connect_port }}"
+          kafka.connect.port: "{{ kafka_connect_port }}"
 
       YARN:
         SERVICEWIDE:
-          yarn_admin_acl: "${yarn_user},{{ default_admin_user }}"
+          yarn_admin_acl: "${yarn_user},francois"
         RESOURCEMANAGER:
           yarn_scheduler_maximum_allocation_mb: 24576
           yarn_scheduler_maximum_allocation_vcores: 12
@@ -191,6 +188,11 @@ clusters:
         GATEWAY:
           mapred_submit_replication: 3
           mapred_reduce_tasks: 6    
+
+      ZEPPELIN:
+        ZEPPELIN_SERVER:
+          zeppelin.shiro.roles.block: admin=*\nfrancois=*
+          zeppelin.admin.group: francois
 
       ZOOKEEPER:
         SERVICEWIDE:
@@ -217,6 +219,7 @@ clusters:
       Master1:
         ATLAS: [ATLAS_SERVER]
         CRUISE_CONTROL: [CRUISE_CONTROL_SERVER]
+        DAS: [DAS_EVENT_PROCESSOR, DAS_WEBAPP]
         #FLINK: [FLINK_HISTORY_SERVER, GATEWAY]
         HBASE: [GATEWAY, HBASETHRIFTSERVER, HBASERESTSERVER]
         HDFS: [JOURNALNODE, GATEWAY, HTTPFS]
@@ -237,6 +240,7 @@ clusters:
         STREAMS_MESSAGING_MANAGER: [STREAMS_MESSAGING_MANAGER_UI, STREAMS_MESSAGING_MANAGER_SERVER]
         TEZ: [GATEWAY]
         YARN: [GATEWAY]
+        ZEPPELIN: [ZEPPELIN_SERVER]
         ZOOKEEPER: [SERVER]  
 
       Master2:
@@ -277,7 +281,6 @@ clusters:
         RANGER: [RANGER_TAGSYNC, RANGER_USERSYNC]
         SCHEMAREGISTRY: [GATEWAY]
         QUEUEMANAGER: [QUEUEMANAGER_STORE, QUEUEMANAGER_WEBAPP]
-        QUERY_PROCESSOR: [QUERY_PROCESSOR]
         SOLR: [GATEWAY]
         SPARK_ON_YARN: [GATEWAY]
         #SPARK3_ON_YARN: [SPARK3_YARN_HISTORY_SERVER, GATEWAY]

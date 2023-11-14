@@ -72,7 +72,7 @@ kafka_connect_protocol: ${KAFKA_CONNECT_PROTOCOL}
 kafka_connect_port: ${KAFKA_CONNECT_PORT}
 das_auth: ${DAS_AUTH}
 hbase_auth: ${HBASE_AUTH}
-bootstrap_servers: ${NODE_1}:${BOOTSTRAP_SERVERS_PORT},${NODE_2}:${BOOTSTRAP_SERVERS_PORT},${NODE_3}:${BOOTSTRAP_SERVERS_PORT}
+bootstrap_servers: ${NODE_7}:${BOOTSTRAP_SERVERS_PORT},${NODE_8}:${BOOTSTRAP_SERVERS_PORT},${NODE_9}:${BOOTSTRAP_SERVERS_PORT}
 node_infra_solr: ${NODE_3}
 
 # PVC
@@ -87,15 +87,6 @@ oc_tar_file_path: ${OC_TAR_FILE_PATH}
 pvc_ecs_server_host: ${PVC_ECS_SERVER_HOST}
 configure_oc: ${CONFIGURE_OC}
 setup_dns_ecs: ${SETUP_DNS_ECS}
-pvc_ssl_cert: "/tmp/certs/${PVC_APP_DOMAIN}-pvc.crt"
-pvc_ssl_key: "/tmp/certs/${PVC_APP_DOMAIN}-pvc.key"
-
-# Possible values to be overrided for pvc installation of ECS
-nfs_over_provisioning: 2000
-nfs_provisioned: 500
-# longhorn_replication: 2
-# ecs_longhorn_storage: /ecs/longhorn-storage
-# ecs_local_storage: /ecs/local-storage
 
 # DATAGEN
 datagen_as_a_service: ${DATAGEN_AS_A_SERVICE}

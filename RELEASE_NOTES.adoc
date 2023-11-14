@@ -1,0 +1,19 @@
+# Releases Notes
+
+## v1.0
+
+### New Features:
+
+- Support for CDP 7.1.9
+- Support for PvC 1.5.2
+- Frozen branch and versions for CDP 7.1.7 / CDH 5 & 6 / WXM
+- Refactor PvC Playbooks 
+
+### Deprecations:
+
+- CDP 7.1.7 (use cdp-717 cluster type or use tag CDP-717 of this repository)
+
+
+### WIP:
+
+- Public Cloud provisioning on AWS

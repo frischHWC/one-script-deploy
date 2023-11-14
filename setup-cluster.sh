@@ -755,12 +755,12 @@ then
         export USE_CFM="true"
         export USE_SPARK3="true"
         export ENCRYPTION_ACTIVATED="true"  
-    elif [ "${CLUSTER_TYPE}" = "all-services-pvc" ]
+    elif [ "${CLUSTER_TYPE}" = "all-services-pvc-oc" ]
     then
-        export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc/hosts"
-        export ANSIBLE_ALL_FILE="ansible-cdp-all-services-pvc/all"
-        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-all-services-pvc/cluster.yml"
-        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-all-services-pvc/extra_vars.yml"
+        export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc-oc/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-all-services-pvc-oc/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-all-services-pvc-oc/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-all-services-pvc-oc/extra_vars.yml"
         export USE_CSA="true"
         export USE_CFM="true"
         export USE_SPARK3="true"
@@ -768,12 +768,12 @@ then
         export FREE_IPA="true"
         export PVC_TYPE="OC"
         export ENCRYPTION_ACTIVATED="true"  
-    elif [ "${CLUSTER_TYPE}" = "all-services-pvc-ecs" ]
+    elif [ "${CLUSTER_TYPE}" = "all-services-pvc" ]
     then
-        export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc-ecs/hosts"
-        export ANSIBLE_ALL_FILE="ansible-cdp-all-services-pvc-ecs/all"
-        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-all-services-pvc-ecs/cluster.yml"
-        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-all-services-pvc-ecs/extra_vars.yml"
+        export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-all-services-pvc/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-all-services-pvc/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-all-services-pvc/extra_vars.yml"
         export USE_CSA="true"
         export USE_CFM="true"
         export USE_SPARK3="true"
@@ -810,6 +810,18 @@ then
         export FREE_IPA="false"
         export CM_VERSION="7.7.1"
         export CDH_VERSION="7.1.8.0"
+        export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.7.zip"
+        export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.7"
+    elif [ "${CLUSTER_TYPE}" = "cdp-717" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdp-717/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-717/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-717/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-717/extra_vars.yml"
+        export CM_VERSION="7.6.7"
+        export CDH_VERSION="7.1.7.2026"
+        export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.7.zip"
+        export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.7"
     elif [ "${CLUSTER_TYPE}" = "cdh6" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdh-6/hosts"
@@ -822,6 +834,8 @@ then
         export TLS="false"
         export DATA_LOAD="false"
         export DATABASE_VERSION="12"
+        export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.7.zip"
+        export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.7"
     elif [ "${CLUSTER_TYPE}" = "cdh6-enc-stream" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdh6-enc-stream/hosts"
@@ -835,6 +849,8 @@ then
         export ENCRYPTION_ACTIVATED="true"
         export DATA_LOAD="false"
         export DATABASE_VERSION="12"
+        export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.7.zip"
+        export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.7"
     elif [ "${CLUSTER_TYPE}" = "cdh5" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdh-5/hosts"
@@ -848,6 +864,8 @@ then
         export DATA_LOAD="false"
         export POST_INSTALL="false"
         export DATABASE_VERSION="12"
+        export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.7.zip"
+        export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.7"
     elif [ "${CLUSTER_TYPE}" = "hdp2" ]
     then
         export ANSIBLE_HOST_FILE="ansible-hdp-2/hosts"

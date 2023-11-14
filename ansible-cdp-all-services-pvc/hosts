@@ -11,10 +11,6 @@ ${NODE_4} host_template=Workers
 ${NODE_5} host_template=Workers
 ${NODE_6} host_template=Workers
 
-[cluster_worker_no_hadoop]
-${NODE_7} host_template=StreamWorkers
-${NODE_8} host_template=StreamWorkers
-${NODE_9} host_template=StreamWorkers
 
 [db_server]
 ${NODE_0}
@@ -30,12 +26,15 @@ ${CA_SERVERS}
 
 ${KRB5_SERVERS}
 
+[pvc_hosts]
+${NODES_ECS_PRINTABLE}
+
 [cluster:children]
 cluster_master_nodes
 cluster_worker_nodes
-cluster_worker_no_hadoop
 cloudera_manager
 ${KTS_SERVERS_GROUP}
+pvc_hosts
 
 [all:vars]
 tls=False

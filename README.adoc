@@ -10,7 +10,7 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 |===
 |SUCCESS |Type |Versions |OS |DB |KDC |TLS |Comment 
 
-| 
+| &#10003;
 | cdp-basic
 | CDH 7.1.9.2 & CM 7.11.3.2
 | CENTOS 7.9
@@ -19,7 +19,7 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | True
 | 
 
-| 
+| &#10003;
 | cdp-basic-enc
 | CDH 7.1.9.2 & CM 7.11.3.2
 | CENTOS 7.9
@@ -119,7 +119,7 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | True
 | 
 
-| 
+| &#10003;
 | cdp-717
 | CDH 7.1.7.2026 & CM 7.6.7
 | CENTOS 7.9
@@ -128,25 +128,7 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | True
 | 
 
-| 
-| hdp-2
-| HDP 2.6.5.0 & Ambari 2.6.2.2
-| CENTOS 7.6
-| Postgres 12
-| MIT KDC
-| False
-| 
-
-| 
-| hdp-3
-| HDP 3.1.5.6091 & Ambari 2.7.5.0
-| CENTOS 7.6
-| MySQL
-| MIT KDC
-| False
-| 
-
-| 
+| &#10003;
 | cdh-5
 | CDH 5.16 & CM 5.16.2
 | CENTOS 7.6
@@ -155,11 +137,29 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | False
 | 
 
-| 
+| &#10003;
 | cdh-6
 | CDH 6.3.4 & CM 6.3.4
 | CENTOS 7.6
 | Postgres 12
+| MIT KDC
+| False
+| 
+
+| &#10003;
+| hdp-3
+| HDP 3.1.5.6091 & Ambari 2.7.5.0
+| CENTOS 7.6
+| MySQL
+| MIT KDC
+| False
+| 
+
+| &#10003;
+| hdp-2
+| HDP 2.6.5.0 & Ambari 2.6.2.2
+| Postgres 12
+| MySQL
 | MIT KDC
 | False
 | 

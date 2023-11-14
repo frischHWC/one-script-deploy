@@ -822,6 +822,8 @@ then
         export CDH_VERSION="7.1.7.2026"
         export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.7.zip"
         export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.7"
+        export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/${DATAGEN_VERSION}/7.1.7.2000/parcels/"
+        export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/${DATAGEN_VERSION}/7.1.7.2000/csd/DATAGEN-${DATAGEN_VERSION}.7.1.7.2000.jar"
     elif [ "${CLUSTER_TYPE}" = "cdh6" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdh-6/hosts"
@@ -863,6 +865,7 @@ then
         export TLS="false"
         export DATA_LOAD="false"
         export POST_INSTALL="false"
+        export USER_CREATION="false"
         export DATABASE_VERSION="12"
         export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.7.zip"
         export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.7"
@@ -878,7 +881,8 @@ then
         export ANSIBLE_REPO_DIR="ansible-hortonworks-master"
         export DATA_LOAD="false"
         export POST_INSTALL="false"
-        export DATABASE_TYPE="postgres"
+        export USER_CREATION="false"
+        export DATABASE_TYPE="mysql"
     elif [ "${CLUSTER_TYPE}" = "hdp3" ]
     then
         export ANSIBLE_HOST_FILE="ansible-hdp-3/hosts"
@@ -888,6 +892,7 @@ then
         export ANSIBLE_REPO_DIR="ansible-hortonworks-master"
         export DATA_LOAD="false"
         export POST_INSTALL="false"
+        export USER_CREATION="false"
         export DATABASE_TYPE="mysql"
     else
         export ANSIBLE_HOST_FILE="${CLUSTER_TYPE}/hosts"

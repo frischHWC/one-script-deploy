@@ -146,6 +146,11 @@ clusters:
           nifi.web.https.port: 8080
           java.arg.2: -Xms2048m
           java.arg.3: -Xmx4096m
+          xml.authorizers.userGroupProvider.shell-user-group-provider.enabled: true
+          xml.authorizers.userGroupProvider.shell-user-group-provider.property.Exclude Groups: nifi
+          xml.authorizers.userGroupProvider.shell-user-group-provider.property.Exclude Users: nifi
+          staging/authorizers.xml_role_safety_valve: <property><name>xml.authorizers.userGroupProvider.composite-configurable-user-group-provider.property.User Group Provider 2</name><value>shell-user-group-provider</value></property>
+
 
       OOZIE:
         SERVICEWIDE:
@@ -207,9 +212,8 @@ clusters:
           smm_database_host: "{{ groups.db_server | first | default(omit) }}"
           smm_database_port: "{{ database_type | default_database_port }}"
         STREAMS_MESSAGING_MANAGER_SERVER:  
-          kafka.connect.host: "{{  groups.cluster_master_nodes | first | default(omit) }}"
           kafka.connect.protocol: "{{ kafka_connect_protocol }}"
-          kafka.connect.port: "{{ kafka_connect_port }}"
+          kafka.connect.hostports: "{{ groups.cluster_worker_no_hadoop | first | default(omit) }}:{{ kafka_connect_port }}"
           
       SQL_STREAM_BUILDER:
         STREAMING_SQL_ENGINE:
@@ -269,7 +273,7 @@ clusters:
         HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
         HUE: [HUE_SERVER, HUE_LOAD_BALANCER]
         INFRA_SOLR: [SOLR_SERVER]
-        KAFKA: [KAFKA_BROKER, KAFKA_CONNECT, GATEWAY]
+        KAFKA: [GATEWAY]
         KUDU: [KUDU_MASTER]
         LIVY_FOR_SPARK3: [GATEWAY]
         LIVY: [GATEWAY]
@@ -291,7 +295,7 @@ clusters:
         HIVE: [HIVEMETASTORE, GATEWAY]
         HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
         INFRA_SOLR: [SOLR_SERVER]
-        KAFKA: [KAFKA_BROKER, KAFKA_CONNECT, GATEWAY]
+        KAFKA: [GATEWAY]
         KUDU: [KUDU_MASTER]
         LIVY_FOR_SPARK3: [GATEWAY]
         LIVY: [LIVY_SERVER, GATEWAY]
@@ -314,7 +318,7 @@ clusters:
         HIVE_ON_TEZ: [GATEWAY]
         IMPALA: [STATESTORE, CATALOGSERVER]
         INFRA_SOLR: [SOLR_SERVER]
-        KAFKA: [KAFKA_BROKER, KAFKA_CONNECT, GATEWAY]
+        KAFKA: [GATEWAY]
         KUDU: [KUDU_MASTER]
         LIVY_FOR_SPARK3: [LIVY_SERVER_FOR_SPARK3, GATEWAY]
         LIVY: [GATEWAY]
@@ -344,13 +348,29 @@ clusters:
         KUDU: [KUDU_TSERVER]
         LIVY_FOR_SPARK3: [GATEWAY]
         LIVY: [GATEWAY]
-        NIFI: [NIFI_NODE]
         OZONE: [OZONE_DATANODE, GATEWAY]
         TEZ: [GATEWAY]
         SOLR: [SOLR_SERVER, GATEWAY]
         SPARK_ON_YARN: [GATEWAY]
         SPARK3_ON_YARN: [GATEWAY]
         YARN: [NODEMANAGER, GATEWAY]
+
+      StreamWorkers:
+        FLINK: [GATEWAY]
+        HBASE: [GATEWAY]
+        HDFS: [GATEWAY]
+        HIVE: [GATEWAY]
+        HIVE_ON_TEZ: [GATEWAY]
+        KAFKA: [KAFKA_BROKER, KAFKA_CONNECT, GATEWAY]
+        LIVY_FOR_SPARK3: [GATEWAY]
+        LIVY: [GATEWAY]
+        NIFI: [NIFI_NODE]
+        OZONE: [GATEWAY]
+        TEZ: [GATEWAY]
+        SOLR: [GATEWAY]
+        SPARK_ON_YARN: [GATEWAY]
+        SPARK3_ON_YARN: [GATEWAY]
+        YARN: [GATEWAY]
         
         
 mgmt:

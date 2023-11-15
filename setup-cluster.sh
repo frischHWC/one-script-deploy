@@ -810,8 +810,6 @@ then
         export FREE_IPA="false"
         export CM_VERSION="7.7.1"
         export CDH_VERSION="7.1.8.0"
-        export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.7.zip"
-        export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.7"
     elif [ "${CLUSTER_TYPE}" = "cdp-717" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-717/hosts"

@@ -37,7 +37,7 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | True
 | 
 
-| 
+| &#10003;
 | cdp-streaming
 | CDH 7.1.9.2 & CM 7.11.3.2
 | CENTOS 7.9
@@ -110,7 +110,7 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | 
 | 
 
-| 
+| &#10003;
 | cdp-wxm
 | CDH 7.1.8.0 & CM 7.7.1
 | CENTOS 7.9

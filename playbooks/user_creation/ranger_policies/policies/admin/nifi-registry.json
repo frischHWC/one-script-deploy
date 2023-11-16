@@ -1,0 +1,82 @@
+{
+    "version": 1,
+    "service": "{{ cluster_name }}_nifiregistry",
+    "name": "Nifi Registry for {{ user.name }}",
+    "policyType": 0,
+    "policyPriority": 0,
+    "description": "Admin Policy for user {{ user.name }}",
+    "isAuditEnabled": true,
+    "resources": {
+      "nifi-registry-resource": {
+        "values": [
+          "/buckets",
+          "/actuator",
+          "/swagger",
+          "/tenants",
+          "/proxy",
+          "/policies",
+          "{{ user.name }}_*"
+        ],
+        "isExcludes": false,
+        "isRecursive": false
+      }
+    },
+    "policyItems": [
+      {
+        "accesses": [
+          {
+            "type": "READ",
+            "isAllowed": true
+          },
+          {
+            "type": "WRITE",
+            "isAllowed": true
+          },
+          {
+            "type": "DELETE",
+            "isAllowed": true
+          }
+        ],
+        "users": [
+          "{{ user.name }}"
+        ],
+        "groups": [
+          
+        ],
+        "roles": [
+          
+        ],
+        "conditions": [
+          
+        ],
+        "delegateAdmin": true
+      }
+    ],
+    "denyPolicyItems": [
+      
+    ],
+    "allowExceptions": [
+      
+    ],
+    "denyExceptions": [
+      
+    ],
+    "dataMaskPolicyItems": [
+      
+    ],
+    "rowFilterPolicyItems": [
+      
+    ],
+    "serviceType": "nifi-registry",
+    "options": {
+      
+    },
+    "validitySchedules": [
+      
+    ],
+    "policyLabels": [
+      
+    ],
+    "zoneName": "",
+    "isDenyAllElse": false
+  }

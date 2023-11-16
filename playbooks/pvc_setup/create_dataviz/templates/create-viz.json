@@ -1,6 +1,0 @@
-{
-    "vizName":"{{ viz.name }}",
-    "tags":[],
-    "template":"{{ viz.size }}-viz",
-    "config":{"ldapGroups":["admin_group"],"ldapAdminGroups":["admin_group"]}
-}

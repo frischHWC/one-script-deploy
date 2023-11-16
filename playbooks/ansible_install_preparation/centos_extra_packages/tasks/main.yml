@@ -27,11 +27,22 @@
     src: centos-extras.repo
     dest: /etc/yum.repos.d/centos-extra-cdp-install.repo
     mode: '0744'
+  when: os_version is version('8.0', '<')
 
 - name: Enable new repo
   shell: sudo yum -q makecache -y --disablerepo='*' --enablerepo='extras'
+  when: os_version is version('8.0', '<')
 
 - name: Install centos-release-scl
   yum:
     name: centos-release-scl
     state: present
+  when: os_version is version('8.0', '<')
+
+- name: Install perl-IPC-Run
+  dnf:
+    name: perl-IPC-Run
+    state: present
+    enablerepo: powertools
+  when: os_version is version('8.0', '>=')
+

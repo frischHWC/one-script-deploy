@@ -30,11 +30,12 @@ clusters:
         ATLAS_SERVER:
           atlas_admin_password: "{{ default_password }}"
           atlas_authentication_method_file: true
+          conf/atlas-application.properties_role_safety_valve: "atlas.proxyuser.dpprofiler.hosts=*\natlas.proxyuser.dpprofiler.users=*\natlas.proxyuser.dpprofiler.groups=*"
       HBASE:
         SERVICEWIDE:
           hbase_restserver_security_authentication: "{{ hbase_auth }}"
           hadoop_secure_web_ui: "{{ kerberos_activated }}"
-          hbase_superuser: "francois"
+          hbase_superuser: "{{ default_admin_user }}"
         REGIONSERVER:  
           hbase_regionserver_wal_codec: org.apache.hadoop.hbase.regionserver.wal.IndexedWALEditCodec
       HDFS:
@@ -56,12 +57,21 @@ clusters:
           dfs_journalnode_edits_dir: /dfs/jn  
         SECONDARYNAMENODE:
           fs_checkpoint_dir_list: /dfs/snn
+      HIVE:
+        HIVEMETASTORE:
+          hive_enable_db_notification: true
+          hive_metastore_delegation_token_store: org.apache.hadoop.hive.thrift.DBTokenStore 
+        SERVICEWIDE:
+          ranger_security_safety_valve: "<property><name>xasecure.hive.uri.permission.coarse.check</name><value>true</value></property>"
       HIVE_ON_TEZ:
         HIVESERVER2:
           hive_server2_transport_mode: "all"
       HUE:
         SERVICEWIDE:
           auth_backend: desktop.auth.backend.KnoxSpnegoDjangoBackend
+      INFRA_SOLR:
+        SERVICEWIDE:
+          enable_ranger_authorization: true
       KNOX:
         SERVICEWIDE:
           knox_encryptquerystring_secret: "{{ default_password }}"
@@ -75,7 +85,7 @@ clusters:
         SERVICEWIDE:
           ozone.service.id: "{{ cluster_name }}"
           ozone.scm.primordial.node.id: "{{  groups.cluster_master_nodes | first | default(omit) }}"
-          ozone.administrators: francois
+          ozone.administrators: "{{ default_admin_user }}"
         S3_GATEWAY:
           ssl_enabled: true
       SPARK_ON_YARN:
@@ -101,10 +111,12 @@ clusters:
           ranger.usersync.group.objectclass: "groupofnames"
           ranger.usersync.group.nameattribute: "cn"
           ranger.usersync.group.memberattributename: "member"
-          ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:u:admin_user&ROLE_SYS_ADMIN:u:francois"
+          ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:u:admin_group&ROLE_SYS_ADMIN:u:{{ default_admin_user }}"
+        RANGER_ADMIN:
+          conf/ranger-admin-site.xml_role_safety_valve: "<property><name>ranger.proxyuser.dpprofiler.hosts</name><value>*</value></property><property><name>ranger.proxyuser.dpprofiler.users</name><value>*</value></property><property><name>ranger.proxyuser.dpprofiler.groups</name><value>*</value></property>"
       YARN:
         SERVICEWIDE:
-          yarn_admin_acl: "${yarn_user},francois"
+          yarn_admin_acl: "${yarn_user},{{ default_admin_user }}"
         RESOURCEMANAGER:
           yarn_scheduler_maximum_allocation_mb: 24576
           yarn_scheduler_maximum_allocation_vcores: 12

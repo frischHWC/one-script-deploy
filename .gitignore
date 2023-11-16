@@ -1,3 +1,5 @@
 .DS_Store
 customer-*
 customer-*/*
+launch_*
+terraform.tfstate

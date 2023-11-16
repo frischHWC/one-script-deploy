@@ -1,0 +1,46 @@
+{
+    "impalaName": "{{ warehouse.name }}",
+    "warehouseId": "{{ dwx_dbc_id }}",
+    "template": "{{ warehouse.size | default(xsmall) }}-impala",
+    "resourcePool": "{{ warehouse.vw_queue | default('root.default') }}",
+    "enablePlatformJWTAuth": false,
+    "autoScaling": {
+      "enableHA": {{ warehouse.enable_ha | default('true') }},
+      "haType": "{{ warehouse.ha_type | default('activepassive') }}",
+      "autoScaleMode": 0,
+      "enableCatalogHA": {{ warehouse.enable_catalog_ha | default('true') }},
+      "impalaEnableAllActiveCoordinators": {{ warehouse.all_coordinators_active | default('false') }},
+      "impalaNumOfActiveCoordinators": {{ warehouse.num_active_coordinators | default('2') }},
+
+      "autoSuspendTimeoutSeconds": {{ warehouse.auto_suspend_timeout | default('300') }},
+      "triggerScaleUpDelay": {{ warehouse.scale_up_delay | default('20') }},
+      "triggerScaleDownDelay": {{ warehouse.scale_down_delay | default('20') }},
+      "disableAutoSuspend": {{ warehouse.disable_auto_suspend | default('false') }},
+      
+      "minClusters": {{ warehouse.min_nodes | default('1') }},
+      "maxClusters": {{ warehouse.max_nodes | default('5') }},
+      
+      "impalaEnableProxy": {{ warehouse.enable_proxy | default('false') }},
+      "impalaEnableShutdown": {{ warehouse.enable_shutdown | default('false') }},
+      "impalaTriggerShutdownDelay": {{ warehouse.shutdown_delay | default('300') }},
+      "impalaAutoscalingVersionNumber": 6,
+
+      "podConfigName": "Cdw Defaults",
+      "impalaAdditionalExecGroupSets": []
+    },
+    "fengEnabled": false,
+    "multithreading": {
+      "useLegacyMultithreading": {{ warehouse.legacy_multithreading | default('true') }},
+      "multithreadingVersion": 1
+    },
+    "queryIsolation": {
+      "maxQueries": {{ warehouse.query_isolation_max_queries | default('0') }},
+      "maxNodesPerQuery": {{ warehouse.query_isolation_max_nodes_per_query | default('0') }}
+    },
+    "config": {
+      "ldapGroups": [
+        "{{ warehouse.allowed_group | default('') }}"
+      ],
+      "enableSSO": true
+    }
+}

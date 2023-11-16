@@ -87,3 +87,14 @@
       with_items: "{{ users }}"
       vars:
         user: "{{ item }}"
+
+- name: Create users' Ranger Policies
+  hosts: edge
+  gather_facts: false
+  tasks: 
+    - name: create User Ranger Policy
+      include_role:
+        name: ranger_policies
+      with_items: "{{ users }}"
+      loop_control:
+        loop_var: user

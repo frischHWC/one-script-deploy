@@ -72,6 +72,12 @@
   roles: 
     - { role: add_ssb_knox, when: knox_service_exists and ssb_service_exists | default(false) }
 
+- name: Install SSB LB package
+  hosts: all
+  gather_facts: false
+  roles: 
+    - { role: install_ssb_package, when: ssb_service_exists | default(false) }
+
 - name: Add Livy 3 urls to Knox
   hosts: main
   gather_facts: false

@@ -1,0 +1,10 @@
+{
+  "managerType": "cloudera-manager",
+  "managerUri": "{{ classic_cluster.cm_url }}",
+  "allowUntrusted": true,
+  "withSingleSignOn": false,
+  "behindGateway": false,
+  "username": "{{ classic_cluster.cm_user }}",
+  "password": "{{ classic_cluster.cm_password }}",
+  "clusterType": "CDPDC"
+}

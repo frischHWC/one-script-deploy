@@ -1,0 +1,30 @@
+{
+    "computeName": "{{ warehouse.name }}",
+    "warehouseId": "{{ dwx_dbc_id }}",
+    "template": "{{ warehouse.size | default(xsmall) }}",
+    "resourcePool": "{{ warehouse.vw_queue | default('root.default') }}",
+    "enablePlatformJWTAuth": false,
+    "autoScaling": {
+      "minClusters": {{ warehouse.min_nodes | default('1') }},
+      "maxClusters": {{ warehouse.max_nodes | default('5') }},
+      "autoSuspendTimeoutSeconds": {{ warehouse.auto_suspend_timeout | default('300') }},
+      "waitTimeSeconds": {{ warehouse.wait_time | default('60') }},
+      "disableAutoSuspend": {{ warehouse.disable_auto_suspend | default('false') }},
+      "maxQueries": {{ warehouse.max_queries | default('2') }},
+      "maxNodesPerQuery": {{ warehouse.max_nodes_per_query | default('4') }},
+      "nodeCount": {{ warehouse.node_count | default('3') }},
+      "enableQueryIsolation": {{ warehouse.enable_query_isolation | default('false') }},
+      "autoScaleType": "{{ warehouse.auto_scale_type | default('Wait Time') }}"
+    },
+    "queryIsolation": {
+      "maxQueries": {{ warehouse.query_isolation_max_queries | default('0') }},
+      "maxNodesPerQuery": {{ warehouse.query_isolation_max_nodes_per_query | default('0') }}
+    },
+    "config": {
+      "ldapGroups": [
+        "{{ warehouse.allowed_group | default('') }}"
+      ],
+      "enableSSO": true
+    },
+    "tags": [],
+}

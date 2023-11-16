@@ -37,6 +37,7 @@ cloudera_manager_host: ${NODE_0}
 cloudera_manager_user: admin 
 cloudera_manager_password: admin
 cloudera_manager_version: ${CM_VERSION}
+cdp_version: ${CDH_VERSION}
 
 # Ranger info required
 ranger_user: admin
@@ -60,8 +61,9 @@ data_gen_git_branch: ${DATAGEN_REPO_BRANCH}
 
 # Credentials required
 kerb_auth: ${KERBEROS}
-kerb_user: francois@${REALM}
-kerb_keytab: /home/francois/francois.keytab
+kerb_user: ${DEFAULT_ADMIN_USER}@${REALM}
+kerb_keytab: /home/${DEFAULT_ADMIN_USER}/${DEFAULT_ADMIN_USER}.keytab
+default_user: ${DEFAULT_ADMIN_USER}
 
 # Release to get and launch
 release_url: ${DATA_LOAD_REPO_URL}

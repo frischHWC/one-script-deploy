@@ -4,6 +4,171 @@ One script to rule them all: CDP / CDP Private Cloud / CDH / HDP !
 
 Given some machines, this script will **setup** all pre-requisites, **Install**, **Configure** a fully **secure** cluster and **Load Data** into it.
 
+## Table of tested Deployments
+
+[.stripes-even, cols="1,1,4,1,1,1,1,4"]
+|===
+|SUCCESS |Type |Versions |OS |DB |KDC |TLS |Comment 
+
+| &#10003;
+| cdp-basic
+| CDH 7.1.9.2 & CM 7.11.3.2
+| CENTOS 7.9
+| Postgres 14
+| MIT KDC
+| True
+| 
+
+| &#10003;
+| cdp-basic-enc
+| CDH 7.1.9.2 & CM 7.11.3.2
+| CENTOS 7.9
+| Postgres 14
+| MIT KDC
+| True
+| 
+
+| &#10003;
+| cdp-all-services
+| CDH 7.1.9.2 & CM 7.11.3.2
+| CENTOS 7.9
+| Postgres 14
+| MIT KDC
+| True
+| 
+
+| &#10003;
+| cdp-streaming
+| CDH 7.1.9.2 & CM 7.11.3.2
+| CENTOS 7.9
+| Postgres 14
+| MIT KDC
+| True
+| 
+
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+
+| &#10003;
+| cdp-pvc
+| CDH 7.1.9.2 & CM 7.11.3.2 & PvC 1.5.2
+| CENTOS 7.9
+| Postgres 14
+| Free IPA
+| True
+| 
+
+| 
+| cdp-all-services-pvc
+| CDH 7.1.9.2 & CM 7.11.3.2 & PvC 1.5.2
+| CENTOS 7.9
+| Postgres 14
+| Free IPA
+| True
+| 
+
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+
+| 
+| cdp-pvc-oc
+| CDH 7.1.9.2 & CM 7.11.3.2 & PvC 1.5.2
+| CENTOS 7.9
+| Postgres 14
+| Free IPA
+| True
+| 
+
+| 
+| cdp-all-services-pvc-oc
+| CDH 7.1.9.2 & CM 7.11.3.2 & PvC 1.5.2
+| CENTOS 7.9
+| Postgres 14
+| Free IPA
+| True
+| 
+
+
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+
+| &#10003;
+| cdp-wxm
+| CDH 7.1.8.0 & CM 7.7.1
+| CENTOS 7.9
+| Postgres 14
+| MIT KDC
+| True
+| 
+
+| &#10003;
+| cdp-717
+| CDH 7.1.7.2026 & CM 7.6.7
+| CENTOS 7.9
+| Postgres 14
+| MIT KDC
+| True
+| 
+
+| &#10003;
+| cdh-5
+| CDH 5.16 & CM 5.16.2
+| CENTOS 7.6
+| Postgres 12
+| MIT KDC
+| False
+| 
+
+| &#10003;
+| cdh-6
+| CDH 6.3.4 & CM 6.3.4
+| CENTOS 7.6
+| Postgres 12
+| MIT KDC
+| False
+| 
+
+| &#10003;
+| hdp-3
+| HDP 3.1.5.6091 & Ambari 2.7.5.0
+| CENTOS 7.6
+| MySQL
+| MIT KDC
+| False
+| 
+
+| &#10003;
+| hdp-2
+| HDP 2.6.5.0 & Ambari 2.6.2.2
+| Postgres 12
+| MySQL
+| MIT KDC
+| False
+| 
+
+|===
+
+__Successful installation are marked with a &#10003; in SUCCESS column__
+
+
 ## Requirements
 
 Launch the script ```requirements.sh``` to enable all requirements before launching the full script.
@@ -39,6 +204,48 @@ __N.B. : This assumes that a passwordless connection is present from here to all
 Many more configurations are available, see them all with:
 
         ./setup-cluster.sh --help
+
+
+### NEW: Script to create Instances and launch creation
+
+__It is only working with AWS as of now.__
+
+Note: This requires you to install Terraform and AWS CLI on the machine where you will launch this script.
+
+It will require also that you create in advance a key pair in AWS, get your private key locally, and also get AWS access key and secret access key:
+
+
+        export ACCESS_KEY="" # Your AWS Access Key 
+        export SECRET_ACCESS_KEY="" # Your AWS Secret Access Key
+        export KEY_PAIR_NAME="" # Name of a key pair in AWS that will be set to acess your machines
+        export PRIVATE_KEY_PATH="" # Local private key path to use to access your machines 
+        export WHITELIST_IP="" # Your IP, so only this IP will be able to access your machines
+
+        export PAYWALL_USER=  # Your Paywall User from Cloudera to access archive.cloduera.com
+        export PAYWALL_PASSWORD=  # Your Paywall password from Cloudera to access archive.cloduera.com
+        export LICENSE_FILE=   # Your Licence file from Cloudera
+        export CLUSTER_NAME=   # A name of your choice (ex: cloudera-test )
+
+        ./setup-cluster-on-cloud.sh \
+                --cloud-provider="AWS" \
+                --aws-access-key=${ACCESS_KEY} \
+                --aws-secret-access-key=${SECRET_ACCESS_KEY} \
+                --aws-key-pair-name=${KEY_PAIR_NAME} \
+                --private-key-path=${PRIVATE_KEY_PATH} \
+                --whitelist-ip=${WHITELIST_IP} \
+                --os-version=8.7 \
+                --setup-etc-hosts=false \
+                \
+                --cluster-name=${CLUSTER_NAME} \
+                --license-file=${LICENSE_FILE} \
+                --paywall-username=${PAYWALL_USER} \
+                --paywall-password=${PAYWALL_PASSWORD}
+
+
+All parameters above must be let like this, as they are appropriate to AWS machines.
+After these parameters, you can add all other parameters that worked with script: setup-cluster.sh.
+
+The script, will use terraform to provide your machines, setup connectivity and then launch setup-cluster.sh with pre-configured parameters to create the wanted cluster. 
 
 
 ### Examples
@@ -91,6 +298,29 @@ Many more configurations are available, see them all with:
             --free-ipa=true \
             --node-ipa=<One node dedicated to IPA> \
             --nodes-base="${NODES}"
+            
+
+#### CDP 7 - Streaming cluster (6 nodes basic with Spark 3 and Flink + a VPC of 3 nodes of Kafka/Nifi) (Kerberos / TLS)
+
+        ./setup-cluster.sh \
+            --cluster-name=${CLUSTER_NAME} \
+            --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --cluster-type=streaming \
+            --nodes-base="${NODES}"
+
+#### CDP 7 - All Services (6 nodes basic with Spark 3 and Flink + 3 Nifi/Kafka nodes + 1 node for KTS ) (Kerberos / TLS)
+
+        ./setup-cluster.sh \
+            --cluster-name=${CLUSTER_NAME} \
+            --license-file=${LICENSE_FILE} \
+            --paywall-username=${PAYWALL_USER} \
+            --paywall-password=${PAYWALL_PASSWORD} \
+            --cluster-type=all-services \
+            --nodes-kts=<Dedicated Node for KTS> \
+            --nodes-base="${NODES}"
+
 
 #### CDP 7 - 9 nodes with 3 dedicated for PvC with ECS (Kerberos / TLS / FreeIPA)
 
@@ -117,17 +347,7 @@ Many more configurations are available, see them all with:
             --node-ipa=<One node dedicated to IPA> \
             --nodes-base="${NODES}"
 
-#### CDP 7 - Streaming cluster (6 nodes basic with Spark 3 and Flink + a VPC of 3 nodes of Kafka/Nifi) (Kerberos / TLS)
-
-        ./setup-cluster.sh \
-            --cluster-name=${CLUSTER_NAME} \
-            --license-file=${LICENSE_FILE} \
-            --paywall-username=${PAYWALL_USER} \
-            --paywall-password=${PAYWALL_PASSWORD} \
-            --cluster-type=streaming \
-            --nodes-base="${NODES}"
-
-#### CDP 7 - All Services (6 nodes basic with Spark 3 and Flink + 3 Nifi/Kafka nodes + 1 node for KTS + Associated with an Openshift PVC) (Kerberos / TLS / FreeIPA)
+#### CDP 7 - All Services (6 nodes basic with Spark 3 and Flink + 3 Nifi/Kafka nodes + 1 node for KTS + Associated with a PvC ) (Kerberos / TLS / FreeIPA)
 
         ./setup-cluster.sh \
             --cluster-name=${CLUSTER_NAME} \
@@ -137,23 +357,9 @@ Many more configurations are available, see them all with:
             --cluster-type=all-services-pvc \
             --nodes-kts=<Dedicated Node for KTS> \
             --node-ipa=<Dedicated Node for IPA> \
-            --kubeconfig-path=<Path to your kubeconfig file> \
-            --oc-tar-file-path=<Path to your oc.tar file downloaded from RedHat> \
+            --nodes-ecs=<Space separated list of 3 nodes> \
             --nodes-base="${NODES}"
 
-#### CDP 7 - Full of Full cluster (6 nodes basic with Spark 3 and Flink + a VPC of 3 nodes of Kafka/Nifi + 2 Nodes for KTS + Associated with an Openshift PVC) (Kerberos / TLS / FreeIPA)
-
-        ./setup-cluster.sh \
-            --cluster-name=${CLUSTER_NAME} \
-            --license-file=${LICENSE_FILE} \
-            --paywall-username=${PAYWALL_USER} \
-            --paywall-password=${PAYWALL_PASSWORD} \
-            --cluster-type=full-enc-pvc \
-            --nodes-kts=<Dedicated Node(s) for KTS> \
-            --node-ipa=<Dedicated Node for IPA> \
-            --kubeconfig-path=<Path to your kubeconfig file> \
-            --oc-tar-file-path=<Path to your oc.tar file downloaded from RedHat> \
-            --nodes-base="${NODES}"
 
 
 #### CDP 7 - Workload XM cluster (1 WXM cluster of 5 nodes associated with a base cluster (provided in command line) ) (Kerberos / TLS)

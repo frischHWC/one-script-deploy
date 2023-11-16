@@ -1,0 +1,35 @@
+{
+    "settings": [
+      {
+        "configurationKey": "enable-quota-management",
+        "configurationName": "Enable quota management",
+        "description": "Enables you to assign quota-managed resource pools to environments, Database Catalogs, Virtual Warehouses, and Data Visualization instances.",
+        "enabled": true,
+        "requiresUpdate": [
+          
+        ],
+        "modified": true
+      },
+      {
+        "configurationKey": "enable-warehouse-group-access-control",
+        "configurationName": "Enable warehouse-level access control for Impala",
+        "description": "Enables you to allow access to an Impala Virtual Warehouse for selected user groups in regular mode. To enable this for Impala warehouses in the Unified Analytics mode, select \"Enable warehouse-level access control for Hive and Unified Analytics\" along with this option. Kerberos authentication is disabled for an Impala Virtual Warehouse in the Unified Analytics mode when you enable this option and associate a user group with that Virtual Warehouse.",
+        "enabled": true,
+        "requiresUpdate": [
+          "IMPALA"
+        ],
+        "modified": true
+      },
+      {
+        "configurationKey": "enable-warehouse-group-access-control-for-hive",
+        "configurationName": "Enable warehouse-level access control for Hive and Unified Analytics",
+        "description": "Enables you to allow access to a Hive Virtual Warehouse for selected user groups in regular or Unified Analytics mode. Kerberos authentication is disabled for a Virtual Warehouse when you enable this option and associate a user group with that Virtual Warehouse.",
+        "enabled": true,
+        "requiresUpdate": [
+          "HIVE",
+          "IMPALA"
+        ],
+        "modified": true
+      }
+    ]
+  }

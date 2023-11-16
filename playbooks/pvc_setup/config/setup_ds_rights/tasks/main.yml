@@ -1,0 +1,70 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+- set_fact:
+    iam_endpoint_api: "{{ cdp_endpoint_url }}/api/v1/iam"
+
+- set_fact:
+    dex_endpoint_api: "{{ cdp_endpoint_url }}/dex/api/v1"
+
+- set_fact:
+    env_endpoint_api: "{{ cdp_endpoint_url }}/api/v1/environments2"
+
+# Get user CRN
+
+- name: List all users
+  uri:
+    url: "{{ iam_endpoint_api }}/listUsers"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Cookie: "{{ all_cookies }}"
+    body: "{\"pageSize\":500}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: list_users
+
+- set_fact:
+    user_crn: "{{ list_users.json | community.general.json_query(query) }}"
+  vars:
+    query: "users[?workloadUsername == '{{ user.name }}' ].crn | [0]"
+
+- name: DEBUG - user_crn
+  debug:
+    msg: "{{ user_crn }}"
+  when: debug | default(false)
+
+
+# Add keytab to CDE if needed
+- name: Set rights for CDE
+  include_tasks: "cde_rights.yml"
+  with_items: "{{ user.virtual_clusters }}"
+  loop_control:
+    loop_var: vc
+  when: cde | default(false)
+
+
+
+# TODO: Add keytab to CML if needed
+# How to get token to access CML (a cdswtoken is required to make requests) ???
+# Get cluster id with get to http://<cml_endpoint>/api/v1/site/config and get id.
+# Upload password to http://<cml_endpoint>/api/v1/users/admin/kerberos-credentials with request
+# {"principal":"test@FRISCH.COM","password":"test1234","clusterId":1} response id 204
+

@@ -21,6 +21,7 @@ export NODE_USER="root"
 export NODE_KEY=""
 export NODE_PASSWORD=""
 export SETUP_HOSTS_KEYS="true"
+export SETUP_ETC_HOSTS="true"
 
 # Steps to do
 export PRE_INSTALL="true"
@@ -33,6 +34,7 @@ export DEMO="false"
 
 # Auth & Log
 export DEFAULT_PASSWORD="Cloudera1234"
+export DEFAULT_ADMIN_USER="francois"
 export DEBUG="false"
 export LOG_DIR="/tmp/deploy_to_cloudcat_logs/"$(date +%m-%d-%Y-%H-%M-%S)
 
@@ -52,13 +54,13 @@ export REALM="FRISCH.COM"
 export ENCRYPTION_ACTIVATED="false"
 
 # Versions
-export CM_VERSION="7.6.7"
-export CDH_VERSION="7.1.7.2026"
-export PVC_VERSION="1.5.1"
-export CSA_VERSION="1.9.0.0"
-export CFM_VERSION="2.1.4.2"
-export SPARK3_VERSION="3.2.7171000.1"
-export WXM_VERSION="2.2.2"
+export CM_VERSION="7.11.3.2"
+export CDH_VERSION="7.1.9.2"
+export CSA_VERSION="1.11.0.0"
+export CFM_VERSION="2.1.6.0"
+export SPARK3_VERSION="3.3.7180.14"
+export WXM_VERSION="2.3.0"
+export PVC_VERSION="1.5.2"
 export AMBARI_VERSION="2.7.5.0"
 export HDP_VERSION="3.1.5.6091"
 export HDF_VERSION="3.5.0.0"
@@ -104,6 +106,8 @@ export SETUP_DNS_ECS="true"
 export PVC_APP_DOMAIN=""
 export PVC_ECO_RESOURCES="false"
 export SETUP_PVC_TOOLS="false"
+export ECS_SSD_DEDICATED_NODES=""
+export ECS_GPU_DEDICATED_NODES=""
 
 # External CSD
 export USE_CSA="false"
@@ -133,7 +137,7 @@ export DATAGEN_REPO_URL="https://github.com/frischHWC/datagen"
 export DATAGEN_REPO_BRANCH="main"
 export DATAGEN_REPO_PARCEL=""
 export DATAGEN_CSD_URL=""
-export DATAGEN_VERSION="0.4.9"
+export DATAGEN_VERSION="0.4.11"
 export EDGE_HOST=""
 
 # Demo
@@ -184,6 +188,7 @@ function usage()
     echo "  --node-key=$NODE_KEY : The key to connect to all nodes (Default) $NODE_KEY "
     echo "  --node-password=$NODE_PASSWORD : The password to connect to all nodes (Default) $NODE_PASSWORD "
     echo "  --setup-hosts-keys=$SETUP_HOSTS_KEYS : If needed to setup hosts keys between hosts (to allow passwordless connections) Set it to false on some Cloud Provider already setup machines (Default) $SETUP_HOSTS_KEYS "
+    echo "  --setup-etc-hosts=$SETUP_ETC_HOSTS : To push an /etc/hosts configured on all host, Set it to false generally for Cloud Provider as they use internal DNS (Default) $SETUP_ETC_HOSTS "
     echo ""
     echo "  --nodes-base=$NODES_BASE : A Space separated list of all nodes (Default) $NODES_BASE "
     echo "  --node-ipa=$NODE_IPA : Required only if using FreeIPA (Default) $NODE_IPA "
@@ -215,6 +220,7 @@ function usage()
     echo ""
     echo ""
     echo "  --default-password=$DEFAULT_PASSWORD : (Optional) Password used for UIs (Default) $DEFAULT_PASSWORD "
+    echo "  --default-admin-user=$DEFAULT_ADMIN_USER : (Optional) User setup with its keytab and rights on all services (It has default password) (Default) $DEFAULT_ADMIN_USER "
     echo ""
     echo "  --ansible-host-file=$ANSIBLE_HOST_FILE : (Optional) The path to ansible hosts file (Default) $ANSIBLE_HOST_FILE "
     echo "  --ansible-all-file=$ANSIBLE_ALL_FILE : (Optional) The path to ansible all file  (Default) $ANSIBLE_ALL_FILE"
@@ -277,6 +283,8 @@ function usage()
     echo "  --create-cml-registry=$CREATE_CML_REGISTRY Optional, used to auto setup a CML Registry if PVC is deployed (Default) $CREATE_CML_REGISTRY"
     echo "  --create-viz=$CREATE_VIZ Optional, used to auto setup a Data Viz if PVC is deployed (Default) $CREATE_VIZ"
     echo "  --pvc-eco-resources=$PVC_ECO_RESOURCES : (Optional) To reduce footprint of pvc deployment by making a mini-small cluster (Default) $PVC_ECO_RESOURCES"
+    echo "  --ecs-gpu-dedicated-nodes=$ECS_GPU_DEDICATED_NODES : (Optional) To specify an ECS node that will be tainted for only GPU Use (assuming it has GPU) (Default) $ECS_GPU_DEDICATED_NODES"
+    echo "  --ecs-ssd-dedicated-nodes=$ECS_SSD_DEDICATED_NODES : (Optional) To specify an ECS node that will be tainted for only SSD Use for CDW (isolating CDW workloads also) (Default) $ECS_SSD_DEDICATED_NODES"
     echo ""
     echo "  --install-repo-url=$INSTALL_REPO_URL : (Optional) Install repo URL (Default) $INSTALL_REPO_URL  "
     echo "  --ansible-repo-dir=$ANSIBLE_REPO_DIR : (Optional) Directory where install repo will be deployed (Default) $ANSIBLE_REPO_DIR "
@@ -339,6 +347,9 @@ while [ "$1" != "" ]; do
         --setup-hosts-keys)
             SETUP_HOSTS_KEYS=$VALUE
             ;;
+        --setup-etc-hosts)
+            SETUP_ETC_HOSTS=$VALUE
+            ;;
         --node-password)
             NODE_PASSWORD=$VALUE
             ;;  
@@ -393,6 +404,9 @@ while [ "$1" != "" ]; do
         --default-password)
             DEFAULT_PASSWORD=$VALUE
             ;;  
+        --default-admin-user)
+            DEFAULT_ADMIN_USER=$VALUE
+            ;; 
         --ansible-host-file)
             ANSIBLE_HOST_FILE=$VALUE
             ;;
@@ -555,6 +569,12 @@ while [ "$1" != "" ]; do
         --pvc-eco-resources)
             PVC_ECO_RESOURCES=$VALUE
             ;;  
+        --ecs-gpu-dedicated-nodes)
+            ECS_GPU_DEDICATED_NODES=$VALUE
+            ;;
+        --ecs-ssd-dedicated-nodes)
+            ECS_SSD_DEDICATED_NODES=$VALUE
+            ;;
         --setup-pvc-tools)
             SETUP_PVC_TOOLS=$VALUE
             ;;  
@@ -715,6 +735,39 @@ then
         export ANSIBLE_ALL_FILE="ansible-cdp/all"
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp/extra_vars.yml"
+    elif [ "${CLUSTER_TYPE}" = "streaming" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdp-streaming/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-streaming/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-streaming/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-streaming/extra_vars.yml"
+        export USE_SPARK3="true"
+        export USE_CSA="true"
+        export USE_CFM="true"
+        export CLUSTER_NAME_STREAMING="${CLUSTER_NAME}-stream"
+    elif [ "${CLUSTER_TYPE}" = "all-services" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdp-all-services/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-all-services/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-all-services/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-all-services/extra_vars.yml"
+        export USE_CSA="true"
+        export USE_CFM="true"
+        export USE_SPARK3="true"
+        export ENCRYPTION_ACTIVATED="true"  
+    elif [ "${CLUSTER_TYPE}" = "all-services-pvc-oc" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc-oc/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-all-services-pvc-oc/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-all-services-pvc-oc/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-all-services-pvc-oc/extra_vars.yml"
+        export USE_CSA="true"
+        export USE_CFM="true"
+        export USE_SPARK3="true"
+        export PVC="true"
+        export FREE_IPA="true"
+        export PVC_TYPE="OC"
+        export ENCRYPTION_ACTIVATED="true"  
     elif [ "${CLUSTER_TYPE}" = "all-services-pvc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc/hosts"
@@ -726,37 +779,8 @@ then
         export USE_SPARK3="true"
         export PVC="true"
         export FREE_IPA="true"
-        export PVC_TYPE="OC"
-        export ENCRYPTION_ACTIVATED="true"  
-        export CM_VERSION="7.10.1"
-    elif [ "${CLUSTER_TYPE}" = "all-services-pvc-no-stream" ]
-    then
-        export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc-no-stream/hosts"
-        export ANSIBLE_ALL_FILE="ansible-cdp-all-services-pvc-no-stream/all"
-        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-all-services-pvc-no-stream/cluster.yml"
-        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-all-services-pvc-no-stream/extra_vars.yml"
-        export USE_CSA="true"
-        export USE_CFM="true"
-        export USE_SPARK3="true"
-        export PVC="true"
-        export FREE_IPA="true"
-        export PVC_TYPE="OC"
-        export ENCRYPTION_ACTIVATED="true"  
-        export CM_VERSION="7.10.1"
-    elif [ "${CLUSTER_TYPE}" = "all-services-pvc-ecs" ]
-    then
-        export ANSIBLE_HOST_FILE="ansible-cdp-all-services-pvc-ecs/hosts"
-        export ANSIBLE_ALL_FILE="ansible-cdp-all-services-pvc-ecs/all"
-        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-all-services-pvc-ecs/cluster.yml"
-        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-all-services-pvc-ecs/extra_vars.yml"
-        export USE_CSA="true"
-        export USE_CFM="true"
-        export USE_SPARK3="true"
-        export PVC="true"
-        export FREE_IPA="true"
         export PVC_TYPE="ECS"
         export ENCRYPTION_ACTIVATED="true"
-        export CM_VERSION="7.10.1"
     elif [ "${CLUSTER_TYPE}" = "pvc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-pvc/hosts"
@@ -765,7 +789,6 @@ then
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-pvc/extra_vars.yml"
         export PVC="true"
         export FREE_IPA="true"
-        export CM_VERSION="7.10.1"
     elif [ "${CLUSTER_TYPE}" = "pvc-oc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-pvc-oc/hosts"
@@ -775,33 +798,6 @@ then
         export PVC="true"
         export PVC_TYPE="OC"
         export FREE_IPA="true"
-        export CM_VERSION="7.10.1"
-    elif [ "${CLUSTER_TYPE}" = "streaming" ]
-    then
-        export ANSIBLE_HOST_FILE="ansible-cdp-streaming/hosts"
-        export ANSIBLE_ALL_FILE="ansible-cdp-streaming/all"
-        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-streaming/cluster.yml"
-        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-streaming/extra_vars.yml"
-        export USE_SPARK3="true"
-        export USE_CSA="true"
-        export USE_CFM="true"
-        export CLUSTER_NAME_STREAMING="${CLUSTER_NAME}-stream"
-    elif [ "${CLUSTER_TYPE}" = "full-enc-pvc" ]
-    then
-        export ANSIBLE_HOST_FILE="ansible-cdp-full-enc-pvc/hosts"
-        export ANSIBLE_ALL_FILE="ansible-cdp-full-enc-pvc/all"
-        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-full-enc-pvc/cluster.yml"
-        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-full-enc-pvc/extra_vars.yml"
-        export USE_CSA="true"
-        export USE_CFM="true"
-        export USE_SPARK3="true"
-        export PVC="true"
-        export FREE_IPA="true"
-        export PVC_TYPE="OC"
-        export ENCRYPTION_ACTIVATED="true"
-        export ENCRYPTION_HA="true"
-        export CLUSTER_NAME_STREAMING="${CLUSTER_NAME}-stream"
-        export CM_VERSION="7.10.1"
     elif [ "${CLUSTER_TYPE}" = "wxm" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-wxm/hosts"
@@ -812,6 +808,20 @@ then
         export USER_CREATION="false"
         export DATA_LOAD="false"
         export FREE_IPA="false"
+        export CM_VERSION="7.7.1"
+        export CDH_VERSION="7.1.8.0"
+    elif [ "${CLUSTER_TYPE}" = "cdp-717" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdp-717/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-717/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-717/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-717/extra_vars.yml"
+        export CM_VERSION="7.6.7"
+        export CDH_VERSION="7.1.7.2026"
+        export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.7.zip"
+        export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.7"
+        export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/${DATAGEN_VERSION}/7.1.7.2000/parcels/"
+        export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/${DATAGEN_VERSION}/7.1.7.2000/csd/DATAGEN-${DATAGEN_VERSION}.7.1.7.2000.jar"
     elif [ "${CLUSTER_TYPE}" = "cdh6" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdh-6/hosts"
@@ -823,7 +833,9 @@ then
         export CDH_VERSION="6.3.4"
         export TLS="false"
         export DATA_LOAD="false"
-        export DATABASE_VERSION="10"
+        export DATABASE_VERSION="12"
+        export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.7.zip"
+        export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.7"
     elif [ "${CLUSTER_TYPE}" = "cdh6-enc-stream" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdh6-enc-stream/hosts"
@@ -836,7 +848,9 @@ then
         export TLS="true"
         export ENCRYPTION_ACTIVATED="true"
         export DATA_LOAD="false"
-        export DATABASE_VERSION="10"
+        export DATABASE_VERSION="12"
+        export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.7.zip"
+        export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.7"
     elif [ "${CLUSTER_TYPE}" = "cdh5" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdh-5/hosts"
@@ -849,7 +863,10 @@ then
         export TLS="false"
         export DATA_LOAD="false"
         export POST_INSTALL="false"
-        export DATABASE_VERSION="10"
+        export USER_CREATION="false"
+        export DATABASE_VERSION="12"
+        export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.7.zip"
+        export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.7"
     elif [ "${CLUSTER_TYPE}" = "hdp2" ]
     then
         export ANSIBLE_HOST_FILE="ansible-hdp-2/hosts"
@@ -862,7 +879,8 @@ then
         export ANSIBLE_REPO_DIR="ansible-hortonworks-master"
         export DATA_LOAD="false"
         export POST_INSTALL="false"
-        export DATABASE_TYPE="postgres"
+        export USER_CREATION="false"
+        export DATABASE_TYPE="mysql"
     elif [ "${CLUSTER_TYPE}" = "hdp3" ]
     then
         export ANSIBLE_HOST_FILE="ansible-hdp-3/hosts"
@@ -872,6 +890,7 @@ then
         export ANSIBLE_REPO_DIR="ansible-hortonworks-master"
         export DATA_LOAD="false"
         export POST_INSTALL="false"
+        export USER_CREATION="false"
         export DATABASE_TYPE="mysql"
     else
         export ANSIBLE_HOST_FILE="${CLUSTER_TYPE}/hosts"
@@ -1019,8 +1038,8 @@ fi
 if [ "${DISTRIBUTION_TO_DEPLOY}" = "CDP" ] && [ -z ${DATAGEN_CSD_URL} ] && [ -z ${DATAGEN_REPO_PARCEL} ]
 then
     echo " Will guess Datagen Parcel Repo and CSD from Version"
-    export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/parcels/${DATAGEN_VERSION}/${CDH_VERSION}/"
-    export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/csd/${DATAGEN_VERSION}/${CDH_VERSION}/DATAGEN-${DATAGEN_VERSION}.${CDH_VERSION}.jar"
+    export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/${DATAGEN_VERSION}/${CDH_VERSION}/parcels/"
+    export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/${DATAGEN_VERSION}/${CDH_VERSION}/csd/DATAGEN-${DATAGEN_VERSION}.${CDH_VERSION}.jar"
 fi
 
 # Set HDP/Ambari repository 
@@ -1057,7 +1076,7 @@ fi
 # Setup of files to interact with the cluster
 ###############################
 
-export NODES_SORTED=$( echo ${NODES_BASE} | sort | uniq )
+export NODES_SORTED=$( echo ${NODES_BASE} | uniq )
 export NODES=( ${NODES_SORTED} )
 export HOSTS_FILE=$(mktemp)
 export HOSTS_ETC=$(mktemp)
@@ -1083,8 +1102,8 @@ do
         SSHKey=`ssh-keyscan ${NODES[$i]} 2> /dev/null`
         echo $SSHKey >> ~/.ssh/known_hosts
         echo $SSHKey >> ${KNOWN_HOSTS}
-        IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES[$i]} | cut -d' ' -f1)
-        if [ -z ${IP_ADRESS_SOLVED} ]
+        IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES[$i]} | head -n1 | cut -d' ' -f1)
+        if [ -z "${IP_ADRESS_SOLVED}" ]
         then
             IP_ADRESS_SOLVED=$( dig +short ${NODES[$i]} )
         fi
@@ -1104,7 +1123,7 @@ then
         SSHKey=`ssh-keyscan ${NODE_IPA} 2> /dev/null`
         echo $SSHKey >> ~/.ssh/known_hosts
         echo $SSHKey >> ${KNOWN_HOSTS}
-        IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODE_IPA} | cut -d' ' -f1)
+        IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODE_IPA} | head -n1 | cut -d' ' -f1)
         if [ -z ${IP_ADRESS_SOLVED} ]
         then
             IP_ADRESS_SOLVED=$( dig +short ${NODE_IPA} )
@@ -1133,7 +1152,7 @@ then
             SSHKey=`ssh-keyscan ${NODES_KTS_SORTED[$i]} 2> /dev/null`
             echo $SSHKey >> ~/.ssh/known_hosts
             echo $SSHKey >> ${KNOWN_HOSTS}
-            IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES_KTS_SORTED[$i]} | cut -d' ' -f1)
+            IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES_KTS_SORTED[$i]} | head -n1 | cut -d' ' -f1)
             if [ -z ${IP_ADRESS_SOLVED} ]
             then
                 IP_ADRESS_SOLVED=$( dig +short ${NODES_KTS_SORTED[$i]} )
@@ -1158,7 +1177,7 @@ then
             SSHKey=`ssh-keyscan ${NODES_PVC_ECS_SORTED[$i]} 2> /dev/null`
             echo $SSHKey >> ~/.ssh/known_hosts
             echo $SSHKey >> ${KNOWN_HOSTS}
-            IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES_PVC_ECS_SORTED[$i]} | cut -d' ' -f1)
+            IP_ADRESS_SOLVED=$(cat /etc/hosts | grep ${NODES_PVC_ECS_SORTED[$i]} | head -n1 | cut -d' ' -f1)
             if [ -z ${IP_ADRESS_SOLVED} ]
             then
                 IP_ADRESS_SOLVED=$( dig +short ${NODES_PVC_ECS_SORTED[$i]} )
@@ -1461,8 +1480,13 @@ then
         ssh ${NODE_USER}@${NODE_0} 'cd ~/deployment/ansible-repo/ ; export CLOUD_TO_USE=static ; export INVENTORY_TO_USE=hosts ; bash install_cluster.sh' > ${LOG_DIR}/deployment.log
     else
         echo "******* Installing required packages *******"
-        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-galaxy install -r requirements.yml --force ; ansible-galaxy collection install -r requirements.yml --force" > ${LOG_DIR}/deployment.log 2>&1
-        
+        if [ "${USE_ANSIBLE_PYTHON_3}" == "true" ]
+        then
+            ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; export PYTHON_PATH=/usr/bin/python3 ; ansible-galaxy install -r requirements.yml --force ; ansible-galaxy collection install -r requirements.yml --force" > ${LOG_DIR}/deployment.log 2>&1
+        else
+            ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-galaxy install -r requirements.yml --force ; ansible-galaxy collection install -r requirements.yml --force" > ${LOG_DIR}/deployment.log 2>&1
+        fi
+
         ################################################
         ######## Installation of CDP step by step in order to be able to track installation #######
         ################################################
@@ -1734,6 +1758,10 @@ fi
 if [ "${PVC}" = "true" ] && [ "${INSTALL_PVC}" = "true" ]
 then
     echo "############ Creating PvC cluster ############" 
+    if [ "${DEBUG}" = "true" ]
+    then
+        echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml pvc.yml ${ANSIBLE_PYTHON_3_PARAMS}"
+    fi
     echo " Follow progression in: ${LOG_DIR}/pvc_deployment.log "
     ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml pvc.yml ${ANSIBLE_PYTHON_3_PARAMS}" > ${LOG_DIR}/pvc_deployment.log 2>&1
     OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/pvc_deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
@@ -1897,9 +1925,9 @@ fi
 if [ "${KERBEROS}" = "true" ] && [ "${USER_CREATION}" = "true" ]
 then
     echo ""
-    echo " Some Kerberos users have been created and their keytabs are on all machines in /home/<username>/, such as /home/francois/ "
+    echo " Some Kerberos users have been created and their keytabs are on all machines in /home/<username>/, such as /home/${DEFAULT_ADMIN_USER}/ "
     echo " Their keytabs have been retrieved locally in ~/cluster-${CLUSTER_NAME}/ and the krb5.conf has been copied in ~/cluster-${CLUSTER_NAME}/ also, allowing you to directly kinit from your computer with: "
-    echo "      env KRB5_CONFIG=~/cluster-${CLUSTER_NAME}/krb5.conf kinit -kt ~/cluster-${CLUSTER_NAME}/francois.keytab francois"
+    echo "      env KRB5_CONFIG=~/cluster-${CLUSTER_NAME}/krb5.conf kinit -kt ~/cluster-${CLUSTER_NAME}/${DEFAULT_ADMIN_USER}.keytab ${DEFAULT_ADMIN_USER}"
     echo ""
 fi
 echo ""

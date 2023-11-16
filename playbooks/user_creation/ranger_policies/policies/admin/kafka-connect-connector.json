@@ -1,0 +1,84 @@
+{
+    "version": 1,
+    "service": "cm_kafka_connect",
+    "name": "Kafka Connect Connector Policy for user {{ user.name }}",
+    "policyType": 0,
+    "policyPriority": 0,
+    "description": "Admin Connector Policy for user {{ user.name }}",
+    "isAuditEnabled": true,
+    "resources": {
+      "connector": {
+        "values": [
+          "*",
+          "{{ user.name }}*"
+        ],
+        "isExcludes": false,
+        "isRecursive": false
+      }
+    },
+    "policyItems": [
+      {
+        "accesses": [
+          {
+            "type": "view",
+            "isAllowed": true
+          },
+          {
+            "type": "manage",
+            "isAllowed": true
+          },
+          {
+            "type": "edit",
+            "isAllowed": true
+          },
+          {
+            "type": "create",
+            "isAllowed": true
+          },
+          {
+            "type": "delete",
+            "isAllowed": true
+          }
+        ],
+        "users": [
+          "{{ user.name }}"
+        ],
+        "groups": [
+        ],
+        "roles": [
+          
+        ],
+        "conditions": [
+          
+        ],
+        "delegateAdmin": true
+      }
+    ],
+    "denyPolicyItems": [
+      
+    ],
+    "allowExceptions": [
+      
+    ],
+    "denyExceptions": [
+      
+    ],
+    "dataMaskPolicyItems": [
+      
+    ],
+    "rowFilterPolicyItems": [
+      
+    ],
+    "serviceType": "kafka-connect",
+    "options": {
+      
+    },
+    "validitySchedules": [
+      
+    ],
+    "policyLabels": [
+      
+    ],
+    "zoneName": "",
+    "isDenyAllElse": false
+  }

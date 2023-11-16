@@ -44,6 +44,15 @@ then
     yum -y install epel-release
     yum -y install ansible
 
+    # TODO
+    echo "Install Terraform"
+
+    # TODO
+    echo "Install AWS CLI"
+
+    # TODO
+    echo "Install pcregrep"
+
 
 elif [ "$machine_type" == "debian" ]
 then
@@ -67,6 +76,15 @@ then
     echo "Install ansible"
     apt -y install ansible
 
+    # TODO
+    echo "Install Terraform"
+
+    # TODO
+    echo "Install AWS CLI"
+
+    # TODO
+    echo "Install pcregrep"
+
 
 elif [ "$machine_type" == "suse" ]
 then
@@ -89,6 +107,15 @@ then
     echo "Install ansible"
     zypper -n install ansible
 
+    # TODO
+    echo "Install Terraform"
+
+    # TODO
+    echo "Install AWS CLI"
+
+    # TODO
+    echo "Install pcregrep"
+
 elif [ "$machine_type" == "mac" ]
 then
 
@@ -103,6 +130,15 @@ then
     echo "TODO: Install Python 3"
 
     echo "TODO:Install ansible"
+
+    # TODO
+    echo "Install Terraform"
+
+    # TODO
+    echo "Install AWS CLI"
+
+    # TODO
+    echo "Install pcregrep"
 
 fi
 

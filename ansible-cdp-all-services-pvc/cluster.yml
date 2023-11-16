@@ -24,7 +24,7 @@ clusters:
       - "{{ cdh_repo }}"
 
   - name: "{{ cluster_name }}"
-    services: [ATLAS, CRUISE_CONTROL, DAS, FLINK, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, KS_INDEXER, KUDU, LIVY, LIVY_FOR_SPARK3, NIFI, NIFIREGISTRY, OMID, OOZIE, OZONE, PHOENIX, QUEUEMANAGER, RANGER, SCHEMAREGISTRY, SPARK_ON_YARN, SPARK3_ON_YARN, SOLR, SQL_STREAM_BUILDER, STREAMS_MESSAGING_MANAGER, TEZ, YARN, ZEPPELIN, ZOOKEEPER]
+    services: [ATLAS, CRUISE_CONTROL, FLINK, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, KS_INDEXER, KUDU, LIVY, LIVY_FOR_SPARK3, NIFI, NIFIREGISTRY, OMID, OOZIE, OZONE, PHOENIX, QUERY_PROCESSOR, QUEUEMANAGER, RANGER, SCHEMAREGISTRY, SPARK_ON_YARN, SPARK3_ON_YARN, SOLR, SQL_STREAM_BUILDER, STREAMS_MESSAGING_MANAGER, TEZ, YARN, ZOOKEEPER]
     security:
       kerberos: "{{ kerberos_activated }}"
       hdfs_encryption: "{{ encryption_activated }}"
@@ -44,10 +44,7 @@ clusters:
           atlas_admin_password: "{{ default_password }}"
           atlas_authentication_method_file: true
           atlas_solr_replication_factor: 2
-
-      DAS:
-        DAS_WEBAPP:
-          data_analytics_studio_user_authentication: "{{ das_auth }}"
+          conf/atlas-application.properties_role_safety_valve: "atlas.proxyuser.dpprofiler.hosts=*\natlas.proxyuser.dpprofiler.users=*\natlas.proxyuser.dpprofiler.groups=*"
       
       FLINK:
         FLINK_HISTORY_SERVER:
@@ -57,7 +54,7 @@ clusters:
         SERVICEWIDE:
           hbase_restserver_security_authentication: "{{ hbase_auth }}"
           hadoop_secure_web_ui: "{{ kerberos_activated }}"
-          hbase_superuser: "francois"
+          hbase_superuser: "{{ default_admin_user }}"
         REGIONSERVER:  
           hbase_regionserver_wal_codec: org.apache.hadoop.hbase.regionserver.wal.IndexedWALEditCodec
       
@@ -85,6 +82,8 @@ clusters:
         HIVEMETASTORE:
           hive_enable_db_notification: true
           hive_metastore_delegation_token_store: org.apache.hadoop.hive.thrift.DBTokenStore 
+        SERVICEWIDE:
+          ranger_security_safety_valve: "<property><name>xasecure.hive.uri.permission.coarse.check</name><value>true</value></property>"
 
       HIVE_ON_TEZ:
         HIVESERVER2:
@@ -99,6 +98,10 @@ clusters:
           scratch_dirs: /tmp/impala
           enable_audit_event_log: true   
 
+      INFRA_SOLR:
+        SERVICEWIDE:
+          enable_ranger_authorization: true
+          
       KAFKA:
         KAFKA_CONNECT:  
           bootstrap.servers: "{{ bootstrap_servers }}"
@@ -107,6 +110,7 @@ clusters:
         SERVICEWIDE:
           knox_encryptquerystring_secret: "{{ default_password }}"
           knox_hadoop_auth_config_signature_secret: "{{ default_password }}"
+          conf/gateway-site.xml_service_safety_valve: <property><name>knox.homepage.logout.enabled</name><value>true</value></property>
         KNOX_GATEWAY:
           gateway_knox_admin_groups: admin_group
           gateway_master_secret: "{{ default_password }}"
@@ -140,6 +144,13 @@ clusters:
           nifi.autogen.node.identities.dn.suffix: " , ST=CA, C=US"
           nifi.security.identity.mapping.value.dn: $1
           nifi.web.https.port: 8080
+          java.arg.2: -Xms2048m
+          java.arg.3: -Xmx4096m
+          xml.authorizers.userGroupProvider.shell-user-group-provider.enabled: true
+          xml.authorizers.userGroupProvider.shell-user-group-provider.property.Exclude Groups: nifi
+          xml.authorizers.userGroupProvider.shell-user-group-provider.property.Exclude Users: nifi
+          staging/authorizers.xml_role_safety_valve: <property><name>xml.authorizers.userGroupProvider.composite-configurable-user-group-provider.property.User Group Provider 2</name><value>shell-user-group-provider</value></property>
+
 
       OOZIE:
         SERVICEWIDE:
@@ -154,7 +165,7 @@ clusters:
         SERVICEWIDE:
           ozone.service.id: "{{ cluster_name }}"
           ozone.scm.primordial.node.id: "{{  groups.cluster_master_nodes | first | default(omit) }}"
-          ozone.administrators: francois
+          ozone.administrators: "{{ default_admin_user }}"
 
       SPARK_ON_YARN:
         SERVICEWIDE:
@@ -167,6 +178,7 @@ clusters:
           rangertagsync_user_password: "{{ default_password }}"
           rangerusersync_user_password: "{{ default_password }}"
         RANGER_ADMIN:
+          conf/ranger-admin-site.xml_role_safety_valve: "<property><name>ranger.proxyuser.dpprofiler.hosts</name><value>*</value></property><property><name>ranger.proxyuser.dpprofiler.users</name><value>*</value></property><property><name>ranger.proxyuser.dpprofiler.groups</name><value>*</value></property>"
           ranger.audit.solr.no.replica: 2
           ranger.audit.solr.max.shards.per.node: 2
         RANGER_USERSYNC:
@@ -200,15 +212,10 @@ clusters:
           smm_database_host: "{{ groups.db_server | first | default(omit) }}"
           smm_database_port: "{{ database_type | default_database_port }}"
         STREAMS_MESSAGING_MANAGER_SERVER:  
-          kafka.connect.host: "{{  groups.cluster_worker_no_hadoop | first | default(omit) }}"
           kafka.connect.protocol: "{{ kafka_connect_protocol }}"
-          kafka.connect.port: "{{ kafka_connect_port }}"
+          kafka.connect.hostports: "{{ groups.cluster_worker_no_hadoop | first | default(omit) }}:{{ kafka_connect_port }}"
           
       SQL_STREAM_BUILDER:
-        SERVICEWIDE:
-          loadbalancer.url: "{{  groups.cloudera_manager | first | default(omit) }}"
-        LOAD_BALANCER:
-          loadbalancer.url: "{{  groups.cloudera_manager | first | default(omit) }}"
         STREAMING_SQL_ENGINE:
           default.admin.password: "{{ default_password }}" 
           ssb-conf/application.properties_role_safety_valve: log.sqlio.restapi = true
@@ -220,7 +227,7 @@ clusters:
 
       YARN:
         SERVICEWIDE:
-          yarn_admin_acl: "${yarn_user},francois"
+          yarn_admin_acl: "${yarn_user},{{ default_admin_user }}"
         RESOURCEMANAGER:
           yarn_scheduler_maximum_allocation_mb: 24576
           yarn_scheduler_maximum_allocation_vcores: 12
@@ -232,11 +239,6 @@ clusters:
         GATEWAY:
           mapred_submit_replication: 3
           mapred_reduce_tasks: 6   
-
-      ZEPPELIN:
-        ZEPPELIN_SERVER:
-          zeppelin.shiro.roles.block: admin=*\ndev=*
-          zeppelin.admin.group: dev 
 
       ZOOKEEPER:
         SERVICEWIDE:
@@ -260,7 +262,6 @@ clusters:
         SPARK3_ON_YARN: [GATEWAY]
         SQL_STREAM_BUILDER: [LOAD_BALANCER]
         YARN: [GATEWAY]
-        ZEPPELIN: [ZEPPELIN_SERVER]
 
       Master1:
         ATLAS: [ATLAS_SERVER]
@@ -278,6 +279,7 @@ clusters:
         LIVY: [GATEWAY]
         OOZIE: [OOZIE_SERVER]
         OZONE: [OZONE_MANAGER, STORAGE_CONTAINER_MANAGER, GATEWAY]
+        QUERY_PROCESSOR: [QUERY_PROCESSOR]
         SOLR: [GATEWAY]
         SPARK_ON_YARN: [GATEWAY]
         SPARK3_ON_YARN: [GATEWAY]
@@ -287,7 +289,6 @@ clusters:
 
       Master2:
         ATLAS: [ATLAS_SERVER]
-        DAS: [DAS_EVENT_PROCESSOR, DAS_WEBAPP]
         FLINK: [GATEWAY]
         HBASE: [MASTER, HBASERESTSERVER, HBASETHRIFTSERVER, GATEWAY]
         HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
@@ -376,6 +377,8 @@ mgmt:
   name: Cloudera Management Service
   services: [ALERTPUBLISHER, EVENTSERVER, HOSTMONITOR, REPORTSMANAGER, SERVICEMONITOR]
   configs:
+    SERVICEWIDE:
+      ldap_monitoring_enabled: "{{ free_ipa }}"
     SERVICEMONITOR:
       firehose_heapsize: 2147483648
 

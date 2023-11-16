@@ -39,7 +39,7 @@ clusters:
         SERVICEWIDE:
           hbase_restserver_security_authentication: "{{ hbase_auth }}"
           hadoop_secure_web_ui: "{{ kerberos_activated }}"
-          hbase_superuser: "francois"
+          hbase_superuser: "{{ default_admin_user }}"
         REGIONSERVER:  
           hbase_regionserver_wal_codec: org.apache.hadoop.hbase.regionserver.wal.IndexedWALEditCodec
       HDFS:
@@ -60,9 +60,18 @@ clusters:
           dfs_journalnode_edits_dir: /dfs/jn  
         SECONDARYNAMENODE:
           fs_checkpoint_dir_list: /dfs/snn
+      HIVE:
+        HIVEMETASTORE:
+          hive_enable_db_notification: true
+          hive_metastore_delegation_token_store: org.apache.hadoop.hive.thrift.DBTokenStore 
+        SERVICEWIDE:
+          ranger_security_safety_valve: "<property><name>xasecure.hive.uri.permission.coarse.check</name><value>true</value></property>"
       HIVE_ON_TEZ:
         HIVESERVER2:
           hive_server2_transport_mode: "all"
+      INFRA_SOLR:
+        SERVICEWIDE:
+          enable_ranger_authorization: true
       RANGER:
         SERVICEWIDE:
           keyadmin_user_password: "{{ default_password }}"
@@ -83,10 +92,10 @@ clusters:
           ranger.usersync.group.objectclass: "groupofnames"
           ranger.usersync.group.nameattribute: "cn"
           ranger.usersync.group.memberattributename: "member"
-          ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:g:admin_user&ROLE_SYS_ADMIN:u:francois"
+          ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:g:admin_group&ROLE_SYS_ADMIN:u:{{ default_admin_user }}"
       YARN:
         SERVICEWIDE:
-          yarn_admin_acl: "${yarn_user},francois"
+          yarn_admin_acl: "${yarn_user},{{ default_admin_user }}"
         RESOURCEMANAGER:
           yarn_scheduler_maximum_allocation_mb: 24576
           yarn_scheduler_maximum_allocation_vcores: 12

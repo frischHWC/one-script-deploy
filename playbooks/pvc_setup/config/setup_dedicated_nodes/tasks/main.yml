@@ -1,0 +1,66 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+- name: Get All Hosts
+  uri:
+    url: "{{ cloudera_manager_api_url }}/hosts"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: all_hosts
+
+- name: Set hostId
+  set_fact:
+    dedicated_node_host_id: "{{ all_hosts.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?hostname == '{{ dedicated_node_hostname }}' ].hostId | [0]"
+
+- name: DEBUG - dedicated_node_host_id
+  debug:
+    msg: "{{ dedicated_node_host_id }}"
+  when: debug | default(false)
+
+- name: Set taint to apply (SSD)
+  set_fact:
+    node_taint_to_apply: "Dedicated NVME Node"
+  when: dedicated_node_type == 'ssd'
+
+- name: Set taint to apply (GPU)
+  set_fact:
+    node_taint_to_apply: "Dedicated GPU Node"
+  when: dedicated_node_type == 'gpu'
+
+- name: Taint the host by changing configuration
+  uri:
+    url: "{{ cloudera_manager_api_url }}/hosts/{{ dedicated_node_host_id }}/config"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: PUT
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    status_code: [200, 202]
+    body_format: json
+    body: "{{ lookup('template', 'taint-node.json' ) }}"
+    force_basic_auth: yes
+    validate_certs: no

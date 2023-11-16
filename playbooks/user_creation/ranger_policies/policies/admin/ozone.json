@@ -1,0 +1,110 @@
+{
+    "version": 1,
+    "service": "cm_ozone",
+    "name": "Ozone policy for {{ user.name }}",
+    "policyType": 0,
+    "policyPriority": 0,
+    "description": "Admin Policy for user {{ user.name }}",
+    "isAuditEnabled": true,
+    "resources": {
+      "volume": {
+        "values": [
+          "s3v",
+          "*",
+          "{{ user.name }}*"
+        ],
+        "isExcludes": false
+      },
+      "bucket": {
+        "values": [
+          "*"
+        ],
+        "isExcludes": false
+      },
+      "key": {
+        "values": [
+          "*"
+        ],
+        "isExcludes": false,
+        "isRecursive": false
+      }
+    },
+    "policyItems": [
+      {
+        "accesses": [
+          {
+            "type": "all",
+            "isAllowed": true
+          },
+          {
+            "type": "read",
+            "isAllowed": true
+          },
+          {
+            "type": "write",
+            "isAllowed": true
+          },
+          {
+            "type": "create",
+            "isAllowed": true
+          },
+          {
+            "type": "list",
+            "isAllowed": true
+          },
+          {
+            "type": "delete",
+            "isAllowed": true
+          },
+          {
+            "type": "write_acl",
+            "isAllowed": true
+          },
+          {
+            "type": "read_acl",
+            "isAllowed": true
+          }
+        ],
+        "users": [
+          "{{ user.name }}"
+        ],
+        "groups": [
+          
+        ],
+        "roles": [
+          
+        ],
+        "conditions": [
+          
+        ],
+        "delegateAdmin": true
+      }
+    ],
+    "denyPolicyItems": [
+      
+    ],
+    "allowExceptions": [
+      
+    ],
+    "denyExceptions": [
+      
+    ],
+    "dataMaskPolicyItems": [
+      
+    ],
+    "rowFilterPolicyItems": [
+      
+    ],
+    "serviceType": "ozone",
+    "options": {
+      
+    },
+    "validitySchedules": [
+      
+    ],
+    "policyLabels": [
+      
+    ],
+    "zoneName": "",
+    "isDenyAllElse": false
+  }

@@ -1,0 +1,10 @@
+{
+    "vizName":"{{ viz.name }}",
+    "template":"{{ viz.size }}-viz",
+    "resourcePool": "{{ viz.queue | default('root.default') }}",
+    "config":{
+        "ldapGroups":["{{ viz.user_group | default('admin_group') }}"],
+        "ldapAdminGroups":["{{ viz.admin_group | default('admin_group') }}"]
+    },
+    "tags":[]
+}

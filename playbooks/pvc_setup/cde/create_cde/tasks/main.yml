@@ -1,0 +1,233 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+- set_fact:
+    dex_endpoint_api: "{{ cdp_endpoint_url }}/dex/api/v1"
+
+- name: DEBUG - dex_endpoint_api
+  debug:
+    msg: "{{ dex_endpoint_api }}"
+
+# List environments
+- name: List Environments and get its crn
+  uri:
+    url: "{{ pvc_api_call }}/environments2/listEnvironments"
+    method: POST
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{\"pageSize\":500}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: env_details
+
+- name: DEBUG - env_details
+  debug:
+    msg: "{{ env_details }}"
+  when: debug | default(false)
+
+- set_fact:
+    env_crn: "{{ env_details.json | community.general.json_query(query) }}"
+  vars:
+    query: "environments[?environmentName == '{{ virtual_cluster.env_name }}' ].crn | [0]"
+
+- set_fact:
+    env_status: "{{ env_details.json | community.general.json_query(query) }}"
+  vars:
+    query: "environments[?environmentName == '{{ virtual_cluster.env_name }}' ].status | [0]"
+
+- name: DEBUG - env_crn
+  debug:
+    msg: "{{ env_crn }}"
+  when: debug | default(false)
+
+- set_fact:
+    is_env_existing: "{{ false if env_crn == '' else true }}"
+
+- name: Fail if cluster is not exist
+  fail:
+    msg: "Cluster with name: {{ virtual_cluster.env_name }} do not exist. Please see dpx-liftie logs and thunderhead-environments2-api logs"
+  when: not is_env_existing
+
+- name: Fail if cluster is not available
+  fail:
+    msg: "Cluster with name: and crn:{{ env_crn }} is not registered. Please see dpx-liftie logs and thunderhead-environments2-api logs"
+  when: env_status != 'AVAILABLE'
+
+
+- name: Get CDE Services
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_clusters
+
+- set_fact:
+    cde_service_id: "{{ cde_clusters.json | community.general.json_query(query) }}"
+  vars:
+    query: "[?name == '{{ virtual_cluster.cde_service_name }}' && status != 'ClusterDeletionCompleted' ].id | [0]"
+
+- set_fact:
+    dex_cde_is_existing: "{{ false if cde_service_id == '' else true }}"
+
+- name: DEBUG - dex_cde_is_existing
+  debug:
+    msg: "{{ dex_cde_is_existing }}"
+
+
+# Check PvC version if >= 1.4.1 and use _v1.4.1
+- set_fact:
+    activate_cde_template: 'activate_cde.json'
+
+- set_fact:
+    activate_cde_template: 'activate_cde_v1.4.1.json'
+  when: pvc_version is version('1.4.1', '>=')
+
+- set_fact:
+    activate_cde_template: 'activate_cde_v1.5.2.json'
+  when: pvc_version is version('1.5.2', '>=')
+
+- set_fact:
+    create_vc_template: 'create_vc.json'
+
+- set_fact:
+    create_vc_template: 'create_vc_v1.4.1.json'
+  when: pvc_version is version('1.4.1', '>=')
+
+- set_fact:
+    create_vc_template: 'create_vc_v1.5.1.json'
+  when: pvc_version is version('1.5.1', '>=')
+
+- set_fact:
+    create_vc_template: 'create_vc_v1.5.2.json'
+  when: pvc_version is version('1.5.2', '>=')
+
+- name: Create CDE Service
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster"
+    method: POST
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: [200, 202]
+    body_format: json
+    body: "{{ lookup('template', '{{ activate_cde_template }}' ) }}"
+    return_content: yes
+    validate_certs: no
+  register: create_cde
+  changed_when: yes
+  when: not dex_cde_is_existing
+
+- set_fact:
+    cde_service_id: "{{ create_cde.json.id }}"
+  when: not dex_cde_is_existing
+
+- name: Check CDE Service Activation
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_service_activation
+  until: " cde_service_activation.json.status == 'ClusterCreationCompleted' "
+  retries: 50
+  delay: 30
+
+# Create VC for created cde service
+
+# TODO: Add purposes and session timeout from 1.5.1
+# {"name":"test","config":{"properties":{"livy.ingress.enabled":"true","iceberg.enabled":"false","spark.version":"3.2.3","dexapp.appTier":"tier-2","session.timeout":"1h"},"resources":{"cpu_requests":"12","mem_requests":"60Gi","gcpu_requests":"8","gmem_requests":"24Gi"},"chartValueOverrides":{"dex-app":{"pipelines.enabled":"true"}}}}
+- name: Get CDE VCs
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_vcs
+
+- set_fact:
+    cde_vc_id: "{{ cde_vcs.json | community.general.json_query(query_id) }}"
+  vars:
+    query_id: "[?name == '{{ virtual_cluster.name }}'].id | [0]"
+
+- set_fact:
+    dex_vc_is_existing: "{{ false if cde_vc_id == '' else true }}"
+
+- name: Wait 15 seconds before creating vc
+  wait_for:
+    timeout: 15
+  when: not dex_vc_is_existing
+
+- name: Create CDE VC
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance"
+    method: POST
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: [200, 202]
+    body_format: json
+    body: "{{ lookup('template', '{{ create_vc_template }}') }}"
+    return_content: yes
+    validate_certs: no
+  register: create_cde
+  changed_when: yes
+  when: not dex_vc_is_existing
+
+- set_fact:
+    cde_vc_id: "{{ create_cde.json.id }}"
+  when: not dex_vc_is_existing
+
+- name: Check CDE VC Activation
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance/{{ cde_vc_id }}"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_vc_activation
+  until: " cde_vc_activation.json.status == 'AppInstalled' "
+  retries: 50
+  delay: 30
+  when: not dex_vc_is_existing

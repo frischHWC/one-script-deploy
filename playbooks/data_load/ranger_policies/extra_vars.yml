@@ -20,5 +20,5 @@
 # Use it for test
 # export CLUSTER_NAME=fri
 # ansible-playbook -i ~/hosts-${CLUSTER_NAME} main.yml --extra-vars "@extra_vars.yml"
-user: francois
+user: ${DEFAULT_ADMIN_USER}
 ranger_url: 

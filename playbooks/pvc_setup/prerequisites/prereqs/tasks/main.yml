@@ -1,0 +1,143 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+####### PvC pre-requisites and fixes to make before setting up PvC #######
+
+# Required Packages
+- name: Install python 3
+  package:
+    name: python3
+    state: present
+
+- name: Install pip3
+  package:
+    name: python3-pip
+    state: present
+
+- name: Install cdpcli
+  pip:
+    name: cdpcli>=0.9.54
+    executable: pip3
+
+- name: Install unzip
+  package:
+    name: unzip
+    state: present
+
+- name: Install gunzip
+  package:
+    name: unzip
+    state: present
+
+
+- set_fact: 
+    cp_domain: "{{ (lookup('template', kube_config_path ) | from_yaml).clusters[0].cluster.server.split('//')[1].split(':')[0].replace('api.', '') }}"
+  when: pvc_type == "OC"
+
+- set_fact: 
+    cp_domain: "{{ pvc_ecs_server_host }}"
+  when: pvc_type == "ECS"
+
+- name: DEBUG - cp_domain
+  debug:
+    msg: "{{ cp_domain }}"
+  when: debug | default(false)
+
+- name: Template Patch to CM 7.4 host
+  template:
+    src: gen_credentials_ipa_cm74.p
+    dest: /tmp/gen_credentials_ipa.p
+  when: cm_version.split('.')[1] == '4'
+
+- name: Template Patch to CM 7.5+ host
+  template:
+    src: gen_credentials_ipa_cm75.p
+    dest: /tmp/gen_credentials_ipa.p
+  when: cm_version is version('7.5.0', '>=')
+
+- name: Apply patch remotely
+  patch:
+    src: /tmp/gen_credentials_ipa.p
+    dest: /opt/cloudera/cm/bin/gen_credentials_ipa.sh
+    remote_src: yes
+    backup: yes
+  ignore_errors: true
+
+# Apply Patch to generate_credentials for FreeIPA (maybe need a PRINCIPAL=$(echo $PRINCIPAL | sed 's/\.\./\./g'))
+- name: Copy Patch for PvC 1.4.1
+  template:
+    src: gen_credentials_ipa_pvc.p
+    dest: /tmp/gen_credentials_ipa_pvc.p
+  when: pvc_version == '1.4.1'
+
+- name: Apply patch remotely
+  patch:
+    src: /tmp/gen_credentials_ipa_pvc.p
+    dest: /opt/cloudera/cm/bin/gen_credentials_ipa.sh
+    remote_src: yes
+    backup: yes
+  when: pvc_version == '1.4.1'
+  ignore_errors: true
+
+# Correct krb5.conf 
+
+- name: Comment include dir lines of /etc/krb5.conf
+  replace:
+    path: /etc/krb5.conf
+    regexp: '^(includedir)'
+    replace: '#\1'
+
+- name: Resolve ipa_server's IP
+  shell: "cat /etc/hosts | grep -m 1 {{ ipa_server }} | cut -d' ' -f1 | xargs"
+  register: ipa_server_ip_resolve
+
+- name: Resolve ipa_server's IP
+  set_fact: 
+    ipa_server_ip: "{{ ipa_server_ip_resolve.stdout }}"
+
+- name: DEBUG - ipa_server's IP
+  debug:
+    msg: "{{ ipa_server_ip }}"
+  when: debug | default(false)
+
+- name: Insert KDC with IPs after
+  blockinfile:
+    path: /etc/krb5.conf
+    insertafter: 'kpasswd_server.*'
+    marker: "# ip_block"
+    block: |
+          kdc = {{ ipa_server_ip }}:88
+          master_kdc = {{ ipa_server_ip }}:88
+          admin_server = {{ ipa_server_ip }}:749
+          kpasswd_server = {{ ipa_server_ip }}:464
+
+# Download and set up cdp-cde-utils.tgz
+
+- name: Download cdp-cde-utils.sh.gz
+  get_url:
+    url: "https://docs.cloudera.com/data-engineering/1.5.0/cdp-cde-utils.sh"
+    dest: ~/cdp-cde-utils.sh
+    mode: '0775'
+  ignore_errors: true
+    
+- name: Set cdp-cde script executable
+  file:
+    path: ~/cdp-cde-utils.sh
+    mode: '0775'
+  ignore_errors: true

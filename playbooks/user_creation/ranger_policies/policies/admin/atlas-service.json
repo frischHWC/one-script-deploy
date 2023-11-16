@@ -1,0 +1,80 @@
+{
+    "version": 1,
+    "service": "cm_atlas",
+    "name": "Atlas Service Policy for user {{ user.name }}",
+    "policyType": 0,
+    "policyPriority": 0,
+    "description": "Admin Atlas Service Policy for user {{ user.name }}",
+    "isAuditEnabled": true,
+    "resources": {
+      "atlas-service": {
+        "values": [
+          "*",
+          "{{ user.name }}"
+        ],
+        "isExcludes": false,
+        "isRecursive": false
+      }
+    },
+    "policyItems": [
+      {
+        "accesses": [
+          {
+            "type": "admin-export",
+            "isAllowed": true
+          },
+          {
+            "type": "admin-import",
+            "isAllowed": true
+          },
+          {
+            "type": "admin-purge",
+            "isAllowed": true
+          },
+          {
+            "type": "admin-audits",
+            "isAllowed": true
+          }
+        ],
+        "users": [
+          "{{ user.name }}"
+        ],
+        "groups": [
+        ],
+        "roles": [
+          
+        ],
+        "conditions": [
+          
+        ],
+        "delegateAdmin": true
+      }
+    ],
+    "denyPolicyItems": [
+      
+    ],
+    "allowExceptions": [
+      
+    ],
+    "denyExceptions": [
+      
+    ],
+    "dataMaskPolicyItems": [
+      
+    ],
+    "rowFilterPolicyItems": [
+      
+    ],
+    "serviceType": "atlas",
+    "options": {
+      
+    },
+    "validitySchedules": [
+      
+    ],
+    "policyLabels": [
+      
+    ],
+    "zoneName": "",
+    "isDenyAllElse": false
+  }

@@ -17,6 +17,7 @@
 # under the License.
 #
 ---
+# CM check & config
 - name: CM Configuration post-install no unlog and fix TLS settings
   hosts: main
   gather_facts: false
@@ -36,6 +37,8 @@
   roles: 
     - { role: get_cluster_root_cert, when: auto_tls | default(false) }
 
+
+# Free IPA fixes
 - name: Fix krb5.conf with Free IPA
   hosts: cluster
   gather_facts: false
@@ -48,6 +51,8 @@
   roles: 
     - { role: hue_free_ipa_ticket_lifetime, when: free_ipa and hue_service_exists | default(false) }
 
+
+# SolR & Knox fixes
 - name: Create missing SolR plugin for Ranger
   hosts: main
   gather_facts: false
@@ -66,6 +71,8 @@
   roles: 
     - { role: add_solr_knox, when: knox_service_exists and solr_service_exists | default(false) }
 
+
+# SSB fixes
 - name: Add SSB urls to Knox
   hosts: main
   gather_facts: false
@@ -78,6 +85,14 @@
   roles: 
     - { role: install_ssb_package, when: ssb_service_exists | default(false) }
 
+- name: Restart SSB
+  hosts: main
+  gather_facts: false
+  roles: 
+    - { role: restart_ssb, when: ssb_service_exists | default(false) }
+
+
+# Knox fixes
 - name: Add Livy 3 urls to Knox
   hosts: main
   gather_facts: false
@@ -90,18 +105,24 @@
   roles: 
     - { role: restart_knox, when: knox_service_exists | default(false) }
 
+
+# KMS fixes
 - name: Add missing TLS values for KMS
   hosts: main
   gather_facts: false
   roles: 
     - { role: fix_kms_tls, when: encryption_activated | default(false) }
 
+
+# Oozie fixes
 - name: Add missing ExtJS for Oozie
   hosts: cluster
   gather_facts: false
   roles: 
     - { role: fix_oozie_ui, when: oozie_service_exists | default(false) }
 
+
+# WXM Setup
 - name: Pre-Configure WXM
   hosts: main, tp_host
   gather_facts: false
@@ -121,6 +142,8 @@
   roles: 
     - { role: wxm_restart, when: use_wxm | default(false) }
 
+
+# Ranger fixes
 - name: Ranger extra policies to have enough rights with basic accounts
   hosts: main
   gather_facts: false

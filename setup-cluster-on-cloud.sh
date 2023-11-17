@@ -228,7 +228,7 @@ while [ "$1" != "" ]; do
         --worker-disk-size)
             WORKER_DISK_SIZE=$VALUE
             ;;
-         --worker-stream-DISK_SIZE)
+         --worker-stream-disk-size)
             WORKER_STREAM_DISK_SIZE=$VALUE
             ;;
         --ipa-disk-size)

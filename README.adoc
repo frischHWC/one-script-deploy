@@ -64,7 +64,7 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | True
 | 
 
-| 
+| &#10003;
 | cdp-all-services-pvc
 | CDH 7.1.9.2 & CM 7.11.3.2 & PvC 1.5.2
 | CENTOS 7.9

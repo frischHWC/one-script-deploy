@@ -6,7 +6,7 @@
 
 - Support for CDP 7.1.9
 - Support for PvC 1.5.2
-- Frozen branch and versions for CDP 7.1.7 / CDH 5 & 6 / WXM
+- Frozen branch and versions for CDP 7.1.7 / CDH 5 & 6 
 - Refactor PvC Playbooks 
 
 ### Deprecations:

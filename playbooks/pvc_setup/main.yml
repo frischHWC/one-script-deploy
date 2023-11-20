@@ -64,7 +64,7 @@
   gather_facts: false
   roles: 
     - role: prerequisites/patch_ecs_agent
-      when: not skip_pvc_prereqs and pvc_type == "ECS"
+      when: not skip_pvc_prereqs and pvc_type == "ECS" and cm_version is version('7.7.1', '<')
 
 - name: Pre-requisites and fixes for PvC 
   hosts: "{{ cloudera_manager_host }}"

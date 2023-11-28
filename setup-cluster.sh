@@ -163,6 +163,7 @@ export PVC_ECS_SERVER_HOST=""
 export CLUSTER_NAME_STREAMING=""
 export USE_ROOT_CA="false"
 export USE_OUTSIDE_PAYWALL_BUILDS="false"
+export FREE_IPA_TRIES=2
 # To solve any potential issue with UTF-8
 export ENV='en_US.UTF-8'
 export LC_ALL='en_US.UTF-8'
@@ -1556,20 +1557,35 @@ then
 
         if [ "${FREE_IPA}" = "true" ]
         then
-            echo "******* Installing Free IPA *******"
-            if [ "${DEBUG}" = "true" ]
+            # Free IPA has intermittent failures (usually due to hosts joining the realm too fast), so a simple retry make it work
+            FREE_IPA_LAUNCH_TRIED=0
+            FREE_IPA_FAILED=true
+            while [ $FREE_IPA_LAUNCH_TRIED -lt $FREE_IPA_TRIES ] ; do
+                if [ $FREE_IPA_LAUNCH_TRIED -gt 0 ]; then
+                    echo "Launching a retry because installation failed, retry is : $FREE_IPA_LAUNCH_TRIED out of $FREE_IPA_TRIES possible tries" 
+                fi
+                echo "******* Installing Free IPA *******"
+                if [ "${DEBUG}" = "true" ]
+                then
+                    echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml ${ANSIBLE_PYTHON_3_PARAMS} "
+                fi
+                ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml ${ANSIBLE_PYTHON_3_PARAMS}" >> ${LOG_DIR}/deployment.log 2>&1
+                OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
+                if [ "${OUTPUT}" == "2" ]
+                then
+                  echo " SUCCESS: Deployment of Free IPA"
+                  FREE_IPA_FAILED=false
+                  break
+                else
+                  echo " FAILURE: Could not deploy Free IPA" 
+                  echo " See details in file: ${LOG_DIR}/deployment.log "
+                fi
+                FREE_IPA_LAUNCH_TRIED=$((FREE_IPA_LAUNCH_TRIED + 1))
+            done
+            if [ "${FREE_IPA_FAILED}" == "true" ]
             then
-                echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml ${ANSIBLE_PYTHON_3_PARAMS} "
-            fi
-            ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml ${ANSIBLE_PYTHON_3_PARAMS}" >> ${LOG_DIR}/deployment.log 2>&1
-            OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-            if [ "${OUTPUT}" == "2" ]
-            then
-              echo " SUCCESS: Deployment of Free IPA"
-            else
-              echo " FAILURE: Could not deploy Free IPA" 
-              echo " See details in file: ${LOG_DIR}/deployment.log "
-              exit 1
+                echo " Total FAILURE: Could not deploy Free IPA after $FREE_IPA_TRIES tries"
+                exit 1 
             fi
         fi
 

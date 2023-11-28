@@ -260,6 +260,59 @@
   debug:
     msg: "{{ env_crn }}"
 
+# List and delete old CML Registry 
+- name: List ML Registries
+  uri:
+    url: "{{ cml_endpoint_api }}/listModelRegistries"
+    method: POST
+    headers: 
+      Accept: "*/*"
+      Accept-Encoding: gzip, deflate, br
+      Content-Type: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{}"
+    status_code: [200, 202]
+    return_content: yes
+    validate_certs: no
+  register: ml_registries_answer
+
+- name: DEBUG - ml_registries_answer
+  debug:
+    msg: "{{ ml_registries_answer }}"
+  when: debug | default(false)
+
+- set_fact:
+    mlr_crn: "{{ ml_registries_answer.json | community.general.json_query(query) }}"
+  vars:
+    query: "modelRegistries[?environmentName == '{{ ml_registry.env_name }}' ].crn | [0]"
+    
+- name: DEBUG - mlr_crn
+  debug:
+    msg: "{{ mlr_crn }}"
+
+- name: Delete Model Registry
+  uri:
+    url: "{{ cml_endpoint_api }}/deleteModelRegistry"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', 'delete_cml_registry.json') }}"
+    status_code: [200, 202]
+    return_content: yes
+    validate_certs: no
+  register: mlr_delete_answer
+  when: mlr_crn != '' 
+
+- name: DEBUG - mlr_delete_answer
+  debug:
+    msg: "{{ mlr_delete_answer }}"
+  when: mlr_crn != '' 
+
+
 # Create ML Registry
 - name: Create CML Registry
   uri:

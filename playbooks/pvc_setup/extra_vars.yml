@@ -163,6 +163,9 @@ workspaces:
     nfs_disk_size: 100 # default = 1000 (It is in GiB, so 1000 = 1 TiB)
     nfs_storage_class: longhorn # default = longhorn (change it if running on OC)
     ml_gov_principal: mlgov # default = mlgov
+    queue: root.default.customer # default = root.default
+    mem_quota: 100 # default = 50
+    cpu_quota: 20 # default = 10
 
 ml_registries:
   - name: "mlr"
@@ -283,12 +286,17 @@ yunikorn_child_queues:
     priority: true # Optionnal defautl to true
     priority_fencing: false # Optionnal defautl to false
     priority_offset: 0 # Optionnal defautl to 0
+    # Optional: Tags can be used for many reasons (including setting quota management for CML with this tag)
+    tags: 
+      - "experience:cml"
 
   - name: customer
     mem_max: 250G
     cpu_max: 150
     mem_guaranteed: 100G
     cpu_guaranteed: 50 
+    tags: 
+      - "experience:cml"
 
   - name: industry
     mem_max: 350G

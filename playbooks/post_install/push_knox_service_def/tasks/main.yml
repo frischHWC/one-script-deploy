@@ -26,71 +26,71 @@
     owner: knox
     group: knox
   with_items: 
-    - "livy_for_spark3/0.6.0/" 
-    - "ssb-sse-ui/1.9.0/" 
-    - "ssb-sse-ws/1.9.0/"
-    - "ssb-sse-lb-ui/1.9.0/"
-    - "ssb-sse-lb-ws/1.9.0/"
-    - "ssb-sse-lb-api/1.9.0/"
+    - "livy_for_spark3/0.7.2/" 
+    - "ssb-sse-ui/1.11.0/" 
+    - "ssb-sse-ws/1.11.0/"
+    - "ssb-sse-lb-ui/1.11.0/"
+    - "ssb-sse-lb-ws/1.11.0/"
+    - "ssb-sse-lb-api/1.11.0/"
 
 
 # Push files to these directories
 - name: Copy Knox SD - Livy 3
   copy:
     src: "rewrite_livy.xml"
-    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/livy_for_spark3/0.6.0/rewrite.xml
+    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/livy_for_spark3/0.7.2/rewrite.xml
 
 - name: Copy Knox SD - Livy 3
   copy:
     src: "service_livy.xml"
-    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/livy_for_spark3/0.6.0/service.xml
+    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/livy_for_spark3/0.7.2/service.xml
 
 - name: Copy Knox SD - SSB UI
   copy:
     src: "rewrite_ssb_ui.xml"
-    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-ui/1.9.0/rewrite.xml
+    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-ui/1.11.0/rewrite.xml
 
 - name: Copy Knox SD - SSB UI
   copy:
     src: "service_ssb_ui.xml"
-    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-ui/1.9.0/service.xml
+    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-ui/1.11.0/service.xml
 
 - name: Copy Knox SD - SSB WS
   copy:
     src: "rewrite_ssb_ws.xml"
-    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-ws/1.9.0/rewrite.xml
+    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-ws/1.11.0/rewrite.xml
 
 - name: Copy Knox SD - SSB WS
   copy:
     src: "service_ssb_ws.xml"
-    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-ws/1.9.0/service.xml
+    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-ws/1.11.0/service.xml
 
 - name: Copy Knox SD - SSB UI LB
   copy:
     src: "rewrite_ssb_lb_ui.xml"
-    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-lb-ui/1.9.0/rewrite.xml
+    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-lb-ui/1.11.0/rewrite.xml
 
 - name: Copy Knox SD - SSB UI LB
   copy:
     src: "service_ssb_lb_ui.xml"
-    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-lb-ui/1.9.0/service.xml
+    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-lb-ui/1.11.0/service.xml
 
 - name: Copy Knox SD - SSB WS LB
   copy:
     src: "rewrite_ssb_lb_ws.xml"
-    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-lb-ws/1.9.0/rewrite.xml
+    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-lb-ws/1.11.0/rewrite.xml
 
 - name: Copy Knox SD - SSB WS LB
   copy:
     src: "service_ssb_lb_ws.xml"
-    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-lb-ws/1.9.0/service.xml
+    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-lb-ws/1.11.0/service.xml
 
 - name: Copy Knox SD - SSB API LB
   copy:
     src: "rewrite_ssb_lb_api.xml"
-    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-lb-api/1.9.0/rewrite.xml
+    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-lb-api/1.11.0/rewrite.xml
 
 - name: Copy Knox SD - SSB API LB
   copy:
     src: "service_ssb_lb_api.xml"
-    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-lb-api/1.9.0/service.xml
+    dest: /opt/cloudera/parcels/CDH/lib/knox/data/services/ssb-sse-lb-api/1.11.0/service.xml

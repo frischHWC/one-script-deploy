@@ -216,14 +216,20 @@ clusters:
           kafka.connect.hostports: "{{ groups.cluster_worker_no_hadoop | first | default(omit) }}:{{ kafka_connect_port }}"
           
       SQL_STREAM_BUILDER:
+        SERVICEWIDE:
+          loadbalancer.url: "{{ groups.cloudera_manager | first | default(omit) }}"
         STREAMING_SQL_ENGINE:
           default.admin.password: "{{ default_password }}" 
-          ssb-conf/application.properties_role_safety_valve: log.sqlio.restapi = true
+          ssb-conf/application.properties_role_safety_valve: log.sqlio.restapi = true 
+          ssb.yarn.ui.proxy: "/gateway/cdp-proxy/yarnuiv2/proxy"
+          ssb.mve.proxy: "/gateway/cdp-proxy-api/ssb-mve-api"
+          ssb.mve.loadbalancer.proxy: "/gateway/cdp-proxy/ssb-sse-ui-lb/ui"
         MATERIALIZED_VIEW_ENGINE:
           ssb.mve.datasource.url: "jdbc:{{ database_type }}://{{ database_host }}:{{ database_type | default_database_port }}/ssb_mve"
           ssb.mve.datasource.username: ssb_mve
           ssb.mve.datasource.password: "{{ database_default_password }}"
           ssb-conf/application.properties_role_safety_valve: log.snapper.restapi = true
+
 
       YARN:
         SERVICEWIDE:

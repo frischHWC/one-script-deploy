@@ -165,7 +165,7 @@ workspaces:
     ml_gov_principal: mlgov # default = mlgov
     queue: root.default.customer # default = root.default
     mem_quota: 100 # default = 50
-    cpu_quota: 20 # default = 10
+    cpu_quota: 40 # default = 20
 
 ml_registries:
   - name: "mlr"

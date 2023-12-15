@@ -7,8 +7,10 @@ variable "hostname_private_ip_map" {
 }
 
 variable "machines_ids" {
-  type    = set(string)
-  default = toset([ ${MACHINES_IDS} ])
+  type    = map(string)
+  default = {
+    ${HOST_NAME_MACHINES_ID_MAP}
+  }
 }
 
 # NETWORK RESOURCES
@@ -49,10 +51,14 @@ resource "aws_route53_record" "hosts_wildcard_records" {
   records = [each.value]
 }
 
-# TODO: Add elastic IP for each machine
+# Add elastic IP for each machine
 resource "aws_eip" "hosts_elastic_ips" {
   for_each = var.machines_ids
-  instance = each.key
+  instance = each.value
+  domain   = "vpc"
+  tags = {
+    Name = each.key
+  }
 }
 
 # TODO: Add PTR records for reverse dns records

@@ -11,8 +11,8 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 |SUCCESS |Type |Versions |OS |DB |KDC |TLS |Comment 
 
 | &#10003;
-| cdp-basic
-| CDH 7.1.9.2 & CM 7.11.3.2
+| basic
+| CDH 7.1.9.3 & CM 7.11.3.3
 | CENTOS 7.9
 | Postgres 14
 | MIT KDC
@@ -20,8 +20,8 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | 
 
 | &#10003;
-| cdp-basic-enc
-| CDH 7.1.9.2 & CM 7.11.3.2
+| basic-enc
+| CDH 7.1.9.3 & CM 7.11.3.3
 | CENTOS 7.9
 | Postgres 14
 | MIT KDC
@@ -29,8 +29,8 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | 
 
 | &#10003;
-| cdp-all-services
-| CDH 7.1.9.2 & CM 7.11.3.2
+| full
+| CDH 7.1.9.3 & CM 7.11.3.3
 | CENTOS 7.9
 | Postgres 14
 | MIT KDC
@@ -38,8 +38,17 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | 
 
 | &#10003;
-| cdp-streaming
-| CDH 7.1.9.2 & CM 7.11.3.2
+| all-services
+| CDH 7.1.9.3 & CM 7.11.3.3
+| CENTOS 7.9
+| Postgres 14
+| MIT KDC
+| True
+| 
+
+| &#10003;
+| streaming
+| CDH 7.1.9.3 & CM 7.11.3.3
 | CENTOS 7.9
 | Postgres 14
 | MIT KDC
@@ -56,17 +65,8 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | 
 
 | &#10003;
-| cdp-pvc
-| CDH 7.1.9.2 & CM 7.11.3.2 & PvC 1.5.2
-| CENTOS 7.9
-| Postgres 14
-| Free IPA
-| True
-| 
-
-| &#10003;
-| cdp-all-services-pvc
-| CDH 7.1.9.2 & CM 7.11.3.2 & PvC 1.5.2
+| pvc
+| CDH 7.1.9.3 & CM 7.11.3.3 & PvC 1.5.2-h1
 | CENTOS 7.9
 | Postgres 14
 | Free IPA
@@ -74,6 +74,15 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | 
 
 | 
+| all-services-pvc
+| CDH 7.1.9.3 & CM 7.11.3.3 & PvC 1.5.2-h1
+| CENTOS 7.9
+| Postgres 14
+| Free IPA
+| True
+| 
+
+| 
 | 
 | 
 | 
@@ -83,7 +92,7 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | 
 
 | 
-| cdp-pvc-oc
+| pvc-oc
 | CDH 7.1.9.2 & CM 7.11.3.2 & PvC 1.5.2
 | CENTOS 7.9
 | Postgres 14
@@ -92,7 +101,7 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | 
 
 | 
-| cdp-all-services-pvc-oc
+| all-services-pvc-oc
 | CDH 7.1.9.2 & CM 7.11.3.2 & PvC 1.5.2
 | CENTOS 7.9
 | Postgres 14
@@ -100,6 +109,51 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | True
 | 
 
+
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+| 
+
+| 
+| basic
+| CDH 7.1.9.3 & CM 7.11.3.3
+| CENTOS 8.8
+| Postgres 14
+| MIT KDC
+| True
+| On AWS with setup-cluster-on-cloud
+
+| 
+| full
+| CDH 7.1.9.3 & CM 7.11.3.3
+| CENTOS 8.8
+| Postgres 14
+| MIT KDC
+| True
+| On AWS with setup-cluster-on-cloud
+
+| 
+| streaming
+| CDH 7.1.9.3 & CM 7.11.3.3
+| CENTOS 8.8
+| Postgres 14
+| MIT KDC
+| True
+| On AWS with setup-cluster-on-cloud
+
+| 
+| pvc
+| CDH 7.1.9.3 & CM 7.11.3.3 & PvC 1.5.2-h1
+| CENTOS 8.8
+| Postgres 14
+| Free IPA
+| True
+| On AWS with setup-cluster-on-cloud
 
 | 
 | 

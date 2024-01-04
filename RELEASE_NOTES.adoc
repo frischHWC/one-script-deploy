@@ -1,11 +1,33 @@
 # Releases Notes
 
+## v1.1
+
+### New Features:
+
+- Public Cloud Provisioning on AWS 
+- Support for CDP 7.1.9.2 & 7.1.9.3
+- Support for PvC 1.5.2-h1
+- Datagen version 0.4.12
+
+### Deprecations:
+
+- CDP WXM is still working but branch has been frozen and will no longer be tested
+- HDP 2 & 3 are still working but branch has been frozen and will no longer be tested
+- CDH 5 & 6 are still working but branch has been frozen and will no longer be tested
+
+### WIP:
+
+- Issue on stuck ansible connection when importing the cluster template => Need to relaunch the playbooks and stop stuck connection
+- Parameters for more network and disks settings on Cloud
+- PvC on AWS (Requires some PTR Records)
+
+
 ## v1.0
 
 ### New Features:
 
 - Support for CDP 7.1.9
-- Support for PvC 1.5.2
+- Support for PvC 1.5.2-h1
 - Frozen branch and versions for CDP 7.1.7 / CDH 5 & 6 
 - Refactor PvC Playbooks 
 

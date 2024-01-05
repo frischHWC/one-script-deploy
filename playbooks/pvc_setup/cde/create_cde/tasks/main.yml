@@ -166,8 +166,6 @@
 
 # Create VC for created cde service
 
-# TODO: Add purposes and session timeout from 1.5.1
-# {"name":"test","config":{"properties":{"livy.ingress.enabled":"true","iceberg.enabled":"false","spark.version":"3.2.3","dexapp.appTier":"tier-2","session.timeout":"1h"},"resources":{"cpu_requests":"12","mem_requests":"60Gi","gcpu_requests":"8","gmem_requests":"24Gi"},"chartValueOverrides":{"dex-app":{"pipelines.enabled":"true"}}}}
 - name: Get CDE VCs
   uri:
     url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance"
@@ -231,3 +229,5 @@
   retries: 50
   delay: 30
   when: not dex_vc_is_existing
+
+# TODO: Use helm charts to lower CDE 

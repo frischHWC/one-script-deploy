@@ -419,6 +419,8 @@
   when: warehouse.type == 'impala' | default(false)
 
 # TODO: Here you change deployment resources of VW to lower it. To remove it and use helm charts upgrae instead.
+# TODO: To upgrade the helm is "pretty" hard as it is recreated each time but in cdw pod, there are some files to create the helm under:
+# /charts of pod standalone-compute-operator ?
 
 - name: Pause 10 seconds to let the deployments to be created
   pause:

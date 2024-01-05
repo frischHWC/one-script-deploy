@@ -54,13 +54,13 @@ export REALM="FRISCH.COM"
 export ENCRYPTION_ACTIVATED="false"
 
 # Versions
-export CM_VERSION="7.11.3.2"
-export CDH_VERSION="7.1.9.2"
+export CM_VERSION="7.11.3.3"
+export CDH_VERSION="7.1.9.3"
 export CSA_VERSION="1.11.0.0"
 export CFM_VERSION="2.1.6.0"
 export SPARK3_VERSION="3.3.7180.14"
 export WXM_VERSION="2.3.0"
-export PVC_VERSION="1.5.2"
+export PVC_VERSION="1.5.2-h1"
 export AMBARI_VERSION="2.7.5.0"
 export HDP_VERSION="3.1.5.6091"
 export HDF_VERSION="3.5.0.0"
@@ -137,7 +137,7 @@ export DATAGEN_REPO_URL="https://github.com/frischHWC/datagen"
 export DATAGEN_REPO_BRANCH="main"
 export DATAGEN_REPO_PARCEL=""
 export DATAGEN_CSD_URL=""
-export DATAGEN_VERSION="0.4.11"
+export DATAGEN_VERSION="0.4.12"
 export EDGE_HOST=""
 
 # Demo
@@ -163,6 +163,7 @@ export PVC_ECS_SERVER_HOST=""
 export CLUSTER_NAME_STREAMING=""
 export USE_ROOT_CA="false"
 export USE_OUTSIDE_PAYWALL_BUILDS="false"
+export FREE_IPA_TRIES=2
 # To solve any potential issue with UTF-8
 export ENV='en_US.UTF-8'
 export LC_ALL='en_US.UTF-8'
@@ -942,6 +943,12 @@ then
         export CM_REPO="https://archive.cloudera.com/p/cm5/${OS_BY_CLDR}/${OS_VERSION:0:1}/x86_64/cm/5.16.2.4505"
     else    
         export CM_REPO="https://archive.cloudera.com/p/cm${CM_VERSION:0:1}/${CM_VERSION}/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}"
+        
+        # Starting from CM 7.11.3.3, patch are behind a /patch URL
+        if [ "${CM_VERSION}" = "7.11.3.3" ]
+        then 
+            export CM_REPO="https://archive.cloudera.com/p/cm${CM_VERSION:0:1}/patch/${CM_VERSION}-47960007/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}"
+        fi
     fi
 fi
 
@@ -1556,20 +1563,35 @@ then
 
         if [ "${FREE_IPA}" = "true" ]
         then
-            echo "******* Installing Free IPA *******"
-            if [ "${DEBUG}" = "true" ]
+            # Free IPA has intermittent failures (usually due to hosts joining the realm too fast), so a simple retry make it work
+            FREE_IPA_LAUNCH_TRIED=0
+            FREE_IPA_FAILED=true
+            while [ $FREE_IPA_LAUNCH_TRIED -lt $FREE_IPA_TRIES ] ; do
+                if [ $FREE_IPA_LAUNCH_TRIED -gt 0 ]; then
+                    echo "Launching a retry because installation failed, retry is : $FREE_IPA_LAUNCH_TRIED out of $FREE_IPA_TRIES possible tries" 
+                fi
+                echo "******* Installing Free IPA *******"
+                if [ "${DEBUG}" = "true" ]
+                then
+                    echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml ${ANSIBLE_PYTHON_3_PARAMS} "
+                fi
+                ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml ${ANSIBLE_PYTHON_3_PARAMS}" >> ${LOG_DIR}/deployment.log 2>&1
+                OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
+                if [ "${OUTPUT}" == "2" ]
+                then
+                  echo " SUCCESS: Deployment of Free IPA"
+                  FREE_IPA_FAILED=false
+                  break
+                else
+                  echo " FAILURE: Could not deploy Free IPA" 
+                  echo " See details in file: ${LOG_DIR}/deployment.log "
+                fi
+                FREE_IPA_LAUNCH_TRIED=$((FREE_IPA_LAUNCH_TRIED + 1))
+            done
+            if [ "${FREE_IPA_FAILED}" == "true" ]
             then
-                echo " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml ${ANSIBLE_PYTHON_3_PARAMS} "
-            fi
-            ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml ${ANSIBLE_PYTHON_3_PARAMS}" >> ${LOG_DIR}/deployment.log 2>&1
-            OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-            if [ "${OUTPUT}" == "2" ]
-            then
-              echo " SUCCESS: Deployment of Free IPA"
-            else
-              echo " FAILURE: Could not deploy Free IPA" 
-              echo " See details in file: ${LOG_DIR}/deployment.log "
-              exit 1
+                echo " Total FAILURE: Could not deploy Free IPA after $FREE_IPA_TRIES tries"
+                exit 1 
             fi
         fi
 

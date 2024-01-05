@@ -6,6 +6,13 @@
   "enableGovernance": "{{ workspace.enable_governance | default(false) }}",
   "enableModelMetrics": "{{ workspace.enable_model_metrics | default(false) }}",
   "existingDatabaseConfig": {},
+  "resourcePoolConfig": {
+    "parentPoolName": "{{ workspace.queue | default('root.default') }}",
+    "workspaceQuota": {
+      "cpuQuota": "{{ workspace.cpu_quota | default('20') }}",
+      "memoryQuota": "{{ workspace.mem_quota | default('50') }} G"
+    }
+  },
   "namespace": "{{ workspace.name }}",
   "performCdswMigration": false,
   "mlGovernancePrincipal": "{{ workspace.ml_gov_principal | default('mlgov') }}",

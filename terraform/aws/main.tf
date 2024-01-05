@@ -85,7 +85,15 @@ resource "aws_security_group" "${CLUSTER_NAME}_external_security_group" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"   
-    cidr_blocks = ["${WHITELIST_IP}/32"] 
+    cidr_blocks = [${WHITELIST_IP}] 
+  }
+
+  # For CM
+  ingress {
+    from_port   = 7180
+    to_port     = 7180
+    protocol    = "tcp"   
+    cidr_blocks = [${WHITELIST_IP}] 
   }
 
   # For CM
@@ -93,7 +101,7 @@ resource "aws_security_group" "${CLUSTER_NAME}_external_security_group" {
     from_port   = 7183
     to_port     = 7183
     protocol    = "tcp"   
-    cidr_blocks = ["${WHITELIST_IP}/32"] 
+    cidr_blocks = [${WHITELIST_IP}] 
   }
 
   # For Ranger
@@ -101,7 +109,7 @@ resource "aws_security_group" "${CLUSTER_NAME}_external_security_group" {
     from_port   = 6182
     to_port     = 6182
     protocol    = "tcp"   
-    cidr_blocks = ["${WHITELIST_IP}/32"] 
+    cidr_blocks = [${WHITELIST_IP}] 
   }
 
   # For Knox
@@ -109,7 +117,7 @@ resource "aws_security_group" "${CLUSTER_NAME}_external_security_group" {
     from_port   = 8443
     to_port     = 8443
     protocol    = "tcp"   
-    cidr_blocks = ["${WHITELIST_IP}/32"] 
+    cidr_blocks = [${WHITELIST_IP}] 
   }
 
   # For Datagen
@@ -117,7 +125,7 @@ resource "aws_security_group" "${CLUSTER_NAME}_external_security_group" {
     from_port   = 4242
     to_port     = 4242
     protocol    = "tcp"   
-    cidr_blocks = ["${WHITELIST_IP}/32"] 
+    cidr_blocks = [${WHITELIST_IP}] 
   }
 
   # Add a list of ports instead of all of them

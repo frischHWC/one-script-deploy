@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<service name="ssb-sse-ws" role="SSB-SSE-WS" version="1.9.0">
+<service name="ssb-sse-ws" role="SSB-SSE-WS" version="1.11.0">
    <metadata>
       <context>/ssb-sse-ws</context>
       <description>SSB-SSE-WS</description>

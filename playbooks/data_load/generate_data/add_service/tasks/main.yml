@@ -224,3 +224,15 @@
     status_code: 200
     validate_certs: no
     body_format: json
+
+- name: Restart of Kafka  
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ kafka_service_name }}/commands/restart"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: POST
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: no
+    body_format: json
+  when: kafka_exists

@@ -22,7 +22,11 @@
       }
     },
     "metadata": {
-      
+      "tags": {
+        {% if queue.tags is defined %}
+          {% for value in queue.tags %}"{{ value.split(':')[0] }}": "{{ value.split(':')[1] }}"{% if not loop.last %},{% endif %}{% endfor %}
+        {% endif %}
+      }
     },
     "scheduling": {
       "preemption": {

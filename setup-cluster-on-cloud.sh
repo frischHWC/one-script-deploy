@@ -28,12 +28,12 @@ export CLUSTER_TYPE="basic"
 export PUBLIC_KEY_PATH=~/.ssh/id_rsa.pub
 export PRIVATE_KEY_PATH="~/.ssh/id_rsa"
 export INITIAL_NODE_USER="rocky"
+export WHITELIST_IPS=""
 
 # Related to AWS
 export AWS_ACCESS_KEY_ID=""
 export AWS_SECRET_ACCESS_KEY=""
 export KEY_PAIR_NAME=""
-export WHITELIST_IP=""
 export AMI_ID="ami-0618721d17eff62b0"
 export REGION="eu-west-3"
 
@@ -90,7 +90,7 @@ function usage()
     echo "  --aws-secret-access-key=$AWS_SECRET_ACCESS_KEY : Mandatory to get access to AWS account"
     echo "  --aws-key-pair-name=$KEY_PAIR_NAME : Mandatory to get access to AWS account"
     echo "  --aws-private-key-path=$PRIVATE_KEY_PATH : Mandatory to get access to AWS account"
-    echo "  --whitelist-ip=$WHITELIST_IP : IP to whitelist for all incoming connections to instances"
+    echo "  --whitelist-ips=$WHITELIST_IPS : IP to whitelist for all incoming connections to instances"
     echo "  --ami-id=$AMI_ID : (Optional) The cloud provider to use among YCLOUD, GCE, AWS (Default) "
     echo "  --region=$REGION : (Optional) Name of the region, provider-dependent where to provisioon machines (Default) eu-west-3"
     echo ""
@@ -177,8 +177,8 @@ while [ "$1" != "" ]; do
         --aws-key-pair-name)
             KEY_PAIR_NAME=$VALUE
             ;;
-        --whitelist-ip)
-            WHITELIST_IP=$VALUE
+        --whitelist-ips)
+            WHITELIST_IPS=$VALUE
             ;;
         --ami-id)
             AMI_ID=$VALUE
@@ -487,13 +487,24 @@ then
     export DOMAIN_NAME="${CLUSTER_NAME}.${KEY_PAIR_NAME}.onescript.vpc.com"
 fi
 
+# Split WHITELIST_IP
+export WHIP_UNIQ=$( echo ${WHITELIST_IPS} | uniq )
+export WHIP_ARRAY=( ${WHIP_UNIQ} )
+export WHITELIST_IP=""
+for ip in "${WHIP_ARRAY[@]}"; do
+    WHITELIST_IP+="\"$ip/32\","
+done
+WHITELIST_IP=${WHITELIST_IP%,}
+
+## Terraform files
 export TF_FILE_TEMPLATE_PATH="terraform/${TF_FILE_TEMPLATE_NAME}"
-export TF_TEMPLATE_HOSTS_FILE_PATH="terraform/${TF_FILE_TEMPLATE_NAME}/hosts.tpl"
+export TF_TEMPLATE_HOSTS_FILE_PATH="terraform/${TF_FILE_TEMPLATE_NAME}/ids_hostname.tpl"
 export TF_TEMPLATE_INTERNAL_HOSTS_FILE_PATH="terraform/${TF_FILE_TEMPLATE_NAME}/hosts_internal.tpl"
 
 export TF_WORK_DIR="${TF_BASE_WORK_DIR}/terraform_${CLUSTER_NAME}"
-export TF_HOSTS_FILE=${TF_WORK_DIR}/etc_hosts
+export TF_INTERNAL_MACHINE_IDS_FILE=${TF_WORK_DIR}/internal_machine_ids
 export TF_INTERNAL_HOSTS_FILE=${TF_WORK_DIR}/internal_etc_hosts
+export TF_HOSTS_FILE=${TF_WORK_DIR}/external_etc_hosts
 export CURRENT_DIR=$(pwd)
 
 export YOUR_PUBLIC_KEY=$(cat ${PUBLIC_KEY_PATH})
@@ -506,11 +517,13 @@ envsubst < ${TF_FILE_TEMPLATE_PATH}/outputs.tf > ${TF_WORK_DIR}/outputs.tf
 envsubst < ${TF_FILE_TEMPLATE_PATH}/variables.tf > ${TF_WORK_DIR}/variables.tf
 envsubst < ${TF_FILE_TEMPLATE_PATH}/providers.tf > ${TF_WORK_DIR}/providers.tf
 
-cp ${TF_TEMPLATE_HOSTS_FILE_PATH} ${TF_WORK_DIR}/hosts.tpl
+cp ${TF_TEMPLATE_HOSTS_FILE_PATH} ${TF_WORK_DIR}/ids_hostname.tpl
 cp ${TF_TEMPLATE_INTERNAL_HOSTS_FILE_PATH} ${TF_WORK_DIR}/hosts_internal.tpl
 
 rm ${TF_HOSTS_FILE}
 touch ${TF_HOSTS_FILE}
+rm ${TF_INTERNAL_MACHINE_IDS_FILE}
+touch ${TF_INTERNAL_MACHINE_IDS_FILE}
 rm ${TF_INTERNAL_HOSTS_FILE}
 touch ${TF_INTERNAL_HOSTS_FILE}
 
@@ -524,7 +537,11 @@ then
     echo ""
 fi
 
-# Launch Terraform
+
+
+## Provision Machines and basic network
+echo "Start Provisionning Machines on the Cloud"
+
 cd ${TF_WORK_DIR}
 terraform init
 terraform validate
@@ -534,11 +551,11 @@ terraform apply -auto-approve
 # Get Terraform output
 export VPC_ID=$(terraform output -json vpc_id | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
 export BASE_MASTERS=$(terraform output -json masters | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
-terraform output ip_hosts_masters >> ${TF_HOSTS_FILE}
+terraform output ip_hosts_masters >> ${TF_INTERNAL_MACHINE_IDS_FILE}
 terraform output ip_internal_hosts_masters >> ${TF_INTERNAL_HOSTS_FILE}
 export MASTER_IDS=$(terraform output -json masters_ids | jq -r '.[0] | @sh ' | sort | uniq)
 export BASE_WORKERS=$(terraform output -json workers | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
-terraform output ip_hosts_workers >> ${TF_HOSTS_FILE}
+terraform output ip_hosts_workers >> ${TF_INTERNAL_MACHINE_IDS_FILE}
 terraform output ip_internal_hosts_workers >> ${TF_INTERNAL_HOSTS_FILE}
 export WORKER_IDS=$(terraform output -json workers_ids | jq -r '.[0] | @sh ' | sort | uniq)
 
@@ -547,7 +564,7 @@ export FREE_IPA_NODE=""
 if [ ${FREE_IPA} = "true" ]
 then
     export FREE_IPA_NODE=$(terraform output -json ipa | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
-    terraform output ip_hosts_ipa >> ${TF_HOSTS_FILE}
+    terraform output ip_hosts_ipa >> ${TF_INTERNAL_MACHINE_IDS_FILE}
     terraform output ip_internal_hosts_ipa >> ${TF_INTERNAL_HOSTS_FILE}
     export IPA_IDS=$(terraform output -json ipa_ids | jq -r '.[0] | @sh ' | sort | uniq)
 fi
@@ -556,7 +573,7 @@ export KTS_NODE=""
 if [ ${ENCRYPTION_ACTIVATED} = "true" ]
 then
     export KTS_NODE=$(terraform output -json kts | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
-    terraform output ip_hosts_kts >> ${TF_HOSTS_FILE}
+    terraform output ip_hosts_kts >> ${TF_INTERNAL_MACHINE_IDS_FILE}
     terraform output ip_internal_hosts_kts >> ${TF_INTERNAL_HOSTS_FILE}
     export KTS_IDS=$(terraform output -json kts_ids | jq -r '.[0] | @sh ' | sort | uniq)
 fi
@@ -565,7 +582,7 @@ export BASE_WORKERS_STREAM=""
 if [ ${WORKER_STREAM_COUNT} != 0 ]
 then
     export BASE_WORKERS_STREAM=$(terraform output -json workers-stream | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
-    terraform output ip_hosts_worker_stream >> ${TF_HOSTS_FILE}
+    terraform output ip_hosts_worker_stream >> ${TF_INTERNAL_MACHINE_IDS_FILE}
     terraform output ip_internal_hosts_worker_stream >> ${TF_INTERNAL_HOSTS_FILE}
     export WORKER_STREAM_IDS=$(terraform output -json workers-stream_ids | jq -r '.[0] | @sh ' | sort | uniq)
 fi
@@ -574,7 +591,7 @@ export ECS_MASTER_NODES=""
 if [ ${ECS_MASTER_COUNT} != 0 ]
 then
     export ECS_MASTER_NODES=$(terraform output -json ecs-master | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
-    terraform output ip_hosts_ecs_master >> ${TF_HOSTS_FILE}
+    terraform output ip_hosts_ecs_master >> ${TF_INTERNAL_MACHINE_IDS_FILE}
     terraform output ip_internal_hosts_ecs_master >> ${TF_INTERNAL_HOSTS_FILE}
     export ECS_MASTER_IDS=$(terraform output -json ecs-master_ids | jq -r '.[0] | @sh ' | sort | uniq)
 fi
@@ -583,49 +600,41 @@ export ECS_WORKER_NODES=""
 if [ ${ECS_WORKER_COUNT} != 0 ]
 then
     export ECS_WORKER_NODES=$(terraform output -json ecs-worker | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
-    terraform output ip_hosts_ecs_worker >> ${TF_HOSTS_FILE}
+    terraform output ip_hosts_ecs_worker >> ${TF_INTERNAL_MACHINE_IDS_FILE}
     terraform output ip_internal_hosts_ecs_worker >> ${TF_INTERNAL_HOSTS_FILE}
     export ECS_WORKER_IDS=$(terraform output -json ecs-worker_ids | jq -r '.[0] | @sh ' | sort | uniq)
 fi
 
 export MACHINE_IDS_SUM="${MASTER_IDS} ${WORKER_IDS} ${IPA_IDS} ${KTS_IDS} ${WORKER_STREAM_IDS} ${ECS_MASTER_IDS} ${ECS_WORKER_IDS}"
 export MACHINES_IDS=$(echo $MACHINE_IDS_SUM | awk '{$1=$1};1' | sed 's/ /, /g' | sed s/\'/\"/g )
-echo $MACHINES_IDS
 
 # Clean hosts file
-sed -i'' -e 's/EOT//g' ${TF_HOSTS_FILE}
-sed -i'' -e 's/\"//g' ${TF_HOSTS_FILE}
-sed -i'' -e 's/\<//g' ${TF_HOSTS_FILE}
-sed -i'' -e '/^$/d' ${TF_HOSTS_FILE}
+sed -i'' -e 's/EOT//g' ${TF_INTERNAL_MACHINE_IDS_FILE}
+sed -i'' -e 's/\"//g' ${TF_INTERNAL_MACHINE_IDS_FILE}
+sed -i'' -e 's/\<//g' ${TF_INTERNAL_MACHINE_IDS_FILE}
+sed -i'' -e '/^$/d' ${TF_INTERNAL_MACHINE_IDS_FILE}
 sed -i'' -e 's/EOT//g' ${TF_INTERNAL_HOSTS_FILE}
 sed -i'' -e 's/\"//g' ${TF_INTERNAL_HOSTS_FILE}
 sed -i'' -e 's/\<//g' ${TF_INTERNAL_HOSTS_FILE}
 sed -i'' -e '/^$/d' ${TF_INTERNAL_HOSTS_FILE}
 
-# TODO: Remove HOSTS_FILE and use Elastic IP after
-#
-# export MACHINES_WITH_IPS=$(cat ${TF_HOSTS_FILE}) 
-
-# if pcregrep -q -M "$MACHINES_WITH_IPS" /etc/hosts;
-# then
-#     echo "Cluster already exists in /etc/hosts, continuing...";
-# else
-#     echo ""
-#     echo " Copy this to your /etc/hosts file (this requires root privileges): "
-#     echo ""
-#     echo "## Cluster ${CLUSTER_NAME} ##"
-#     echo "${MACHINES_WITH_IPS}"
-#     echo "##"
-#     echo ""
-#     read -p "Press Enter to continue:"
-# fi
-
 cd ${CURRENT_DIR}
 
 echo "Finish Provisionning Machines on the Cloud"
 
-# TODO: Remove  Sleep 5 secs to make sure all instances are well up and running
-# sleep 5
+
+#### Creation of Network Advanced requirements: DNS records, Elastic Ips etc...
+
+echo "Start Provisioning Advanced Netwoork Requirements"
+
+# Create a map of hostname to machine IDs
+export FILE_CONTAINING_HOST_NAME_MACHINES_ID_MAP=$(mktemp)
+while IFS= read -r line; do
+    HOSTNAME_LINE=$( echo $line | cut -d' ' -f 2 )
+    ID_LINE=$( echo $line | cut -d' ' -f 1 )
+    echo "\"$HOSTNAME_LINE\" = \"$ID_LINE\"" >> $FILE_CONTAINING_HOST_NAME_MACHINES_ID_MAP  
+done < "$TF_INTERNAL_MACHINE_IDS_FILE"
+export HOST_NAME_MACHINES_ID_MAP=$(cat $FILE_CONTAINING_HOST_NAME_MACHINES_ID_MAP)
 
 # Create DNS records for ALL machines
 export FIRST_MASTER_IP=$(head -1 ${TF_INTERNAL_HOSTS_FILE} | cut -d ' ' -f 1)
@@ -640,26 +649,49 @@ export HOST_NAME_IP_MAP=$(cat $FILE_CONTAINING_HOSTNAME_IP_MAP)
 
 mkdir -p ${TF_WORK_DIR}/dns_records
 envsubst < ${TF_FILE_TEMPLATE_PATH}/dns_records/main.tf > ${TF_WORK_DIR}/dns_records/main.tf
+envsubst < ${TF_FILE_TEMPLATE_PATH}/dns_records/outputs.tf > ${TF_WORK_DIR}/dns_records/outputs.tf
 envsubst < ${TF_FILE_TEMPLATE_PATH}/providers.tf > ${TF_WORK_DIR}/dns_records/providers.tf
+cp ${TF_FILE_TEMPLATE_PATH}/dns_records/hosts_eip.tpl ${TF_WORK_DIR}/dns_records/hosts_eip.tpl
 cd ${TF_WORK_DIR}/dns_records
 terraform init
 terraform validate
 terraform apply -auto-approve
+terraform output hosts_ips >> ${TF_HOSTS_FILE}
+sed -i'' -e 's/EOT//g' ${TF_HOSTS_FILE}
+sed -i'' -e 's/\"//g' ${TF_HOSTS_FILE}
+sed -i'' -e 's/\<//g' ${TF_HOSTS_FILE}
+sed -i'' -e '/^$/d' ${TF_HOSTS_FILE}
 cd ${CURRENT_DIR}
 
-# TODO: Get ElasticIP and create map elasticIP -> hostname 
-exit
+echo "Finished Provisioning Advanced Netwoork Requirements"
 
 
+## Get IPs 
+export MACHINES_WITH_IPS=$(cat ${TF_HOSTS_FILE}) 
 
+if pcre2grep -q -M "$MACHINES_WITH_IPS" /etc/hosts; then
+    echo "Cluster already exists in /etc/hosts, continuing...";
+else
+    echo ""
+    echo " Copy this to your /etc/hosts file (this requires root privileges): "
+    echo ""
+    echo "## Cluster ${CLUSTER_NAME} ##"
+    echo "${MACHINES_WITH_IPS}"
+    echo "##"
+    echo ""
+    read -p "Press Enter to continue:"
+fi
 
 # Sleep 5 secs to make sure dns records propagates
 sleep 5
 
+export NODES=( ${BASE_MASTERS} ${BASE_WORKERS} ${FREE_IPA_NODE} ${KTS_NODE} ${BASE_WORKERS_STREAM} ${ECS_MASTER_NODES} ${ECS_WORKER_NODES} )
+
+### Launch Machine prerequisites in the Cloud
 if [ "${APPLY_CLOUD_MACHINES_PREREQUISITES}" = "true" ]
 then
     echo " Applying prerequisites on nodes depending on Cloud Provider "
-    export NODES=( ${BASE_MASTERS} ${BASE_WORKERS} ${FREE_IPA_NODE} ${KTS_NODE} ${BASE_WORKERS_STREAM} ${ECS_MASTER_NODES} ${ECS_WORKER_NODES})
+    
     for i in ${!NODES[@]}
     do   
         echo "**** Applying Prerequisites for node: ${NODES[$i]}"
@@ -691,13 +723,33 @@ then
     done
 fi
 
-# Sleep 10 secs to make sure all machines are up again
-sleep 10
+# Check all machines are available
+for i in ${!NODES[@]}
+do
+    while true ; do
+        if ssh root@${NODES[$i]} true ; then
+            echo "Node ${NODES[$i]} is alive"
+            break
+        fi
+        sleep 5
+    done
+done
 
 echo " Finished applying prerequisites"
 
+
 # Prepare and Launch command to setup cluster
 echo "Launching Setup of cluster"
+
+echo "Launching Command:
+./setup-cluster.sh ${ALL_PARAMETERS} \
+  --node-user='root' \
+  --node-key="${PRIVATE_KEY_PATH}" \
+  --nodes-base="${BASE_MASTERS} ${BASE_WORKERS} ${BASE_WORKERS_STREAM}" \
+  --node-ipa="${FREE_IPA_NODE}" \
+  --nodes-kts="${KTS_NODE}" \
+  --nodes-ecs="${ECS_MASTER_NODES} ${ECS_WORKER_NODES}"
+"
 
 ./setup-cluster.sh ${ALL_PARAMETERS} \
   --node-user='root' \

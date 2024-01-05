@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<service role="LIVY_FOR_SPARK3" name="livy_for_spark3" version="0.6.0">
+<service role="LIVY_FOR_SPARK3" name="livy_for_spark3" version="0.7.2">
     <routes>
         <route path="/livy_for_spark3/**?**"/>
         <route path="/livy_for_spark3">

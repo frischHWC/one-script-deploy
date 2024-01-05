@@ -80,43 +80,43 @@ output "ecs-worker_ids" {
 
 # For external /etc/hosts file use
 output "ip_hosts_masters" {
-  value = templatefile("hosts.tpl", {
+  value = templatefile("ids_hostname.tpl", {
     instances = aws_instance.${CLUSTER_NAME}-master.*
   })
 }
 
 output "ip_hosts_workers" {
-  value = templatefile("hosts.tpl", {
+  value = templatefile("ids_hostname.tpl", {
     instances = aws_instance.${CLUSTER_NAME}-worker.*
   })
 }
 
 output "ip_hosts_worker_stream" {
-  value = templatefile("hosts.tpl", {
+  value = templatefile("ids_hostname.tpl", {
     instances = aws_instance.${CLUSTER_NAME}-worker-stream.*
   })
 }
 
 output "ip_hosts_ipa" {
-  value = templatefile("hosts.tpl", {
+  value = templatefile("ids_hostname.tpl", {
     instances = aws_instance.${CLUSTER_NAME}-ipa.*
   })
 }
 
 output "ip_hosts_kts" {
-  value = templatefile("hosts.tpl", {
+  value = templatefile("ids_hostname.tpl", {
     instances = aws_instance.${CLUSTER_NAME}-kts.*
   })
 }
 
 output "ip_hosts_ecs_master" {
-  value = templatefile("hosts.tpl", {
+  value = templatefile("ids_hostname.tpl", {
     instances = aws_instance.${CLUSTER_NAME}-ecs-master.*
   })
 }
 
 output "ip_hosts_ecs_worker" {
-  value = templatefile("hosts.tpl", {
+  value = templatefile("ids_hostname.tpl", {
     instances = aws_instance.${CLUSTER_NAME}-ecs-worker.*
   })
 }

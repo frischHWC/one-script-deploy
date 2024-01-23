@@ -191,6 +191,12 @@
   retries: 60
   delay: 30
 
+- name: Set Datagen files Readable
+  file:
+    path: /opt/cloudera/parcels/DATAGEN/
+    recurse: yes
+    mode: '0755'
+
 - name: Start Datagen Service
   uri:
     url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/datagen/commands/start"

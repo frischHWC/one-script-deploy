@@ -110,7 +110,7 @@ clusters:
           knox_encryptquerystring_secret: "{{ default_password }}"
           knox_hadoop_auth_config_signature_secret: "{{ default_password }}"
           conf/gateway-site.xml_service_safety_valve: <property><name>knox.homepage.logout.enabled</name><value>true</value></property>
-          knox_homepage_hidden_topologies: ""
+          knox_homepage_hidden_topologies: "manager,knoxsso,homepage"
         KNOX_GATEWAY:
           gateway_knox_admin_groups: admin_group
           gateway_master_secret: "{{ default_password }}"

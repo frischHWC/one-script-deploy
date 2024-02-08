@@ -66,7 +66,7 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 
 | &#10003;
 | pvc
-| CDH 7.1.9.3 & CM 7.11.3.3 & PvC 1.5.2-h1
+| CDH 7.1.9.3 & CM 7.11.3.3 & PvC 1.5.2-h3
 | CENTOS 7.9
 | Postgres 14
 | Free IPA
@@ -75,7 +75,7 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 
 | &#10003;
 | all-services-pvc
-| CDH 7.1.9.3 & CM 7.11.3.3 & PvC 1.5.2-h1
+| CDH 7.1.9.3 & CM 7.11.3.3 & PvC 1.5.2-h3
 | CENTOS 7.9
 | Postgres 14
 | Free IPA
@@ -148,7 +148,7 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 
 | 
 | pvc
-| CDH 7.1.9.3 & CM 7.11.3.3 & PvC 1.5.2-h1
+| CDH 7.1.9.3 & CM 7.11.3.3 & PvC 1.5.2-h3
 | CENTOS 8.8
 | Postgres 14
 | Free IPA

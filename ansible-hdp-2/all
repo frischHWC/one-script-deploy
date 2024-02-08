@@ -191,7 +191,7 @@ blueprint_dynamic:                                        # properties for the d
       - HST_SERVER
       - LOGSEARCH_SERVER
       - METRICS_MONITOR
-      - LOGSEARCH_LOGFEEDER                                   
+      - LOGSEARCH_LOGFEEDER                                 
   - host_group: "hdp-master-1"
     clients: ['ZOOKEEPER_CLIENT', 'HDFS_CLIENT', 'HBASE_CLIENT', 'YARN_CLIENT', 'MAPREDUCE2_CLIENT', 'TEZ_CLIENT', 'SQOOP', 'HIVE_CLIENT', 'OOZIE_CLIENT', 'INFRA_SOLR_CLIENT', 'SPARK2_CLIENT']
     services:

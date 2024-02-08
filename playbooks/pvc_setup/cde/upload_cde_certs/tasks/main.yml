@@ -120,4 +120,4 @@
 # Send certs
 
 - name: Add certs with script to VC
-  shell: "./cdp-cde-utils.sh init-virtual-cluster -h {{ cde_vc_endpoint_hostname }} -c endpoint-{{ cde_vc_endpoint_hostname }}.crt -k endpoint-{{ cde_vc_endpoint_hostname }}.key"
+  shell: "./cde-utils.sh init-virtual-cluster -h {{ cde_vc_endpoint_hostname }} -c endpoint-{{ cde_vc_endpoint_hostname }}.crt -k endpoint-{{ cde_vc_endpoint_hostname }}.key"

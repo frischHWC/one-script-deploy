@@ -127,17 +127,14 @@
           admin_server = {{ ipa_server_ip }}:749
           kpasswd_server = {{ ipa_server_ip }}:464
 
-# Download and set up cdp-cde-utils.tgz
+# Download and set up cde-utils.sh
 
-- name: Download cdp-cde-utils.sh.gz
+- name: Download cde-utils.sh
   get_url:
-    url: "https://docs.cloudera.com/data-engineering/1.5.0/cdp-cde-utils.sh"
-    dest: ~/cdp-cde-utils.sh
+    url: "https://archive.cloudera.com/p/dex/cde/1.19.1/cde-utils.sh"
+    dest: ~/cde-utils.sh
     mode: '0775'
+    username: "{{ paywall_user }}"
+    password: "{{ paywall_password }}"
   ignore_errors: true
     
-- name: Set cdp-cde script executable
-  file:
-    path: ~/cdp-cde-utils.sh
-    mode: '0775'
-  ignore_errors: true

@@ -60,10 +60,10 @@ export CSA_VERSION="1.11.0.0"
 export CFM_VERSION="2.1.6.0"
 export SPARK3_VERSION="3.3.7180.14"
 export WXM_VERSION="2.3.0"
-export PVC_VERSION="1.5.2-h1"
+export PVC_VERSION="1.5.2-h3"
 export AMBARI_VERSION="2.7.5.0"
 export HDP_VERSION="3.1.5.6091"
-export HDF_VERSION="3.5.0.0"
+export HDF_VERSION="3.5.2.0"
 
 # Repository (if not specified, version is used to guess repository from it)
 export CM_REPO=
@@ -875,7 +875,7 @@ then
         export DISTRIBUTION_TO_DEPLOY="HDP"
         export AMBARI_VERSION="2.6.2.2"
         export HDP_VERSION="2.6.5.0"
-        export HDF_VERSION="3.1.2.0"
+        export HDF_VERSION="3.5.2.0"
         export INSTALL_REPO_URL="https://github.com/frischHWC/ansible-hortonworks/archive/refs/heads/master.zip"
         export ANSIBLE_REPO_DIR="ansible-hortonworks-master"
         export DATA_LOAD="false"

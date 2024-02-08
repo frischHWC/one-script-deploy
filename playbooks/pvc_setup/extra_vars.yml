@@ -37,6 +37,8 @@ kube_config_path: ${KUBECONFIG_PATH}
 docker_registry: container.repository.cloudera.com
 docker_registry_user: ${PAYWALL_USER}
 docker_registry_password: ${PAYWALL_PASSWORD}  
+paywall_user: ${PAYWALL_USER}
+paywall_password: ${PAYWALL_PASSWORD}  
 cdw: ${CREATE_CDW}
 cde: ${CREATE_CDE}
 cml: ${CREATE_CML}

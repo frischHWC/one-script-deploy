@@ -1,0 +1,181 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Set CM URLs for observability cluster
+- set_fact:
+    cloudera_manager_protocol: http
+    cloudera_manager_port: 7180
+  when: not auto_tls
+
+- set_fact:
+    cloudera_manager_protocol: https
+    cloudera_manager_port: 7183
+  when: auto_tls
+
+- set_fact:
+    cloudera_manager_url: "{{ cloudera_manager_protocol }}://{{ cloudera_manager_host }}:{{ cloudera_manager_port }}"
+
+- name: Get CM API Version
+  uri:
+    url: "{{ cloudera_manager_url }}/api/version"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_api_version_response
+
+- set_fact:
+    cloudera_manager_api_version: "{{ cloudera_manager_api_version_response.content }}"
+
+- set_fact:
+    cloudera_manager_api_url: "{{ cloudera_manager_url }}/api/{{ cloudera_manager_api_version }}"
+
+- name: DEBUG - cloudera_manager_api_url
+  debug:
+    msg: "{{ cloudera_manager_api_url }}"
+  when: debug | default(false)
+
+# Get observability host and service name
+- name: Get All services from CM
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_observability_all_services
+
+- set_fact:
+    observability_service_name: "{{ cloudera_manager_observability_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'OBSERVABILITY'].name | [0]"
+
+- name: DEBUG - observability_service_name
+  debug:
+    msg: "{{ observability_service_name }}"
+  when: debug | default(false)
+
+- name: Get detailed service observability from CM
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ observability_service_name }}/roles"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_observability_all_roles
+
+- set_fact:
+    observability_api_server: "{{ cloudera_manager_observability_all_roles.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'DBUS_API_SERVICE'].hostRef.hostname | [0]"
+
+- name: DEBUG - observability_api_server
+  debug:
+    msg: "{{ observability_api_server }}"
+  when: debug | default(false)
+
+
+- name: Get detailed config observability from CM
+  uri:
+    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ observability_service_name }}/roleConfigGroups/{{ observability_service_name }}-THUNDERHEAD_SIGMA_CONSOLE-BASE/config?view=full"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_observability_all_roles
+
+- set_fact:
+    observability_ssl_enabled: "{{ cloudera_manager_observability_all_roles.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ssl_enabled'].value | [0]"
+
+- set_fact:
+    observability_ssl_enabled: "{{ cloudera_manager_observability_all_roles.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?name == 'ssl_enabled'].default | [0]"
+  when: observability_ssl_enabled == ''
+  
+- name: DEBUG - observability_ssl_enabled
+  debug:
+    msg: "{{ observability_ssl_enabled }}"
+  when: debug | default(false)
+
+- name: Set observability Databus API server URL 
+  set_fact:
+    observability_dbus_api_server_url: "https://{{ observability_api_server }}:12022/"
+  when: observability_ssl_enabled
+
+- name: Set observability Databus API server URL 
+  set_fact:
+    observability_dbus_api_server_url: "http://{{ observability_api_server }}:12022/"
+  when: not observability_ssl_enabled
+
+- name: DEBUG - observability_dbus_api_server_url
+  debug:
+    msg: "{{ observability_dbus_api_server_url }}"
+  when: debug | default(false)
+
+# Set CM URLs for base cluster to associate with observability
+
+- name: Check if needed to configure observability 
+  set_fact: 
+    configure_observability_with_base: "{{ true if cloudera_manager_base_url != '' else false }}"
+
+- name: Get CM API Version
+  uri:
+    url: "{{ cloudera_manager_base_url }}/api/version"
+    user: "{{ cloudera_manager_base_user }}"
+    password: "{{ cloudera_manager_base_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_base_api_version_response
+  when: configure_observability_with_base
+
+- set_fact:
+    cloudera_manager_base_api_version: "{{ cloudera_manager_base_api_version_response.content }}"
+  when: configure_observability_with_base
+
+- set_fact:
+    cloudera_manager_base_api_url: "{{ cloudera_manager_base_url }}/api/{{ cloudera_manager_base_api_version }}"
+  when: configure_observability_with_base
+
+- name: DEBUG - cloudera_manager_base_api_url
+  debug:
+    msg: "{{ cloudera_manager_base_api_url }}"
+  when: configure_observability_with_base and debug | default(false)

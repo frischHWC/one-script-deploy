@@ -1,0 +1,8 @@
+{
+    "items": [
+      {
+        "name": "telemetrypublisher_safety_valve",
+        "value": "telemetry.upload.job.logs=true\ntelemetry.altus.url={{ observability_dbus_api_server_url }}\nautoactions.yarn.app.collector.enabled=true\nautoactions.impala.collector.enabled=true\nautoactions.collection.yarn.enabled=true\nautoactions.collection.mr.enabled=true\nautoactions.collection.spark.enabled=true\nautoactions.collection.hive.enabled=true\nautoactions.definition.cache.refresh.minutes=5"
+      }
+    ]
+}

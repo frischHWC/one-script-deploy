@@ -59,7 +59,7 @@ export CDH_VERSION="7.1.9.3"
 export CSA_VERSION="1.11.0.0"
 export CFM_VERSION="2.1.6.0"
 export SPARK3_VERSION="3.3.7180.14"
-export WXM_VERSION="2.3.0"
+export OBSERVABILITY_VERSION="3.4.4"
 export PVC_VERSION="1.5.2-h3"
 export AMBARI_VERSION="2.7.5.0"
 export HDP_VERSION="3.1.5.6091"
@@ -72,7 +72,7 @@ export PVC_REPO=
 export CSA_BASE_REPO=
 export CFM_BASE_REPO=
 export SPARK3_BASE_REPO=
-export WXM_BASE_REPO=
+export OBSERVABILITY_BASE_REPO=
 export AMBARI_REPO=
 export HDP_REPO=
 export HDF_REPO=
@@ -113,9 +113,9 @@ export ECS_GPU_DEDICATED_NODES=""
 export USE_CSA="false"
 export USE_CFM="false"
 export USE_SPARK3="false"
-export USE_WXM="false"
+export USE_OBSERVABILITY="false"
 
-# WXM Related
+# OBSERVABILITY Related
 export ALTUS_KEY_ID=
 export ALTUS_PRIVATE_KEY=
 export CM_BASE_URL=
@@ -197,7 +197,7 @@ function usage()
     echo "  --nodes-ecs=$NODES_PVC_ECS : (Optional) A Space separated list of ECS nodes (external to cluster) where to install ECS (Default) $NODES_PVC_ECS  "
     echo ""
     echo "  --cluster-type=$CLUSTER_TYPE : To simplify deployment, this parameter will adjust number of nodes, security and templates to deploy.  (Default) $CLUSTER_TYPE"
-    echo "       Choices: basic, basic-enc, streaming, pvc, pvc-oc, full, full-enc-pvc, wxm, cdh5, cdh6, hdp3, hdp2 (Default) $ Will install a CDP 7 with almost all services "
+    echo "       Choices: basic, basic-enc, streaming, pvc, pvc-oc, full, full-enc-pvc, observability, cdh5, cdh6, hdp3, hdp2 (Default) $ Will install a CDP 7 with almost all services "
     echo ""
     echo ""
     echo " These are optionnal parameters to test the deployment and run certain steps only : "
@@ -239,7 +239,7 @@ function usage()
     echo "  --hdp-version=$HDP_VERSION : (Optional) Version of HDP (Default) $HDP_VERSION "
     echo "  --hdf-version=$HDF_VERSION : (Optional) Version of HDP (Default) $HDF_VERSION "
     echo "  --spark3-version=$SPARK3_VERSION : (Optional) Version of SPARK3 (Default) $SPARK3_VERSION"
-    echo "  --wxm-version=$WXM_VERSION : (Optional) Version of WXM (Default) $WXM_VERSION"
+    echo "  --observability-version=$OBSERVABILITY_VERSION : (Optional) Version of OBSERVABILITY (Default) $OBSERVABILITY_VERSION"
     echo "  --pvc-version=$PVC_VERSION : (Optional) Version of PVC for CDP deployment (Default) $PVC_VERSION "
     echo ""
     echo "  --cm-repo=$CM_REPO : (Optional) repo of CM (Default) $CM_REPO "
@@ -247,7 +247,7 @@ function usage()
     echo "  --csa-repo=$CSA_BASE_REPO : (Optional) repo of CSA (Default) $CSA_BASE_REPO "
     echo "  --cfm-repo=$CFM_BASE_REPO : (Optional) repo of CFM (Default) $CFM_BASE_REPO "
     echo "  --spark3-repo=$SPARK3_BASE_REPO : (Optional) repo of SPARK3 (Default) $SPARK3_BASE_REPO "
-    echo "  --wxm-repo=$WXM_BASE_REPO : (Optional) repo of WXM (Default) $WXM_BASE_REPO "
+    echo "  --observability-repo=$OBSERVABILITY_BASE_REPO : (Optional) repo of OBSERVABILITY (Default) $OBSERVABILITY_BASE_REPO "
     echo "  --ambari-repo=$AMBARI_REPO : (Optional) repo of Ambari (Default) $AMBARI_REPO "
     echo "  --hdp-repo=$HDP_REPO : (Optional) repo of HDP (Default) $HDP_REPO "
     echo "  --hdf-repo=$HDF_REPO : (Optional) repo of HDP (Default) $HDF_REPO "
@@ -302,13 +302,13 @@ function usage()
     echo "  --use-csa=$USE_CSA : (Optional) Use of CSA (Default) $USE_CSA "
     echo "  --use-cfm=$USE_CFM : (Optional) Use of CFM (Default) $USE_CFM "
     echo "  --use-spark3=$USE_SPARK3 : (Optional) Use of Spark 3 (Default) $USE_SPARK3 "
-    echo "  --use-wxm=$USE_WXM : (Optional) Use of WXM (Default) $USE_WXM "
+    echo "  --use-observability=$USE_OBSERVABILITY : (Optional) Use of OBSERVABILITY (Default) $USE_OBSERVABILITY "
     echo ""
-    echo "  --altus-key-id=$ALTUS_KEY_ID : (Optional) Altus key ID needed for WXM (Default) $ALTUS_KEY_ID "
-    echo "  --altus-private-key=$ALTUS_PRIVATE_KEY : (Optional) Path to th Altus Private Key file needed for WXM (Default) $ALTUS_PRIVATE_KEY "
-    echo "  --cm-base-url=$CM_BASE_URL : (Optional) CM URL in http://<hostname>:<port> form for associating this cluster to WXM (Default) $CM_BASE_URL "
-    echo "  --cm-base-user=$CM_BASE_USER : (Optional) CM user to associate this cluster to WXM (Default) $CM_BASE_USER "
-    echo "  --cm-base-password=$CM_BASE_PASSWORD : (Optional)  CM password to associate this cluster to WXM (Default) $CM_BASE_PASSWORD "
+    echo "  --altus-key-id=$ALTUS_KEY_ID : (Optional) Altus key ID needed for OBSERVABILITY (Default) $ALTUS_KEY_ID "
+    echo "  --altus-private-key=$ALTUS_PRIVATE_KEY : (Optional) Path to th Altus Private Key file needed for OBSERVABILITY (Default) $ALTUS_PRIVATE_KEY "
+    echo "  --cm-base-url=$CM_BASE_URL : (Optional) CM URL in http://<hostname>:<port> form for associating this cluster to OBSERVABILITY (Default) $CM_BASE_URL "
+    echo "  --cm-base-user=$CM_BASE_USER : (Optional) CM user to associate this cluster to OBSERVABILITY (Default) $CM_BASE_USER "
+    echo "  --cm-base-password=$CM_BASE_PASSWORD : (Optional)  CM password to associate this cluster to OBSERVABILITY (Default) $CM_BASE_PASSWORD "
     echo "  --tp-host=$TP_HOST : (Optional)  On base cluster, where to install Telemetry (Default) $TP_HOST "
     echo ""
     echo "  --cdh6-kts-path=$CDH6_KTS_PATH : (Optional) Path to KTS tar gz for CDH6 (Default) $CDH6_KTS_PATH "
@@ -453,8 +453,8 @@ while [ "$1" != "" ]; do
         --spark3-version)
             SPARK3_VERSION=$VALUE
             ;;
-        --wxm-version)
-            WXM_VERSION=$VALUE
+        --observability-version)
+            OBSERVABILITY_VERSION=$VALUE
             ;;
         --pvc-version)
             PVC_VERSION=$VALUE
@@ -483,8 +483,8 @@ while [ "$1" != "" ]; do
         --spark3-repo)
             SPARK3_BASE_REPO=$VALUE
             ;;
-        --wxm-repo)
-            WXM_BASE_REPO=$VALUE
+        --observability-repo)
+            OBSERVABILITY_BASE_REPO=$VALUE
             ;;
         --pvc-repo)
             PVC_REPO=$VALUE
@@ -624,8 +624,8 @@ while [ "$1" != "" ]; do
         --use-spark3)
             USE_SPARK3=$VALUE
             ;;    
-        --use-wxm)
-            USE_WXM=$VALUE
+        --use-observability)
+            USE_OBSERVABILITY=$VALUE
             ;;
         --altus-key-id)
             ALTUS_KEY_ID=$VALUE
@@ -799,18 +799,16 @@ then
         export PVC="true"
         export PVC_TYPE="OC"
         export FREE_IPA="true"
-    elif [ "${CLUSTER_TYPE}" = "wxm" ]
+    elif [ "${CLUSTER_TYPE}" = "observability" ]
     then
-        export ANSIBLE_HOST_FILE="ansible-cdp-wxm/hosts"
-        export ANSIBLE_ALL_FILE="ansible-cdp-wxm/all"
-        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-wxm/cluster.yml"
-        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-wxm/extra_vars.yml"
-        export USE_WXM="true"
+        export ANSIBLE_HOST_FILE="ansible-cdp-observability/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-observability/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-observability/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-observability/extra_vars.yml"
+        export USE_OBSERVABILITY="true"
         export USER_CREATION="false"
         export DATA_LOAD="false"
         export FREE_IPA="false"
-        export CM_VERSION="7.7.1"
-        export CDH_VERSION="7.1.8.0"
     elif [ "${CLUSTER_TYPE}" = "cdp-717" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-717/hosts"
@@ -1028,17 +1026,17 @@ then
     fi
 fi
 
-if [ "${USE_WXM}" = "true" ]
+if [ "${USE_OBSERVABILITY}" = "true" ]
 then
-    if [ -z "${WXM_BASE_REPO}" ] 
+    if [ -z "${OBSERVABILITY_BASE_REPO}" ] 
     then
-        export WXM_REPO="https://archive.cloudera.com/p/wxm/${WXM_VERSION}/parcels/"
-        export WXM_CSD_JAR=$(curl -s -X GET -u ${PAYWALL_USER}:${PAYWALL_PASSWORD} https://archive.cloudera.com/p/wxm/${WXM_VERSION}/csd/ | grep .jar | grep WXM | cut -d '>' -f 3 | cut -d '<' -f 1)
-        export WXM_CSD="https://archive.cloudera.com/p/wxm/${WXM_VERSION}/csd/${WXM_CSD_JAR}"
+        export OBSERVABILITY_REPO="https://archive.cloudera.com/p/observability/${OBSERVABILITY_VERSION}/parcels/"
+        export OBSERVABILITY_CSD_JAR=$(curl -s -X GET -u ${PAYWALL_USER}:${PAYWALL_PASSWORD} https://archive.cloudera.com/p/observability/${OBSERVABILITY_VERSION}/csd/ | grep .jar | grep OBSERVABILITY | cut -d '>' -f 3 | cut -d '<' -f 1)
+        export OBSERVABILITY_CSD="https://archive.cloudera.com/p/observability/${OBSERVABILITY_VERSION}/csd/${OBSERVABILITY_CSD_JAR}"
     else
-        export WXM_REPO="${CFM_BASE_REPO}/parcels/"
-        export WXM_CSD_JAR=$(curl -s -X GET ${WXM_REPO}/csd/ | grep .jar | grep NIFI- | cut -d '>' -f 3 | cut -d '<' -f 1)
-        export WXM_CSD="${WXM_REPO}/csd/${WXM_CSD_JAR}"
+        export OBSERVABILITY_REPO="${OBSERVABILITY_BASE_REPO}/parcels/"
+        export OBSERVABILITY_CSD_JAR=$(curl -s -X GET ${OBSERVABILITY_BASE_REPO}/csd/ | grep .jar | grep NIFI- | cut -d '>' -f 3 | cut -d '<' -f 1)
+        export OBSERVABILITY_CSD="${OBSERVABILITY_BASE_REPO}/csd/${OBSERVABILITY_CSD_JAR}"
     fi
 fi
 

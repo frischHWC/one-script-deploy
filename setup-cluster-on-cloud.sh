@@ -80,7 +80,7 @@ function usage()
     echo "  -h --help"
     echo "  --cluster-name=$CLUSTER_NAME Required as it will be the name of the cluster in cloudcat (Default) "
     echo "  --cloud-provider=$CLOUD_PROVIDER : The cloud provider to use among AWS, (GCP, AZURE not supported) (Default) AWS"
-    echo "  --cluster-type=$CLUSTER_TYPE : Choices: basic, basic-enc, streaming, pvc, pvc-oc, full, full-enc-pvc, wxm, cdh5, cdh6, hdp3, hdp2 (Default) $ Will install a CDP 7 with almost all services"
+    echo "  --cluster-type=$CLUSTER_TYPE : Choices: basic, basic-enc, streaming, pvc, pvc-oc, full, full-enc-pvc, observability, cdh5, cdh6, hdp3, hdp2 (Default) $ Will install a CDP 7 with almost all services"
     echo "  --public-key-path=$PUBLIC_KEY_PATH : The path to your public key, used to setup password-less connections to nodes (Default) ${PUBLIC_KEY_PATH}"
     echo "  --private-key-path=$PRIVATE_KEY_PATH : Mandatory to get access to machines"
     echo "  --initial-node-user=$INITIAL_NODE_USER : Mandatory to get access to machines"
@@ -408,7 +408,7 @@ then
         then
             export WORKER_STREAM_COUNT=3
         fi
-    elif [ "${CLUSTER_TYPE}" = "wxm" ]
+    elif [ "${CLUSTER_TYPE}" = "observability" ]
     then
         if [ "${MASTER_COUNT}" = 0 ]
         then

@@ -55,6 +55,15 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | True
 | 
 
+| &#10003;
+| cdp-observability
+| CDH 7.1.9.3 & CM 7.11.3
+| CENTOS 7.9
+| Postgres 14
+| MIT KDC
+| True
+| 
+
 | 
 | 
 | 
@@ -162,15 +171,6 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | 
 | 
 | 
-| 
-
-| &#10003;
-| cdp-wxm
-| CDH 7.1.8.0 & CM 7.7.1
-| CENTOS 7.9
-| Postgres 14
-| MIT KDC
-| True
 | 
 
 | &#10003;
@@ -416,17 +416,17 @@ The script, will use terraform to provide your machines, setup connectivity and 
 
 
 
-#### CDP 7 - Workload XM cluster (1 WXM cluster of 5 nodes associated with a base cluster (provided in command line) ) (Kerberos / TLS)
+#### CDP 7 - Observability cluster (Requires a cluster to be pluggued to; it creates a cluster of 6 nodes ) (Kerberos / TLS)
 
         ./setup-cluster.sh \
             --cluster-name=${CLUSTER_NAME} \
             --license-file=${LICENSE_FILE} \
             --paywall-username=${PAYWALL_USER} \
             --paywall-password=${PAYWALL_PASSWORD} \
-            --cluster-type=wxm \
+            --cluster-type=observability \
             --altus-key-id=<ALTUS key ID provided by Cloudera> \
             --altus-private-key=<path to ALTUS private key provided by Cloudera> \
-            --cm-base-url=<http://<CM host to connect to WXM>:<Port> \
+            --cm-base-url=<http://<CM host to connect to OBSERVABILITY>:<Port> \
             --tp-host=<Host in base cluster that will have Telemetry Publisher installed> \
             --nodes-base="${NODES}"
 

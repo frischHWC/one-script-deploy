@@ -29,9 +29,9 @@ ipaadmin_password: ${DEFAULT_PASSWORD}
 realm: ${REALM} 
 ranger_user: admin 
 ranger_password: ${DEFAULT_PASSWORD} 
-default_password: ${DEFAULT_PASSWORD} 
+default_password: ${DEFAULT_PASSWORD}
 debug: ${DEBUG}
-use_wxm: ${USE_WXM}
+use_observability: ${USE_OBSERVABILITY}
 altus_key_id: ${ALTUS_KEY_ID}
 altus_private_key: ${ALTUS_PRIVATE_KEY}
 cloudera_manager_base_url: ${CM_BASE_URL}

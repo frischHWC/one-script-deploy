@@ -122,25 +122,25 @@
     - { role: fix_oozie_ui, when: oozie_service_exists | default(false) }
 
 
-# WXM Setup
-- name: Pre-Configure WXM
+# observability Setup
+- name: Pre-Configure OBSERVABILITY
   hosts: main, tp_host
   gather_facts: false
   roles: 
-    - { role: wxm_config, when: use_wxm | default(false) }
+    - { role: observability_config, when: use_observability | default(false) }
 
-- name: Configure Telemetry for WXM
+- name: Configure Telemetry for OBSERVABILITY
   hosts: tp_host
   gather_facts: false
   roles: 
-    - { role: wxm_configure_telemetry, when: use_wxm | default(false) }
-    - { role: wxm_truststore_to_base, when: use_wxm | default(false) }
+    - { role: observability_configure_telemetry, when: use_observability | default(false) }
+    - { role: observability_truststore_to_base, when: use_observability | default(false) }
 
-- name: Restart WXM and Services
+- name: Restart OBSERVABILITY and Services
   hosts: main
   gather_facts: false
   roles: 
-    - { role: wxm_restart, when: use_wxm | default(false) }
+    - { role: observability_restart, when: use_observability | default(false) }
 
 
 # Ranger fixes

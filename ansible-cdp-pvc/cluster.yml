@@ -90,6 +90,8 @@ clusters:
           ozone.administrators: "{{ default_admin_user }}"
         S3_GATEWAY:
           ssl_enabled: true
+        OZONE_MANAGER:
+          ozone-conf/ozone-site.xml_role_safety_valve: <property><name>ozone.om.snapshot.load.native.lib</name><value>false</value></property>
       SPARK_ON_YARN:
         SERVICEWIDE:
           atlas_service: "atlas"

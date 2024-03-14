@@ -92,6 +92,10 @@ while [ "$1" != "" ]; do
     shift
 done
 
+# Load logger
+. ./logger.sh
+logger info:cyan "Start to destroy cluster: #bold:${CLUSTER_NAME}#end_bold in the cloud "
+
 # Setup Variables for execution of terraform
 export TF_WORK_DIR="${TF_BASE_WORK_DIR}/terraform_${CLUSTER_NAME}"
 export CURRENT_DIR=$(pwd)
@@ -99,11 +103,7 @@ export CURRENT_DIR=$(pwd)
 # Print Env variables
 if [ "${DEBUG}" = "true" ]
 then
-    echo ""
-    echo "****************************** ENV VARIABLES ******************************"
-    env | sort 
-    echo "***************************************************************************"
-    echo ""
+    print_env_vars
 fi
 
 # Launch Terraform
@@ -116,4 +116,4 @@ then
 fi
 cd ${CURRENT_DIR}
 
-echo "Finished Destroying Machines on the Cloud"
+logger success "Finished Destroying Machines of cluster #bold:${CLUSTER_NAME}#end_bold on the Cloud"

@@ -258,6 +258,9 @@ while [ "$1" != "" ]; do
     shift
 done
 
+# Load logger
+. ./logger.sh
+
 # Setup Variables for execution of terraform
 
 export TF_FILE_TEMPLATE_NAME=""
@@ -530,17 +533,13 @@ touch ${TF_INTERNAL_HOSTS_FILE}
 # Print Env variables
 if [ "${DEBUG}" = "true" ]
 then
-    echo ""
-    echo "****************************** ENV VARIABLES ******************************"
-    env | sort 
-    echo "***************************************************************************"
-    echo ""
+    print_env_vars
 fi
 
 
 
 ## Provision Machines and basic network
-echo "Start Provisionning Machines on the Cloud"
+logger info "Start Provisionning Machines on the Cloud"
 
 cd ${TF_WORK_DIR}
 terraform init
@@ -620,12 +619,12 @@ sed -i'' -e '/^$/d' ${TF_INTERNAL_HOSTS_FILE}
 
 cd ${CURRENT_DIR}
 
-echo "Finish Provisionning Machines on the Cloud"
+logger success "Finish Provisionning Machines on the Cloud"
 
 
 #### Creation of Network Advanced requirements: DNS records, Elastic Ips etc...
 
-echo "Start Provisioning Advanced Netwoork Requirements"
+logger info "Start Provisioning Advanced Network Requirements"
 
 # Create a map of hostname to machine IDs
 export FILE_CONTAINING_HOST_NAME_MACHINES_ID_MAP=$(mktemp)
@@ -663,23 +662,23 @@ sed -i'' -e 's/\<//g' ${TF_HOSTS_FILE}
 sed -i'' -e '/^$/d' ${TF_HOSTS_FILE}
 cd ${CURRENT_DIR}
 
-echo "Finished Provisioning Advanced Netwoork Requirements"
+logger success "Finished Provisioning Advanced Netwoork Requirements"
 
 
 ## Get IPs 
 export MACHINES_WITH_IPS=$(cat ${TF_HOSTS_FILE}) 
 
 if pcre2grep -q -M "$MACHINES_WITH_IPS" /etc/hosts; then
-    echo "Cluster already exists in /etc/hosts, continuing...";
+    logger info "Cluster already exists in /etc/hosts, continuing...";
 else
-    echo ""
-    echo " Copy this to your /etc/hosts file (this requires root privileges): "
+    logger info ""
+    logger info:cyan " Copy this to your #underline:/etc/hosts#end_underline file (this requires root privileges): "
     echo ""
     echo "## Cluster ${CLUSTER_NAME} ##"
     echo "${MACHINES_WITH_IPS}"
-    echo "##"
     echo ""
     read -p "Press Enter to continue:"
+    echo ""
 fi
 
 # Sleep 5 secs to make sure dns records propagates
@@ -690,11 +689,11 @@ export NODES=( ${BASE_MASTERS} ${BASE_WORKERS} ${FREE_IPA_NODE} ${KTS_NODE} ${BA
 ### Launch Machine prerequisites in the Cloud
 if [ "${APPLY_CLOUD_MACHINES_PREREQUISITES}" = "true" ]
 then
-    echo " Applying prerequisites on nodes depending on Cloud Provider "
+    logger info " Applying prerequisites on nodes depending on Cloud Provider "
     
     for i in ${!NODES[@]}
     do   
-        echo "**** Applying Prerequisites for node: ${NODES[$i]}"
+        logger info "Applying Prerequisites for node: #bold:${NODES[$i]}"
 
         SSHKey=`ssh-keyscan ${NODES[$i]} 2> /dev/null`
         echo $SSHKey >> ~/.ssh/known_hosts
@@ -702,23 +701,25 @@ then
         if [ "${CLOUD_PROVIDER}" = "AWS" ]
         then
             # Make sure that restarts does not affect hostname and set hostname
-            ssh -i ${PRIVATE_KEY_PATH} ${INITIAL_NODE_USER}@${NODES[$i]} "sudo hostnamectl set-hostname ${NODES[$i]}"
-            ssh -i ${PRIVATE_KEY_PATH} ${INITIAL_NODE_USER}@${NODES[$i]} "sudo sed -i 's/preserve_hostname\:[[:space:]]false/preserve_hostname: true/g' /etc/cloud/cloud.cfg"
+            ssh -q -i ${PRIVATE_KEY_PATH} ${INITIAL_NODE_USER}@${NODES[$i]} "sudo hostnamectl set-hostname ${NODES[$i]}"
+            ssh -q -i ${PRIVATE_KEY_PATH} ${INITIAL_NODE_USER}@${NODES[$i]} "sudo sed -i 's/preserve_hostname\:[[:space:]]false/preserve_hostname: true/g' /etc/cloud/cloud.cfg"
             # Setup password-less ssh for root user of your local user
-            ssh -i ${PRIVATE_KEY_PATH} ${INITIAL_NODE_USER}@${NODES[$i]} "sudo sed -i 's/disable_root\:[[:space:]]true/disable_root: false/g' /etc/cloud/cloud.cfg"
-            ssh -i ${PRIVATE_KEY_PATH} ${INITIAL_NODE_USER}@${NODES[$i]} "sudo echo "${YOUR_PUBLIC_KEY}" >> /home/${INITIAL_NODE_USER}/.ssh/authorized_keys"
-            ssh -i ${PRIVATE_KEY_PATH} ${INITIAL_NODE_USER}@${NODES[$i]} "sudo cp /home/${INITIAL_NODE_USER}/.ssh/authorized_keys /root/.ssh/authorized_keys"
+            ssh -q -i ${PRIVATE_KEY_PATH} ${INITIAL_NODE_USER}@${NODES[$i]} "sudo sed -i 's/disable_root\:[[:space:]]true/disable_root: false/g' /etc/cloud/cloud.cfg"
+            ssh -q -i ${PRIVATE_KEY_PATH} ${INITIAL_NODE_USER}@${NODES[$i]} "sudo echo "${YOUR_PUBLIC_KEY}" >> /home/${INITIAL_NODE_USER}/.ssh/authorized_keys"
+            ssh -q -i ${PRIVATE_KEY_PATH} ${INITIAL_NODE_USER}@${NODES[$i]} "sudo cp /home/${INITIAL_NODE_USER}/.ssh/authorized_keys /root/.ssh/authorized_keys"
             # Setup /etc/hosts with new hostname
-            scp -i ${PRIVATE_KEY_PATH} ${TF_INTERNAL_HOSTS_FILE} ${INITIAL_NODE_USER}@${NODES[$i]}:/tmp/internal_etc_hosts
-            ssh -i ${PRIVATE_KEY_PATH} root@${NODES[$i]} "sudo cat /tmp/internal_etc_hosts >> /etc/hosts"
+            scp -q -i ${PRIVATE_KEY_PATH} ${TF_INTERNAL_HOSTS_FILE} ${INITIAL_NODE_USER}@${NODES[$i]}:/tmp/internal_etc_hosts
+            ssh -q -i ${PRIVATE_KEY_PATH} root@${NODES[$i]} "sudo cat /tmp/internal_etc_hosts >> /etc/hosts"
             # Setup Fake rhel to avoid CM rejections of nodes
             if [ "${OS_VERSION}" == "8.8" ] && [ "${OS}" == "rhel" ] ; then
-              ssh -i ${PRIVATE_KEY_PATH} root@${NODES[$i]} "sudo echo 'Red Hat Enterprise Linux release 8.8 (Ootpa)' > /etc/redhat-release"
-              ssh -i ${PRIVATE_KEY_PATH} root@${NODES[$i]} "sudo echo 'ID=\"rhel\"' >> /etc/os-release"
+              ssh -q -i ${PRIVATE_KEY_PATH} root@${NODES[$i]} "sudo echo 'Red Hat Enterprise Linux release 8.8 (Ootpa)' > /etc/redhat-release"
+              ssh -q -i ${PRIVATE_KEY_PATH} root@${NODES[$i]} "sudo echo 'ID=\"rhel\"' >> /etc/os-release"
             fi
             # Make a reboot of machines to make sure all previous prereqs are applied
-            ssh -i ${PRIVATE_KEY_PATH} root@${NODES[$i]} "sudo reboot"
+            ssh -q -i ${PRIVATE_KEY_PATH} root@${NODES[$i]} "sudo reboot"
         fi
+
+        logger info "Finished Prerequisites for node: #bold:${NODES[$i]}"
 
     done
 fi
@@ -728,20 +729,21 @@ for i in ${!NODES[@]}
 do
     while true ; do
         if ssh root@${NODES[$i]} true ; then
-            echo "Node ${NODES[$i]} is alive"
+            logger info "Node #bold:${NODES[$i]} is alive"
             break
         fi
         sleep 5
     done
 done
 
-echo " Finished applying prerequisites"
+logger success " Finished applying prerequisites"
 
 
 # Prepare and Launch command to setup cluster
-echo "Launching Setup of cluster"
+logger info "Launching Setup of cluster"
 
-echo "Launching Command:
+logger info "Launching Command:"
+echo "
 ./setup-cluster.sh ${ALL_PARAMETERS} \
   --node-user='root' \
   --node-key="${PRIVATE_KEY_PATH}" \

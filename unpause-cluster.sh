@@ -105,14 +105,13 @@ while [ "$1" != "" ]; do
     shift
 done
 
+# Load logger
+. ./logger.sh
+
 # Print Env variables
 if [ "${DEBUG}" = "true" ]
 then
-    echo ""
-    echo "****************************** ENV VARIABLES ******************************"
-    env | sort 
-    echo "***************************************************************************"
-    echo ""
+    print_env_vars
 fi
 
 # To ensure log dirs exists 
@@ -121,7 +120,7 @@ mkdir -p ${LOG_DIR}/
 export ANSIBLE_LINES_NUMBER=4
 export HOSTS_FILE=$(mktemp)
 
-echo "############ Setup of files to interact with cluster  ############"
+logger info "############ Setup of files to interact with cluster  ############"
 
 echo "
 [cloudera_manager]
@@ -146,23 +145,23 @@ then
     echo "ansible_ssh_pass=${NODE_PASSWORD}" >> ${HOSTS_FILE}
 fi
 
-echo "############ Check and Heal cluster ############"
+logger info "############ Check and Heal cluster ############"
 if [ "${DEBUG}" = "true" ]
 then
-    echo " Command launched: ansible-playbook -i ${HOSTS_FILE} playbooks/restart_paused_cluster/main.yml --extra-vars \"@/tmp/restart_paused_cluster_extra_vars.yml\" "
+    logger info " Command launched: ansible-playbook -i ${HOSTS_FILE} playbooks/restart_paused_cluster/main.yml --extra-vars \"@/tmp/restart_paused_cluster_extra_vars.yml\" "
 fi
 cp playbooks/restart_paused_cluster/extra_vars.yml /tmp/restart_paused_cluster_extra_vars.yml
 envsubst < /tmp/restart_paused_cluster_extra_vars.yml > /tmp/restart_paused_cluster_extra_vars.yml.tmp && mv /tmp/restart_paused_cluster_extra_vars.yml.tmp /tmp/restart_paused_cluster_extra_vars.yml
-echo " Follow progression in: ${LOG_DIR}/restart_paused_cluster.log "
+logger info " Follow progression in: #underline:${LOG_DIR}/restart_paused_cluster.log "
 ansible-playbook -i ${HOSTS_FILE} playbooks/restart_paused_cluster/main.yml --extra-vars "@/tmp/restart_paused_cluster_extra_vars.yml" > ${LOG_DIR}/restart_paused_cluster.log 2>&1
 OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/restart_paused_cluster.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
 if [ "${OUTPUT}" == "2" ]
 then
-  echo " SUCCESS: Checked and Healed cluster "
+  logger info " Checked and Healed cluster "
 else
-  echo " FAILURE: Could not check and heal cluster " 
-  echo " See details in file: ${LOG_DIR}/restart_paused_cluster.log "
+  logger error " FAILURE: Could not check and heal cluster " 
+  logger error " See details in file: #underline:${LOG_DIR}/restart_paused_cluster.log "
   exit 1
 fi
 
-echo "############ Finished to unpause cluster ############"
+logger info "############ Finished to unpause cluster ############"

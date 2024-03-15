@@ -137,8 +137,9 @@ function print_env_vars() {
     filename=/tmp/env_vars_$(date +%d_%m_%Y-%H_%M_%S)
     touch $filename
     env | sort > $filename
-    logger info "For debug purposes, Environment Variables have been outputed to $filename"
+    logger debug "For debug purposes, Environment Variables have been outputed to #underline:$filename"
 }
+
 
 if [ "$LOG_TEST" = true ] ; then
     logger info "This is an info"

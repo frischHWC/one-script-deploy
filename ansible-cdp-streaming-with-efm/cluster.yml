@@ -265,7 +265,7 @@ clusters:
       
   - name: "{{ cluster_name }}-stream"
     type: compute
-    services: [CRUISE_CONTROL, KAFKA, KNOX, NIFI, NIFIREGISTRY, SCHEMAREGISTRY, STREAMS_MESSAGING_MANAGER, ZOOKEEPER]
+    services: [CRUISE_CONTROL, EFM, KAFKA, KNOX, NIFI, NIFIREGISTRY, SCHEMAREGISTRY, STREAMS_MESSAGING_MANAGER, ZOOKEEPER]
     security:
       kerberos: "{{ kerberos_activated }}"
     repositories:
@@ -278,6 +278,12 @@ clusters:
       dataContext: SDX
 
     configs:
+
+      EFM:
+        EFM_SERVER:
+          efm.security.user.knox.publicKey: /var/lib/cloudera-scm-agent/agent-cert/cm-auto-host_cert_chain.pem
+          efm.security.user.auth.enabled: true
+
       KAFKA:
         KAFKA_CONNECT:  
           bootstrap.servers: "{{ bootstrap_servers }}"
@@ -330,6 +336,7 @@ clusters:
     host_templates:
       StreamMaster:
         CRUISE_CONTROL: [CRUISE_CONTROL_SERVER]
+        EFM: [EFM_SERVER]
         KAFKA: [KAFKA_BROKER, KAFKA_CONNECT, GATEWAY]
         NIFIREGISTRY: [NIFI_REGISTRY_SERVER]
         NIFI: [NIFI_NODE]

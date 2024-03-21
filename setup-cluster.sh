@@ -54,10 +54,12 @@ export REALM="FRISCH.COM"
 export ENCRYPTION_ACTIVATED="false"
 
 # Versions
+export JDK_VERSION="11"
 export CM_VERSION="7.11.3.6"
 export CDH_VERSION="7.1.9.4"
 export CSA_VERSION="1.11.0.0"
 export CFM_VERSION="2.1.6.0"
+export CEM_VERSION="2.1.2.0"
 export SPARK3_VERSION="3.3.7180.14"
 export OBSERVABILITY_VERSION="3.4.4"
 export PVC_VERSION="1.5.3"
@@ -71,6 +73,7 @@ export CDH_REPO=
 export PVC_REPO=
 export CSA_BASE_REPO=
 export CFM_BASE_REPO=
+export CEM_BASE_REPO=
 export SPARK3_BASE_REPO=
 export OBSERVABILITY_BASE_REPO=
 export AMBARI_REPO=
@@ -112,6 +115,7 @@ export ECS_GPU_DEDICATED_NODES=""
 # External CSD
 export USE_CSA="false"
 export USE_CFM="false"
+export USE_CEM="false"
 export USE_SPARK3="false"
 export USE_OBSERVABILITY="false"
 
@@ -235,17 +239,20 @@ function usage()
     echo "  --cdh-version=$CDH_VERSION : (Optional) Version of CDH (Default) $CDH_VERSION "
     echo "  --csa-version=$CSA_VERSION : (Optional) Version of CSA (Default) $CSA_VERSION "
     echo "  --cfm-version=$CFM_VERSION : (Optional) Version of CFM (Default) $CFM_VERSION "
+    echo "  --cem-version=$CEM_VERSION : (Optional) Version of CEM (Default) $CEM_VERSION "
     echo "  --ambari-version=$AMBARI_VERSION : (Optional) Version of Ambari (Default) $AMBARI_VERSION "
     echo "  --hdp-version=$HDP_VERSION : (Optional) Version of HDP (Default) $HDP_VERSION "
     echo "  --hdf-version=$HDF_VERSION : (Optional) Version of HDP (Default) $HDF_VERSION "
     echo "  --spark3-version=$SPARK3_VERSION : (Optional) Version of SPARK3 (Default) $SPARK3_VERSION"
     echo "  --observability-version=$OBSERVABILITY_VERSION : (Optional) Version of OBSERVABILITY (Default) $OBSERVABILITY_VERSION"
     echo "  --pvc-version=$PVC_VERSION : (Optional) Version of PVC for CDP deployment (Default) $PVC_VERSION "
+    echo "  --jdk-version=$JDK_VERSION : (Optional) Version of JDK (Default) $JDK_VERSION "
     echo ""
     echo "  --cm-repo=$CM_REPO : (Optional) repo of CM (Default) $CM_REPO "
     echo "  --cdh-repo=$CDH_REPO : (Optional) repo of CDH (Default) $CDH_REPO "
     echo "  --csa-repo=$CSA_BASE_REPO : (Optional) repo of CSA (Default) $CSA_BASE_REPO "
     echo "  --cfm-repo=$CFM_BASE_REPO : (Optional) repo of CFM (Default) $CFM_BASE_REPO "
+    echo "  --cem-repo=$CEM_BASE_REPO : (Optional) repo of CEM (Default) $CEM_BASE_REPO "
     echo "  --spark3-repo=$SPARK3_BASE_REPO : (Optional) repo of SPARK3 (Default) $SPARK3_BASE_REPO "
     echo "  --observability-repo=$OBSERVABILITY_BASE_REPO : (Optional) repo of OBSERVABILITY (Default) $OBSERVABILITY_BASE_REPO "
     echo "  --ambari-repo=$AMBARI_REPO : (Optional) repo of Ambari (Default) $AMBARI_REPO "
@@ -301,6 +308,7 @@ function usage()
     echo ""
     echo "  --use-csa=$USE_CSA : (Optional) Use of CSA (Default) $USE_CSA "
     echo "  --use-cfm=$USE_CFM : (Optional) Use of CFM (Default) $USE_CFM "
+    echo "  --use-cem=$USE_CEM : (Optional) Use of CEM (Default) $USE_CEM "
     echo "  --use-spark3=$USE_SPARK3 : (Optional) Use of Spark 3 (Default) $USE_SPARK3 "
     echo "  --use-observability=$USE_OBSERVABILITY : (Optional) Use of OBSERVABILITY (Default) $USE_OBSERVABILITY "
     echo ""
@@ -441,6 +449,9 @@ while [ "$1" != "" ]; do
         --cfm-version)
             CFM_VERSION=$VALUE
             ;;
+        --cem-version)
+            CEM_VERSION=$VALUE
+            ;;
         --ambari-version)
             AMBARI_VERSION=$VALUE
             ;; 
@@ -459,6 +470,9 @@ while [ "$1" != "" ]; do
         --pvc-version)
             PVC_VERSION=$VALUE
             ;;
+        --jdk-version)
+            JDK_VERSION=$VALUE
+            ;;
         --cm-repo)
             CM_REPO=$VALUE
             ;;
@@ -470,6 +484,9 @@ while [ "$1" != "" ]; do
             ;;
         --cfm-repo)
             CFM_BASE_REPO=$VALUE
+            ;;
+        --cem-repo)
+            CEM_BASE_REPO=$VALUE
             ;;
         --ambari-repo)
             AMBARI_REPO=$VALUE
@@ -621,6 +638,9 @@ while [ "$1" != "" ]; do
         --use-cfm)
             USE_CFM=$VALUE
             ;;
+        --use-cem)
+            USE_CEM=$VALUE
+            ;;
         --use-spark3)
             USE_SPARK3=$VALUE
             ;;    
@@ -748,6 +768,17 @@ then
         export USE_SPARK3="true"
         export USE_CSA="true"
         export USE_CFM="true"
+        export CLUSTER_NAME_STREAMING="${CLUSTER_NAME}-stream"
+    elif [ "${CLUSTER_TYPE}" = "streaming-with-efm" ]
+    then
+        export ANSIBLE_HOST_FILE="ansible-cdp-streaming-with-efm/hosts"
+        export ANSIBLE_ALL_FILE="ansible-cdp-streaming-with-efm/all"
+        export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-streaming-with-efm/cluster.yml"
+        export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-streaming-with-efm/extra_vars.yml"
+        export USE_SPARK3="true"
+        export USE_CSA="true"
+        export USE_CFM="true"
+        export USE_CEM="true"
         export CLUSTER_NAME_STREAMING="${CLUSTER_NAME}-stream"
     elif [ "${CLUSTER_TYPE}" = "all-services" ]
     then
@@ -1026,6 +1057,20 @@ then
         export CFM_REGISTRY_CSD_JAR=$(curl -s -X GET ${CFM_BASE_REPO}/tars/parcel/ | grep .jar | grep NIFIREGISTRY | cut -d '>' -f 3 | cut -d '<' -f 1)
         export CFM_CSD="${CFM_BASE_REPO}/tars/parcel/${CFM_CSD_JAR}"
         export CFM_REGISTRY_CSD="${CFM_BASE_REPO}/tars/parcel/${CFM_REGISTRY_CSD_JAR}"
+    fi
+fi
+
+if [ "${USE_CEM}" = "true" ]
+then
+    if [ -z "${CEM_BASE_REPO}" ] 
+    then
+        export CEM_REPO="https://archive.cloudera.com/p/CEM/${OS_BY_CLDR}${OS_VERSION:0:1}/2.x/updates/${CEM_VERSION}/tars/efm/parcel/"
+        export CEM_CSD_JAR=$(curl -s -X GET -u ${PAYWALL_USER}:${PAYWALL_PASSWORD} https://archive.cloudera.com/p/CEM/${OS_BY_CLDR}${OS_VERSION:0:1}/2.x/updates/${CEM_VERSION}/tars/efm/parcel/ | grep .jar | grep EFM- | cut -d '>' -f 3 | cut -d '<' -f 1)
+        export CEM_CSD="https://archive.cloudera.com/p/CEM/${OS_BY_CLDR}${OS_VERSION:0:1}/2.x/updates/${CEM_VERSION}/tars/efm/parcel/${CEM_CSD_JAR}"
+    else
+        export CEM_REPO="${CEM_BASE_REPO}/tars/parcel/"
+        export CEM_CSD_JAR=$(curl -s -X GET ${CEM_BASE_REPO}/tars/parcel/ | grep .jar | grep EFM- | cut -d '>' -f 3 | cut -d '<' -f 1)
+        export CEM_CSD="${CEM_BASE_REPO}/tars/parcel/${CEM_CSD_JAR}"
     fi
 fi
 
@@ -1448,7 +1493,7 @@ then
     OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/pre_install.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
-      logger success " Hosts successfully Setup "
+      logger success " Hosts Ready"
       logger info ""
     else
       logger error " Could not setup hosts " 
@@ -1471,7 +1516,7 @@ then
     OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/prepare_ansible_deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
-      logger success "Ansible deployment prepared "
+      logger success "Ansible Deployment Ready "
       logger info ""
     else
       logger error "Could not prepare ansible deployment " 
@@ -1496,6 +1541,7 @@ then
         else
             ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-galaxy install -r requirements.yml --force ; ansible-galaxy collection install -r requirements.yml --force" > ${LOG_DIR}/deployment.log 2>&1
         fi
+        logger info "Required Packages Installed"
 
         ################################################
         ######## Installation of CDP step by step in order to be able to track installation #######
@@ -1509,7 +1555,7 @@ then
         OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
-          logger success "Verification of Cluster Definition"
+          logger success "Cluster Definition Verified"
           logger info ""
         else
           logger error "Could not Verify Cluster Definition" 
@@ -1526,7 +1572,7 @@ then
         OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
-          logger success "Nodes pre-requisites"
+          logger success "Pre-Requisites Applied"
           logger info ""
         else
           logger error "Could not apply pre-requisites for nodes" 
@@ -1534,7 +1580,7 @@ then
           exit 1
         fi
 
-        logger info "###### Installation of DB, (KDC) etc... ######"
+        logger info "###### Installation of DB, (KDC, HA-Proxy, CA Server)  ######"
         if [ "${DEBUG}" = "true" ]
         then
             logger debug " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_infrastructure.yml ${ANSIBLE_PYTHON_3_PARAMS} "
@@ -1543,7 +1589,7 @@ then
         OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
-          logger success "Creation of DB, (KDC) etc..."
+          logger success "Database Installed"
           logger info ""
         else
           logger error "Could not create DB, KDC and HA Proxy" 
@@ -1560,7 +1606,7 @@ then
         OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
-          logger success "Verification of Parcels"
+          logger success "Parcels Verified"
           logger info ""
         else
           logger error "Could verify Parcels" 
@@ -1586,7 +1632,7 @@ then
                 OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
                 if [ "${OUTPUT}" == "2" ]
                 then
-                  logger success "Deployment of Free IPA"
+                  logger success "Free IPA Installed"
                   logger info ""
                   FREE_IPA_FAILED=false
                   break
@@ -1598,7 +1644,7 @@ then
             done
             if [ "${FREE_IPA_FAILED}" == "true" ]
             then
-                logger error " TotalCould not deploy Free IPA after $FREE_IPA_TRIES tries"
+                logger error "Could not deploy Free IPA after $FREE_IPA_TRIES tries"
                 exit 1 
             fi
         fi
@@ -1612,7 +1658,7 @@ then
         OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
-          logger success "Cloudera Manager Installation"
+          logger success "Cloudera Manager Installed"
           logger info ""
         else
           logger error "Could not install Cloudera Manager" 
@@ -1631,7 +1677,7 @@ then
             OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]
             then
-              logger success "Fix CDH 5 paywall "
+              logger success "CDH 5 Paywall fixed"
               logger info ""
             else
               logger error "Could not fix CDH 5 paywall" 
@@ -1649,7 +1695,7 @@ then
         OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
-          logger success "Setup of Kerberos"
+          logger success "Kerberos setup"
           logger info ""
         else
           logger error "Could not setup Kerberos" 
@@ -1668,7 +1714,7 @@ then
             OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]
             then
-              logger success "Enable Auto-TLS "
+              logger success "Auto-TLS Enabled"
               logger info ""
             else
               logger error "Could not enable Auto-TLS" 
@@ -1695,7 +1741,7 @@ then
         OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
-          logger success "Installation of Cluster"
+          logger success "Cluster Installed"
           logger info ""
         else
           logger error "Could not Install Cluster" 
@@ -1714,7 +1760,7 @@ then
             OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]
             then
-              logger success "Fix settings after Auto-TLS "
+              logger success "Auto-TLS Settings Fixed"
               logger info ""
             else
               logger error "Could not fix settings for Auto-TLS" 
@@ -1734,7 +1780,7 @@ then
             OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
             if [ "${OUTPUT}" == "2" ]
             then
-              logger success "Setup Data Encryption at Rest "
+              logger success "Data Encryption at Rest Setup "
               logger info ""
             else
               logger error "Could not Setup Data Encryption at Rest" 
@@ -1749,7 +1795,7 @@ then
     OUTPUT=$(tail -20 ${LOG_DIR}/deployment.log | grep -A20 RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
-      logger success "Deployment Finished Succesfully"
+      logger success "Cluster Deployed"
       logger info ""
     else
       logger error "Could not Deploy cluster " 
@@ -1772,7 +1818,7 @@ then
     OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/post_install.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
-      logger success "Post Install Configs "
+      logger success "Cluster Configured"
       logger info ""
     else
       logger error "Could not apply post install configs " 
@@ -1795,7 +1841,7 @@ then
     OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/user_creation.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
-      logger success "Users Creation "
+      logger success "Users Created"
       logger info ""
     else
       logger error "Could not create users " 
@@ -1816,7 +1862,7 @@ then
     OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/pvc_deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
-      logger success "PvC Deployed "
+      logger success "PvC Deployed"
       logger info ""
     else
       logger error "Could not deploy PVC " 
@@ -1839,7 +1885,7 @@ then
     OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/pvc_configuration.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
     if [ "${OUTPUT}" == "2" ]
     then
-      logger success "PvC Configured "
+      logger success "PvC Configured"
       logger info ""
     else
       logger error "Could not configure PVC " 
@@ -1882,7 +1928,7 @@ then
         OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/data_load.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
-          logger success "Datagen installed and Data loaded "
+          logger success "Datagen installed and Data loaded"
           logger info ""
         else
           logger error "Could not load data " 
@@ -1903,7 +1949,7 @@ then
         OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/data_load.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
         if [ "${OUTPUT}" == "2" ]
         then
-          logger success "Data loaded "
+          logger success "Datagen installed and Data loaded"
           logger info ""
         else
           logger error "Could not load data " 

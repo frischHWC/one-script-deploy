@@ -218,3 +218,23 @@
   debug:
     msg: "{{ sr_service_exists }}"
   when: debug | default(false)
+
+
+
+- set_fact:
+    efm_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'EFM'].name | [0]"
+
+- name: DEBUG - efm_service_name
+  debug:
+    msg: "{{ efm_service_name }}"
+  when: debug | default(false)
+
+- set_fact: 
+    efm_service_exists: "{{ true if efm_service_name != '' else false }}"
+
+- name: DEBUG - efm_service_exists
+  debug:
+    msg: "{{ efm_service_exists }}"
+  when: debug | default(false)

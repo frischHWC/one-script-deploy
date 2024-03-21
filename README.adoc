@@ -56,6 +56,16 @@ Given some machines, this script will **setup** all pre-requisites, **Install**,
 | 
 
 | &#10003;
+| cdp-streaming-with-efm
+| CDH 7.1.9.3 & CM 7.11.3.2
+| RHEL 8.8
+| Postgres 14
+| MIT KDC
+| True
+| YCLOUD
+| Use --jdk-version=17 (and a RHEL >= 8)
+
+| &#10003;
 | cdp-observability
 | CDH 7.1.9.3 & CM 7.11.3
 | CENTOS 7.9

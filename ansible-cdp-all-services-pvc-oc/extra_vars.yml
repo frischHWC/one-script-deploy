@@ -40,7 +40,7 @@ cloudera_manager_options:
 message: ""
 
 # MAIN PARAMETERS
-jdk_version: 11
+jdk_version: ${JDK_VERSION}
 debug: ${DEBUG}
 node_password: "${NODE_PASSWORD}"
 node_key: ${NODE_KEY}

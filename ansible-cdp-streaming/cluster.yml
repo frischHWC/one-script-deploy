@@ -271,7 +271,6 @@ clusters:
     repositories:
       - "{{ cdh_repo }}"
       - "{{ cfm_repo }}"
-      - "{{ cem_repo }}"
 
     baseCluster:
       name: "{{ cluster_name }}"

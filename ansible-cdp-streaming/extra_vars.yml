@@ -31,7 +31,6 @@ cloudera_manager_csds:
   - ${CSA_SSB_CSD}
   - ${CFM_CSD}
   - ${CFM_REGISTRY_CSD}
-  - ${CEM_CSD}
 cloudera_manager_options:
 # set values to null to delete (and revert to default)
   custom_banner_html: ""

@@ -14,8 +14,7 @@
           "/swagger",
           "/tenants",
           "/proxy",
-          "/policies",
-          "{{ user.name }}_*"
+          "/policies"
         ],
         "isExcludes": false,
         "isRecursive": false

@@ -4,13 +4,8 @@ One script to rule them all: CDP / CDP Private Cloud / CDH / HDP !
 
 Given some machines, this script will **setup** all pre-requisites, **Install**, **Configure** a fully **secure** cluster and **Load Data** into it.
 
-Example:
 
-image:images/one-script.gif[Example of a basic launch]
-
-Result:
-
-image:images/cm.gif[Result of a basic launch]
+image:images/one-script-all.gif[Example of a basic launch]
 
 
 ## Table of tested Deployments

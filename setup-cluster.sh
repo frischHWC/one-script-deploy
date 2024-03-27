@@ -683,6 +683,11 @@ done
 # Load logger
 . ./logger.sh
 
+logger info ""
+logger info:cyan "#bold:############ Start of One Script Deploy ############"
+logger info ""
+
+
 #############################################################################################
 ##### Check on important variables before starting
 #############################################################################################
@@ -1479,55 +1484,24 @@ logger info ""
 # Launch of scripts to deploy
 ###############################
 
+# Load Ansible launch functions used to launch following commands
+. ./functions.sh
+
 if [ "${PRE_INSTALL}" = "true" ] 
 then
-    logger info "############ Setup cluster hosts ############"
-    if [ "${DEBUG}" = "true" ]
-    then
-        logger debug " Command launched: ansible-playbook -i ${HOSTS_FILE} playbooks/pre_install/main.yml --extra-vars \"@/tmp/pre_install_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
-    fi
-    cp playbooks/pre_install/extra_vars.yml /tmp/pre_install_extra_vars.yml
-    envsubst < /tmp/pre_install_extra_vars.yml > /tmp/pre_install_extra_vars.yml.tmp && mv /tmp/pre_install_extra_vars.yml.tmp /tmp/pre_install_extra_vars.yml
-    logger info " Follow progression in: #underline:${LOG_DIR}/pre_install.log "
-    ansible-playbook -i ${HOSTS_FILE} playbooks/pre_install/main.yml --extra-vars "@/tmp/pre_install_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} > ${LOG_DIR}/pre_install.log 2>&1
-    OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/pre_install.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-    if [ "${OUTPUT}" == "2" ]
-    then
-      logger success " Hosts Ready"
-      logger info ""
-    else
-      logger error " Could not setup hosts " 
-      logger error " See details in file: #underline:${LOG_DIR}/pre_install.log "
-      exit 1
-    fi
+    logger info "############ #bold:Setup cluster hosts#end_bold ############"
+    launch_playbook pre_install "Hosts Ready" "Could not prepare Hosts" 280 420 2 false
 fi
 
 if [ "${PREPARE_ANSIBLE_DEPLOYMENT}" = "true" ]
 then
-    logger info "############ On #bold:${NODE_0}#end_bold : Prepare Ansible Deployment ############"
-    if [ "${DEBUG}" = "true" ]
-    then
-        logger debug " Command launched: ansible-playbook -i ${HOSTS_FILE} playbooks/ansible_install_preparation/main.yml --extra-vars \"@/tmp/ansible_install_preparation_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
-    fi
-    cp playbooks/ansible_install_preparation/extra_vars.yml /tmp/ansible_install_preparation_extra_vars.yml
-    envsubst < /tmp/ansible_install_preparation_extra_vars.yml > /tmp/ansible_install_preparation_extra_vars.yml.tmp && mv /tmp/ansible_install_preparation_extra_vars.yml.tmp /tmp/ansible_install_preparation_extra_vars.yml
-    logger info " Follow progression in: #underline:${LOG_DIR}/prepare_ansible_deployment.log "
-    ansible-playbook -i ${HOSTS_FILE} playbooks/ansible_install_preparation/main.yml --extra-vars "@/tmp/ansible_install_preparation_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} > ${LOG_DIR}/prepare_ansible_deployment.log 2>&1
-    OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/prepare_ansible_deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-    if [ "${OUTPUT}" == "2" ]
-    then
-      logger success "Ansible Deployment Ready "
-      logger info ""
-    else
-      logger error "Could not prepare ansible deployment " 
-      logger error " See details in file: ${LOG_DIR}/prepare_ansible_deployment.log "
-      exit 1
-    fi
+    logger info "############ On #underline:${NODE_0}#end_underline : #bold:Prepare Ansible Deployment#end_bold ############"
+    launch_playbook ansible_install_preparation "Ansible Deployment Ready" "Could not prepare ansible deployment" 360 600 2 false
 fi
 
 if [ "${INSTALL}" = "true" ]
 then
-    logger info "############ On #bold:${NODE_0}#end_bold : Launch Ansible Deployment ############"
+    logger info "############ On #underline:${NODE_0}#end_underline : #bold:Launch Ansible Deployment#end_bold ############"
     logger info " Follow progression in: #underline:${LOG_DIR}/deployment.log "
     logger info ""
     if [ "${DISTRIBUTION_TO_DEPLOY}" = "HDP" ]
@@ -1546,181 +1520,40 @@ then
         ################################################
         ######## Installation of CDP step by step in order to be able to track installation #######
         ################################################
-        logger info "###### Verificating cluster Definition ######"
-        if [ "${DEBUG}" = "true" ]
-        then
-            logger debug " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_inventory_and_definition.yml ${ANSIBLE_PYTHON_3_PARAMS} "
-        fi
-        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_inventory_and_definition.yml ${ANSIBLE_PYTHON_3_PARAMS}" >> ${LOG_DIR}/deployment.log 2>&1
-        OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-        if [ "${OUTPUT}" == "2" ]
-        then
-          logger success "Cluster Definition Verified"
-          logger info ""
-        else
-          logger error "Could not Verify Cluster Definition" 
-          logger error " See details in file: ${LOG_DIR}/deployment.log "
-          exit 1
-        fi
+        logger info "###### #bold:Verificating cluster Definition#end_bold ######"
+        launch_playbook verify_inventory_and_definition "Cluster Definition Verified" "Could not Verify Cluster Definition" 12 120 0 "true"
 
-        logger info "###### Applying nodes pre-requisites ######"
-        if [ "${DEBUG}" = "true" ]
-        then
-            logger debug " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_nodes.yml ${ANSIBLE_PYTHON_3_PARAMS} "
-        fi
-        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_nodes.yml ${ANSIBLE_PYTHON_3_PARAMS}" >> ${LOG_DIR}/deployment.log 2>&1
-        OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-        if [ "${OUTPUT}" == "2" ]
-        then
-          logger success "Pre-Requisites Applied"
-          logger info ""
-        else
-          logger error "Could not apply pre-requisites for nodes" 
-          logger error " See details in file: ${LOG_DIR}/deployment.log "
-          exit 1
-        fi
+        logger info "###### #bold:Applying nodes pre-requisites#end_bold ######"
+        launch_playbook prepare_nodes "Pre-Requisites Applied" "Could not apply pre-requisites for nodes" 900 1200 2 true
 
-        logger info "###### Installation of DB, (KDC, HA-Proxy, CA Server)  ######"
-        if [ "${DEBUG}" = "true" ]
-        then
-            logger debug " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_infrastructure.yml ${ANSIBLE_PYTHON_3_PARAMS} "
-        fi
-        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_infrastructure.yml ${ANSIBLE_PYTHON_3_PARAMS}" >> ${LOG_DIR}/deployment.log 2>&1
-        OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-        if [ "${OUTPUT}" == "2" ]
-        then
-          logger success "Database Installed"
-          logger info ""
-        else
-          logger error "Could not create DB, KDC and HA Proxy" 
-          logger error " See details in file: ${LOG_DIR}/deployment.log "
-          exit 1
-        fi
+        logger info "###### #bold:Installation of DB, (KDC, HA-Proxy, CA Server)#end_bold  ######"
+        launch_playbook create_infrastructure "Database Installed" "Could not create DB, KDC and HA Proxy" 360 900 2 true
 
-        logger info "###### Verificating parcels ######"
-        if [ "${DEBUG}" = "true" ]
-        then
-            logger debug " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_parcels.yml ${ANSIBLE_PYTHON_3_PARAMS} "
-        fi 
-        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml verify_parcels.yml ${ANSIBLE_PYTHON_3_PARAMS}" >> ${LOG_DIR}/deployment.log 2>&1
-        OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-        if [ "${OUTPUT}" == "2" ]
-        then
-          logger success "Parcels Verified"
-          logger info ""
-        else
-          logger error "Could verify Parcels" 
-          logger error " See details in file: ${LOG_DIR}/deployment.log "
-          exit 1
-        fi
+        logger info "###### #bold:Verificating parcels#end_bold ######"
+        launch_playbook verify_parcels "Parcels Verified" "Could not verify Parcels" 60 180 0 true
 
         if [ "${FREE_IPA}" = "true" ]
         then
-            # Free IPA has intermittent failures (usually due to hosts joining the realm too fast), so a simple retry make it work
-            FREE_IPA_LAUNCH_TRIED=0
-            FREE_IPA_FAILED=true
-            while [ $FREE_IPA_LAUNCH_TRIED -lt $FREE_IPA_TRIES ] ; do
-                if [ $FREE_IPA_LAUNCH_TRIED -gt 0 ]; then
-                    logger info "Launching a retry because installation failed, retry is : #bold:$FREE_IPA_LAUNCH_TRIED out of $FREE_IPA_TRIES#end_bold possible tries" 
-                fi
-                logger info "###### Installing Free IPA ######"
-                if [ "${DEBUG}" = "true" ]
-                then
-                    logger debug " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml ${ANSIBLE_PYTHON_3_PARAMS} "
-                fi
-                ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml create_freeipa.yml ${ANSIBLE_PYTHON_3_PARAMS}" >> ${LOG_DIR}/deployment.log 2>&1
-                OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-                if [ "${OUTPUT}" == "2" ]
-                then
-                  logger success "Free IPA Installed"
-                  logger info ""
-                  FREE_IPA_FAILED=false
-                  break
-                else
-                  logger warn "Could not deploy Free IPA but will retry" 
-                  logger warn " See details in file: ${LOG_DIR}/deployment.log "
-                fi
-                FREE_IPA_LAUNCH_TRIED=$((FREE_IPA_LAUNCH_TRIED + 1))
-            done
-            if [ "${FREE_IPA_FAILED}" == "true" ]
-            then
-                logger error "Could not deploy Free IPA after $FREE_IPA_TRIES tries"
-                exit 1 
-            fi
+            logger info "###### #bold:Installing Free IPA#end_bold ######"
+            launch_playbook create_freeipa "Free IPA Installed" "Could not deploy Free IPA" 600 1200 2 true
         fi
 
-        logger info "###### Installing Cloudera Manager ######"
-        if [ "${DEBUG}" = "true" ]
-        then
-            logger debug " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cloudera_manager.yml ${ANSIBLE_PYTHON_3_PARAMS} "
-        fi
-        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cloudera_manager.yml ${ANSIBLE_PYTHON_3_PARAMS}" >> ${LOG_DIR}/deployment.log 2>&1
-        OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-        if [ "${OUTPUT}" == "2" ]
-        then
-          logger success "Cloudera Manager Installed"
-          logger info ""
-        else
-          logger error "Could not install Cloudera Manager" 
-          logger error " See details in file: ${LOG_DIR}/deployment.log "
-          exit 1
-        fi
+        logger info "###### #bold:Installing Cloudera Manager#end_bold ######"
+        launch_playbook install_cloudera_manager "Cloudera Manager Installed" "Could not install Cloudera Manager" 600 1200 2 true
 
         if [ "${CM_VERSION:0:1}" = "5" ]
         then
-            logger info "###### Fixing CDH 5 Paywall ######"
-            if [ "${DEBUG}" = "true" ]
-            then
-                logger debug " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_for_cdh5_paywall.yml ${ANSIBLE_PYTHON_3_PARAMS} "
-            fi
-            ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_for_cdh5_paywall.yml ${ANSIBLE_PYTHON_3_PARAMS}" >> ${LOG_DIR}/deployment.log 2>&1
-            OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-            if [ "${OUTPUT}" == "2" ]
-            then
-              logger success "CDH 5 Paywall fixed"
-              logger info ""
-            else
-              logger error "Could not fix CDH 5 paywall" 
-              logger error " See details in file: ${LOG_DIR}/deployment.log "
-              exit 1
-            fi
+            logger info "###### #bold:Fixing CDH 5 Paywall#end_bold ######"
+            launch_playbook fix_for_cdh5_paywall "CDH 5 Paywall fixed" "Could not fix CDH 5 paywall" 60 120 1 true
         fi
 
-        logger info "###### Setting up Kerberos ######"
-        if [ "${DEBUG}" = "true" ]
-        then
-            logger debug " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_security.yml ${ANSIBLE_PYTHON_3_PARAMS} "
-        fi
-        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml prepare_security.yml ${ANSIBLE_PYTHON_3_PARAMS}" >> ${LOG_DIR}/deployment.log 2>&1
-        OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-        if [ "${OUTPUT}" == "2" ]
-        then
-          logger success "Kerberos setup"
-          logger info ""
-        else
-          logger error "Could not setup Kerberos" 
-          logger error " See details in file: ${LOG_DIR}/deployment.log "
-          exit 1
-        fi
+        logger info "###### #bold:Setting up Kerberos#end_bold ######"
+        launch_playbook prepare_security "Kerberos setup" "Could not setup Kerberos" 360 600 2 true
 
         if [ "${TLS}" = "true" ]
         then
-            logger info "###### Enabling Auto-TLS ######"
-            if [ "${DEBUG}" = "true" ]
-            then
-                logger debug " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml extra_auto_tls.yml ${ANSIBLE_PYTHON_3_PARAMS} "
-            fi
-            ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml extra_auto_tls.yml ${ANSIBLE_PYTHON_3_PARAMS}" >> ${LOG_DIR}/deployment.log 2>&1
-            OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-            if [ "${OUTPUT}" == "2" ]
-            then
-              logger success "Auto-TLS Enabled"
-              logger info ""
-            else
-              logger error "Could not enable Auto-TLS" 
-              logger error " See details in file: ${LOG_DIR}/deployment.log "
-              exit 1
-            fi
+            logger info "###### #bold:Enabling Auto-TLS#end_bold ######"
+            launch_playbook extra_auto_tls "Auto-TLS Enabled" "Could not enable Auto-TLS" 280 600 2 true
         fi
 
         logger info "From now, you can follow deployment directly in CM: "
@@ -1732,61 +1565,19 @@ then
         fi
         logger info ""
 
-        logger info "###### Installing Cluster ######"
-        if [ "${DEBUG}" = "true" ]
-        then
-            logger debug " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cluster.yml ${ANSIBLE_PYTHON_3_PARAMS} "
-        fi
-        ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml install_cluster.yml ${ANSIBLE_PYTHON_3_PARAMS}" >> ${LOG_DIR}/deployment.log 2>&1
-        OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-        if [ "${OUTPUT}" == "2" ]
-        then
-          logger success "Cluster Installed"
-          logger info ""
-        else
-          logger error "Could not Install Cluster" 
-          logger error " See details in file: ${LOG_DIR}/deployment.log "
-          exit 1
-        fi
+        logger info "###### #bold:Installing Cluster#end_bold ######"
+        launch_playbook install_cluster "Cluster Installed" "Could not Install Cluster" 0 7200 1 true
 
         if [ "${TLS}" = "true" ]
         then
-            logger info "###### Fixing Auto-TLS Settings ######"
-            if [ "${DEBUG}" = "true" ]
-            then
-                logger debug " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_auto_tls.yml ${ANSIBLE_PYTHON_3_PARAMS} "
-            fi
-            ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml fix_auto_tls.yml ${ANSIBLE_PYTHON_3_PARAMS}" >> ${LOG_DIR}/deployment.log 2>&1
-            OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-            if [ "${OUTPUT}" == "2" ]
-            then
-              logger success "Auto-TLS Settings Fixed"
-              logger info ""
-            else
-              logger error "Could not fix settings for Auto-TLS" 
-              logger error " See details in file: ${LOG_DIR}/deployment.log "
-              exit 1
-            fi
+            logger info "###### #bold:Fixing Auto-TLS Settings#end_bold ######"
+            launch_playbook fix_auto_tls "Auto-TLS Settings Fixed" "Could not fix settings for Auto-TLS" 90 360 2 true
         fi
         
         if [ "${ENCRYPTION_ACTIVATED}" = "true" ]
         then
-            logger info "###### Setting up Data Encryption at Rest ######"
-            if [ "${DEBUG}" = "true" ]
-            then
-                logger debug " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml setup_hdfs_encryption.yml ${ANSIBLE_PYTHON_3_PARAMS} "
-            fi
-            ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml setup_hdfs_encryption.yml ${ANSIBLE_PYTHON_3_PARAMS}" >> ${LOG_DIR}/deployment.log 2>&1
-            OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-            if [ "${OUTPUT}" == "2" ]
-            then
-              logger success "Data Encryption at Rest Setup "
-              logger info ""
-            else
-              logger error "Could not Setup Data Encryption at Rest" 
-              logger error " See details in file: ${LOG_DIR}/deployment.log "
-              exit 1
-            fi
+            logger info "###### #bold:Setting up Data Encryption at Rest#end_bold ######"
+            launch_playbook setup_hdfs_encryption "Data Encryption at Rest Setup" "Could not Setup Data Encryption at Rest" 600 3600 2 true
         fi
         
     fi
@@ -1806,97 +1597,31 @@ fi
 
 if [ "${POST_INSTALL}" = "true" ]
 then
-    logger info "############ Post-Install configuration for CDP ############"
-    if [ "${DEBUG}" = "true" ]
-    then
-        logger debug " Command launched: ansible-playbook -i ${HOSTS_FILE} playbooks/post_install/main.yml --extra-vars \"@/tmp/post_install_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS}"
-    fi
-    cp playbooks/post_install/extra_vars.yml /tmp/post_install_extra_vars.yml
-    envsubst < /tmp/post_install_extra_vars.yml > /tmp/post_install_extra_vars.yml.tmp && mv /tmp/post_install_extra_vars.yml.tmp /tmp/post_install_extra_vars.yml
-    logger info " Follow progression in: #underline:${LOG_DIR}/post_install.log "
-    ansible-playbook -i ${HOSTS_FILE} playbooks/post_install/main.yml --extra-vars "@/tmp/post_install_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} > ${LOG_DIR}/post_install.log 2>&1
-    OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/post_install.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-    if [ "${OUTPUT}" == "2" ]
-    then
-      logger success "Cluster Configured"
-      logger info ""
-    else
-      logger error "Could not apply post install configs " 
-      logger error " See details in file: ${LOG_DIR}/post_install.log "
-      exit 1
-    fi
+    logger info "############ #bold:Post-Install configuration for CDP#end_bold ############"
+    launch_playbook post_install "Cluster Configured" "Could not apply post install configs" 900 3600 2 false
 fi
 
 if [ "${USER_CREATION}" = "true" ]
 then
-    logger info "############ User Creation ############"
-    if [ "${DEBUG}" = "true" ]
-    then
-        logger debug " Command launched: ansible-playbook -i ${HOSTS_FILE} playbooks/user_creation/main.yml --extra-vars \"@/tmp/user_creation_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS}"
-    fi
-    cp playbooks/user_creation/extra_vars.yml /tmp/user_creation_extra_vars.yml
-    envsubst < /tmp/user_creation_extra_vars.yml > /tmp/user_creation_extra_vars.yml.tmp && mv /tmp/user_creation_extra_vars.yml.tmp /tmp/user_creation_extra_vars.yml 
-    logger info " Follow progression in: #underline:${LOG_DIR}/user_creation.log "
-    ansible-playbook -i ${HOSTS_FILE} playbooks/user_creation/main.yml --extra-vars "@/tmp/user_creation_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} > ${LOG_DIR}/user_creation.log 2>&1
-    OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/user_creation.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-    if [ "${OUTPUT}" == "2" ]
-    then
-      logger success "Users Created"
-      logger info ""
-    else
-      logger error "Could not create users " 
-      logger error " See details in file: ${LOG_DIR}/user_creation.log "
-      exit 1
-    fi
+    logger info "############ #bold:User Creation#end_bold ############"
+    launch_playbook user_creation "Users Created" "Could not create users" 900 1800 2 false
 fi
 
 if [ "${PVC}" = "true" ] && [ "${INSTALL_PVC}" = "true" ]
 then
-    logger info "############ Creating PvC cluster ############" 
-    if [ "${DEBUG}" = "true" ]
-    then
-        logger debug " Command launched on controller: ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml pvc.yml ${ANSIBLE_PYTHON_3_PARAMS}"
-    fi
-    logger info " Follow progression in: #underline:${LOG_DIR}/pvc_deployment.log "
-    ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml pvc.yml ${ANSIBLE_PYTHON_3_PARAMS}" > ${LOG_DIR}/pvc_deployment.log 2>&1
-    OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/pvc_deployment.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-    if [ "${OUTPUT}" == "2" ]
-    then
-      logger success "PvC Deployed"
-      logger info ""
-    else
-      logger error "Could not deploy PVC " 
-      logger error " See details in file: ${LOG_DIR}/pvc_deployment.log "
-      exit 1
-    fi
+    logger info "############ #bold:Creating PvC cluster#end_bold ############" 
+    launch_playbook pvc "PvC Deployed" "Could not deploy PVC" 1800 3600 1 true
 fi
 
 if [ "${PVC}" = "true" ] && [ "${CONFIGURE_PVC}" = "true" ]
 then
-    logger info "############ Configuring PvC cluster ############" 
-    if [ "${DEBUG}" = "true" ]
-    then
-        logger debug " Command launched: ansible-playbook -i ${HOSTS_FILE} playbooks/pvc_setup/main.yml --extra-vars \"@/tmp/pvc_setup_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
-    fi
-    cp playbooks/pvc_setup/extra_vars.yml /tmp/pvc_setup_extra_vars.yml
-    envsubst < /tmp/pvc_setup_extra_vars.yml > /tmp/pvc_setup_extra_vars.yml.tmp && mv /tmp/pvc_setup_extra_vars.yml.tmp /tmp/pvc_setup_extra_vars.yml
-    logger info " Follow progression in: #underline:${LOG_DIR}/pvc_configuration.log "
-    ansible-playbook -i ${HOSTS_FILE} playbooks/pvc_setup/main.yml --extra-vars "@/tmp/pvc_setup_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} > ${LOG_DIR}/pvc_configuration.log 2>&1
-    OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/pvc_configuration.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-    if [ "${OUTPUT}" == "2" ]
-    then
-      logger success "PvC Configured"
-      logger info ""
-    else
-      logger error "Could not configure PVC " 
-      logger error " See details in file: ${LOG_DIR}/pvc_configuration.log "
-      exit 1
-    fi
+    logger info "############ #bold:Configuring PvC cluster#end_bold ############" 
+    launch_playbook pvc_setup "PvC Configured" "Could not configure PVC" 2400 3600 2 false
 fi
 
 if [ "${DATA_LOAD}" = "true" ]
 then
-    logger info "############ Data Loading ############" 
+    logger info "############ #bold:Data Loading#end_bold ############" 
     if [ "${DISTRIBUTION_TO_DEPLOY}" = "HDP" ]
     then
         export RD_VERSION='2.6.5'
@@ -1914,55 +1639,13 @@ then
         export DATA_LOAD_REPO_URL="https://github.com/frischHWC/random-datagen/releases/download/${DISTRIBUTION_TO_DEPLOY}-${RD_VERSION}/random-datagen-${DISTRIBUTION_TO_DEPLOY}-${RD_VERSION}.tar.gz"
     fi
 
-    if [ "${DATAGEN_AS_A_SERVICE}" == "true" ]
-    then
-    # New way to deploy DATA using DATAGEN as a Service
-        if [ "${DEBUG}" = "true" ]
-        then
-            logger debug " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/data_load/main.yml --extra-vars \"@/tmp/data_load_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
-        fi
-        cp playbooks/data_load/extra_vars.yml /tmp/data_load_extra_vars.yml
-        envsubst < /tmp/data_load_extra_vars.yml > /tmp/data_load_extra_vars.yml.tmp && mv /tmp/data_load_extra_vars.yml.tmp /tmp/data_load_extra_vars.yml
-        logger info " Follow progression in: #underline:${LOG_DIR}/data_load.log "
-        ansible-playbook -i ${HOSTS_FILE} playbooks/data_load/main.yml --extra-vars "@/tmp/data_load_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} >> ${LOG_DIR}/data_load.log 2>&1
-        OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/data_load.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-        if [ "${OUTPUT}" == "2" ]
-        then
-          logger success "Datagen installed and Data loaded"
-          logger info ""
-        else
-          logger error "Could not load data " 
-          logger error " See details in file: ${LOG_DIR}/data_load.log "
-          exit 1
-        fi
-
-    else
-    # Old way to deploy data using old releases of random-datagen
-        if [ "${DEBUG}" = "true" ]
-        then
-            logger debug " Command launched: ansible-playbook -i /tmp/hosts-${CLUSTER_NAME} playbooks/data_load/main_old.yml --extra-vars \"@/tmp/data_load_extra_vars.yml\" ${ANSIBLE_PYTHON_3_PARAMS} "
-        fi
-        cp playbooks/data_load/extra_vars.yml /tmp/data_load_extra_vars.yml
-        envsubst < /tmp/data_load_extra_vars.yml > /tmp/data_load_extra_vars.yml.tmp && mv /tmp/data_load_extra_vars.yml.tmp /tmp/data_load_extra_vars.yml
-        logger info " Follow progression in: #underline:${LOG_DIR}/data_load.log "
-        ansible-playbook -i ${HOSTS_FILE} playbooks/data_load/main_old.yml --extra-vars "@/tmp/data_load_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} > ${LOG_DIR}/data_load.log 2>&1
-        OUTPUT=$(tail -${ANSIBLE_LINES_NUMBER} ${LOG_DIR}/data_load.log | grep -A${ANSIBLE_LINES_NUMBER} RECAP | grep -v "failed=0" | wc -l | xargs)
-        if [ "${OUTPUT}" == "2" ]
-        then
-          logger success "Datagen installed and Data loaded"
-          logger info ""
-        else
-          logger error "Could not load data " 
-          logger error " See details in file: ${LOG_DIR}/data_load.log "
-          exit 1
-        fi
-    fi    
+    launch_playbook data_load "Datagen installed and Data loaded" "Could not load data" 900 1200 2 false
 fi
 
 
 if [ "${DEMO}" = "true" ]
 then
-    logger info "############ Launching Demo ############" 
+    logger info "############ #bold:Launching Demo#end_bold ############" 
     CURRENT_DIR=$(pwd)
     cd /tmp/
     rm -rf cdp-demo-repo
@@ -1984,6 +1667,10 @@ fi
 ###############################
 # Clean up and end
 ###############################
+
+logger info ""
+logger info:cyan "#bold:############ End of One Script Deploy ############"
+logger info ""
 
 logger info "############ Remove temporary local files  ############"
 rm -rf ${HOSTS_ETC}
@@ -2014,14 +1701,6 @@ then
     logger info ""
 fi
 
-# Not useful anymore
-# if [ "${PVC}" = "true" ] && [ "${PVC_TYPE}" = "ECS" ]
-# then
-#     echo " **** WARNING: It is required to have this wildcard DNS entry *apps.${PVC_APP_DOMAIN} to access Control Plane UI ****"
-#     echo " Add this line to your /etc/hosts: "
-#     echo "$(cat /etc/hosts | grep -m1 ${PVC_ECS_SERVER_HOST} | cut -d ' ' -f1 ) *apps.${PVC_APP_DOMAIN}"
-# fi
-
 if [ "${KERBEROS}" = "true" ] && [ "${USER_CREATION}" = "true" ]
 then
     logger info ""
@@ -2031,10 +1710,10 @@ then
     logger info ""
 fi
 logger info ""
-logger info ""
 logger info " To allow easy interaction with the cluster the hosts file used to setup the cluster has been copied to ~/${CLUSTER_NAME}/hosts "
 logger info " Examples:"
 logger info ""
 logger info:cyan "  ansible-playbook -i ~/cluster-${CLUSTER_NAME}/hosts ansible_playbook.yml --extra-vars \"\" "
 logger info:cyan "  ansible all -i ~/cluster-${CLUSTER_NAME}/hosts -a \"cat /etc/hosts\" "
 logger info ""
+

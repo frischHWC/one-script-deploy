@@ -18,8 +18,7 @@
           "/controller",
           "/tenants",
           "/provenance",
-          "/policies",
-          "/{{ user.name }}_*"
+          "/policies"
         ],
         "isExcludes": false,
         "isRecursive": false

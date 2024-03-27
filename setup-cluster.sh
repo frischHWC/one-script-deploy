@@ -1616,7 +1616,7 @@ fi
 if [ "${PVC}" = "true" ] && [ "${CONFIGURE_PVC}" = "true" ]
 then
     logger info "############ #bold:Configuring PvC cluster#end_bold ############" 
-    launch_playbook pvc_setup "PvC Configured" "Could not configure PVC" 2400 3600 2 false
+    launch_playbook pvc_setup "PvC Configured" "Could not configure PVC" 3600 5400 2 false
 fi
 
 if [ "${DATA_LOAD}" = "true" ]

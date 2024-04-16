@@ -198,7 +198,7 @@ clusters:
           ranger.usersync.group.objectclass: "groupofnames"
           ranger.usersync.group.nameattribute: "cn"
           ranger.usersync.group.memberattributename: "member"
-          ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:u:administrator&ROLE_SYS_ADMIN:u:dev"
+          ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:g:admin_group&ROLE_SYS_ADMIN:u:{{ default_admin_user }}"
       
       SCHEMAREGISTRY:
         SERVICEWIDE:

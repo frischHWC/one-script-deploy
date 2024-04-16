@@ -42,7 +42,7 @@
 
 - name: Install gunzip
   package:
-    name: unzip
+    name: gunzip
     state: present
 
 

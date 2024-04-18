@@ -141,7 +141,7 @@ export DATAGEN_REPO_URL="https://github.com/frischHWC/datagen"
 export DATAGEN_REPO_BRANCH="main"
 export DATAGEN_REPO_PARCEL=""
 export DATAGEN_CSD_URL=""
-export DATAGEN_VERSION="0.4.14"
+export DATAGEN_VERSION="0.5.0"
 export EDGE_HOST=""
 
 # Demo
@@ -858,8 +858,6 @@ then
         export CDH_VERSION="7.1.7.2026"
         export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.7.zip"
         export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.7"
-        export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/${DATAGEN_VERSION}/7.1.7.2000/parcels/"
-        export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/${DATAGEN_VERSION}/7.1.7.2000/csd/DATAGEN-${DATAGEN_VERSION}.7.1.7.2000.jar"
     elif [ "${CLUSTER_TYPE}" = "cdh6" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdh-6/hosts"
@@ -1095,9 +1093,10 @@ fi
 
 if [ "${DISTRIBUTION_TO_DEPLOY}" = "CDP" ] && [ -z ${DATAGEN_CSD_URL} ] && [ -z ${DATAGEN_REPO_PARCEL} ]
 then
-    logger info " Will guess Datagen Parcel Repo and CSD from Version"
-    export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/${DATAGEN_VERSION}/${CDH_VERSION}/parcels/"
-    export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/${DATAGEN_VERSION}/${CDH_VERSION}/csd/DATAGEN-${DATAGEN_VERSION}.${CDH_VERSION}.jar"
+    CDH_MAIN_VERSION=${CDH_VERSION:0:5}
+    logger info " Will guess Datagen Parcel Repo and CSD from Datagen Version $DATAGEN_VERSION and CDH main ersion"
+    export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/${DATAGEN_VERSION}/CDP/${CDH_MAIN_VERSION}/parcels/"
+    export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/${DATAGEN_VERSION}/CDP/${CDH_MAIN_VERSION}/csd/DATAGEN-${DATAGEN_VERSION}.${CDH_MAIN_VERSION}.jar"
 fi
 
 # Set HDP/Ambari repository 

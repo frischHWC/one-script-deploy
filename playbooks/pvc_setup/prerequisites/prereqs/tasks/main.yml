@@ -40,12 +40,6 @@
     name: unzip
     state: present
 
-- name: Install gunzip
-  package:
-    name: gunzip
-    state: present
-
-
 - set_fact: 
     cp_domain: "{{ (lookup('template', kube_config_path ) | from_yaml).clusters[0].cluster.server.split('//')[1].split(':')[0].replace('api.', '') }}"
   when: pvc_type == "OC"

@@ -163,13 +163,14 @@ function restart_nodes() {
     logger info "Restarting nodes"
     for i in ${!ALL_NODES[@]}
     do
+        logger debug "Restarting ${ALL_NODES[$i]}"
         ssh -q ${NODE_USER}@${ALL_NODES[$i]} "sudo reboot"
     done
     for i in ${!ALL_NODES[@]}
     do
         while true ; do
             if ssh -q root@${ALL_NODES[$i]} true ; then
-                logger info "Node #bold:${ALL_NODES[$i]} is alive"
+                logger debug "Node #bold:${ALL_NODES[$i]} is alive"
                 break
             fi
             sleep 5

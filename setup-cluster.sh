@@ -1169,6 +1169,10 @@ logger info "############ Setup connections to all nodes  ############"
 touch ~/.ssh/known_hosts
 touch ~/.ssh/authorized_keys
 
+
+# Useful array of all nodes
+ALL_NODES=( "${NODES[@]}") 
+
 echo "[base]" >> ${HOSTS_FILE} 
 for i in ${!NODES[@]}
 do
@@ -1193,6 +1197,8 @@ echo "" >> ${HOSTS_FILE}
 
 if [ ! -z "${NODE_IPA}" ]
 then
+    NODE_IPA_AS_ARRAY=( `echo ${NODE_IPA}` )
+    ALL_NODES+=("${NODE_IPA_AS_ARRAY[@]}")
     echo "[ipa]" >> ${HOSTS_FILE} 
     echo "${NODE_IPA}" >> ${HOSTS_FILE}
     echo "" >> ${HOSTS_FILE}
@@ -1216,6 +1222,7 @@ then
     export NODES_KTS_ARRAY=$( echo ${NODES_KTS} | sort | uniq )
     export NODES_KTS_SORTED=( ${NODES_KTS_ARRAY} )
     export KTS_ACTIVE=${NODES_KTS_SORTED[0]}
+    ALL_NODES+=("${NODES_KTS_SORTED[@]}")
     if [ ${#NODES_KTS_SORTED[@]} == 2 ]
     then
         export KTS_PASSIVE=${NODES_KTS_SORTED[1]}
@@ -1246,6 +1253,7 @@ if [ ! -z "${NODES_PVC_ECS}" ]
 then
     export NODES_PVC_ECS_SORTED_ARRAY=$( echo ${NODES_PVC_ECS} | uniq )
     export NODES_PVC_ECS_SORTED=( ${NODES_PVC_ECS_SORTED_ARRAY} )
+    ALL_NODES+=("${NODES_PVC_ECS_SORTED[@]}")
     echo "[pvc]" >> ${HOSTS_FILE}
     for i in ${!NODES_PVC_ECS_SORTED[@]}
     do
@@ -1276,9 +1284,6 @@ then
     fi
 fi
 
-# Useful array of all nodes
-NODE_IPA_AS_ARRAY=( `echo ${NODE_IPA}` )
-ALL_NODES=( "${NODES[@]}" "${NODE_IPA_AS_ARRAY[@]}" "${NODES_KTS[@]}" "${NODES_PVC_ECS_SORTED[@]}" )
 
 # To adjust the number of lines to analyze from ansible response
 NUMBER_OF_NODES=$(wc ${HOSTS_FILE} | awk '{print $1}')
@@ -1507,9 +1512,6 @@ logger info ""
 ###############################
 # Launch of scripts to deploy
 ###############################
-
-# Load Ansible launch functions used to launch following commands
-. ./functions.sh
 
 if [ "${PRE_INSTALL}" = "true" ] 
 then

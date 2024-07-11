@@ -1,0 +1,23 @@
+{
+    "id": "min-dbc",
+    "name": "dbc_minimal_resources",
+    "version": 1,
+    "entity-type": "dbc",
+    "description": "",
+    "is-default": true,
+    "resources": {
+      "hue-query-processor": {
+        "cpu": "0.25",
+        "memory": "1024MB"
+      },
+      "metastore": {
+        "cpu": "0.5",
+        "memory": "6192MB",
+        "breakdown": {
+          "xmx": "6G"
+        }
+      }
+    },
+    "attachedEntities": null,
+    "createdBy": "User"
+  }

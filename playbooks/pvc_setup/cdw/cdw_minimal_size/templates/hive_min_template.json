@@ -1,0 +1,74 @@
+{
+    "id": "min-hive",
+    "name": "hive_minimal_resources",
+    "version": 1,
+    "entity-type": "hive",
+    "description": "Default minimal resources for components inside a Hive Virtual Warehouse.",
+    "is-default": true,
+    "resources": {
+      "hiveserver2": {
+        "cpu": "1",
+        "memory": "4096MB",
+        "breakdown": {
+          "xms": "2G",
+          "xmx": "3277M"
+        }
+      },
+      "hue": {
+        "cpu": "0.5",
+        "memory": "2048MB"
+      },
+      "query-coordinator": {
+        "cpu": "0.5",
+        "memory": "2048MB",
+        "breakdown": {
+          "xms": "1G",
+          "xmx": "2048M"
+        }
+      },
+      "query-executor": {
+        "cpu": "2",
+        "memory": "16192MB",
+        "breakdown": {
+          "xms": "8G",
+          "xmx": "14G",
+          "headroom": "1G",
+          "xss": "256k",
+          "maxDirectMemorySize": "1G",
+          "waitQueueSize": "2"
+        },
+        "localStorage": {
+          "scratch": "24GiB",
+          "cache": "20GiB",
+          "overhead": "4GiB"
+        }
+      },
+      "standalone-compute-operator": {
+        "cpu": "0.2",
+        "memory": "2048MB"
+      },
+      "standalone-query-executor": {
+        "cpu": "2",
+        "memory": "16192MB",
+        "breakdown": {
+          "xms": "8G",
+          "xmx": "14G",
+          "headroom": "1G",
+          "xss": "256k",
+          "maxDirectMemorySize": "1G",
+          "waitQueueSize": "2"
+        },
+        "localStorage": {
+          "scratch": "24GiB",
+          "cache": "20GiB",
+          "overhead": "4GiB"
+        }
+      },
+      "usage-monitor": {
+        "cpu": "0.1",
+        "memory": "256MB"
+      }
+    },
+    "attachedEntities": null,
+    "createdBy": "User"
+  }

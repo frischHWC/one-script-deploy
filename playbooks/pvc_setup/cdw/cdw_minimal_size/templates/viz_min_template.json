@@ -1,0 +1,16 @@
+{
+    "id": "min-viz",
+    "name": "viz_minimal_resources",
+    "version": 1,
+    "entity-type": "viz",
+    "description": "Default minimal resources for components inside Data Visualization.",
+    "is-default": true,
+    "resources": {
+      "viz-webapp": {
+        "cpu": "1",
+        "memory": "4096MB"
+      }
+    },
+    "attachedEntities": null,
+    "createdBy": "User"
+  }

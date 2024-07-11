@@ -1,0 +1,88 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Get Environment details
+- set_fact:
+    dwx_endpoint_api: "{{ cdp_endpoint_url }}/dwx/api/v2"
+
+- name: DEBUG - dwx_endpoint_api
+  debug:
+    msg: "{{ dwx_endpoint_api }}"
+
+
+- name: Push DBC minimal resourcces template
+  uri:
+    url: "{{ dwx_endpoint_api }}/resources/templates"
+    method: PUT
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', item) }}"
+    status_code: 200
+    validate_certs: no
+  with_items:
+    - dbc_min_template.json
+    - hive_min_template.json
+    - impala_min_template.json
+    - viz_min_template.json
+  ignore_errors: true
+
+
+- name: Get all templates
+  uri:
+    url: "{{ dwx_endpoint_api }}/resources/templates"
+    method: GET
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    validate_certs: no
+  register: answer_for_templates
+
+- set_fact:
+    hive_template_id: "{{ answer_for_templates.json | community.general.json_query(query) }}"
+  vars:
+    query: "[?name == 'hive_minimal_resources' ].id | [0]"
+
+- set_fact:
+    impala_template_id: "{{ answer_for_templates.json | community.general.json_query(query) }}"
+  vars:
+    query: "[?name == 'impala_minimal_resources' ].id | [0]"
+
+- set_fact:
+    viz_template_id: "{{ answer_for_templates.json | community.general.json_query(query) }}"
+  vars:
+    query: "[?name == 'viz_minimal_resources' ].id | [0]"
+
+
+- name: DEBUG - hive_template_id
+  debug:
+    msg: "{{ hive_template_id }}"
+
+- name: DEBUG - impala_template_id
+  debug:
+    msg: "{{ impala_template_id }}"
+
+- name: DEBUG - viz_template_id
+  debug:
+    msg: "{{ viz_template_id }}"
+

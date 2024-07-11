@@ -1,0 +1,120 @@
+{
+    "id": "min-impala",
+    "name": "impala_minimal_resources",
+    "version": 1,
+    "entity-type": "impala",
+    "description": "Default minimal resources for components inside an Impala Virtual Warehouse.",
+    "is-default": true,
+    "resources": {
+      "hiveserver2": {
+        "cpu": "1",
+        "memory": "4096MB",
+        "breakdown": {
+          "xms": "2G",
+          "xmx": "3277M"
+        }
+      },
+      "hue": {
+        "cpu": "0.5",
+        "memory": "2048MB"
+      },
+      "impala-autoscaler": {
+        "cpu": "0.25",
+        "memory": "1024MB"
+      },
+      "impala-catalogd": {
+        "cpu": "0.5",
+        "memory": "2048MB",
+        "breakdown": {
+          "xms": "1G",
+          "xmx": "2G"
+        },
+        "ephemeralStorage": "512MB"
+      },
+      "impala-coordinator": {
+        "cpu": "2",
+        "memory": "8096MB",
+        "breakdown": {
+          "xms": "1G",
+          "xmx": "2G"
+        },
+        "localStorage": {
+          "scratch": "24GiB",
+          "cache": "20GiB",
+          "overhead": "4GiB"
+        },
+        "ephemeralStorage": "8192MB"
+      },
+      "impala-executor": {
+        "cpu": "2",
+        "memory": "8096MB",
+        "breakdown": {
+          "xms": "1G",
+          "xmx": "2G"
+        },
+        "localStorage": {
+          "scratch": "24GiB",
+          "cache": "20GiB",
+          "overhead": "4GiB"
+        },
+        "ephemeralStorage": "512MB"
+      },
+      "impala-proxy": {
+        "cpu": "0.25",
+        "memory": "1024MB"
+      },
+      "impala-statestored": {
+        "cpu": "0.25",
+        "memory": "1024MB",
+        "ephemeralStorage": "512MB"
+      },
+      "query-coordinator": {
+        "cpu": "0.25",
+        "memory": "2048MB",
+        "breakdown": {
+          "xms": "1G",
+          "xmx": "2048M"
+        }
+      },
+      "query-executor": {
+        "cpu": "2",
+        "memory": "16192MB",
+        "breakdown": {
+          "xms": "8G",
+          "xmx": "14G",
+          "headroom": "1G",
+          "xss": "256k",
+          "maxDirectMemorySize": "1G",
+          "waitQueueSize": "2"
+        },
+        "localStorage": {
+         "scratch": "24GiB",
+          "cache": "20GiB",
+          "overhead": "4GiB"
+        }
+      },
+      "standalone-query-executor": {
+        "cpu": "2",
+        "memory": "16192MB",
+        "breakdown": {
+          "xms": "8G",
+          "xmx": "14G",
+          "headroom": "1G",
+          "xss": "256k",
+          "maxDirectMemorySize": "1G",
+          "waitQueueSize": "2"
+        },
+        "localStorage": {
+          "scratch": "24GiB",
+          "cache": "20GiB",
+          "overhead": "4GiB"
+        }
+      },
+      "usage-monitor": {
+        "cpu": "0.1",
+        "memory": "256MB"
+      }
+    },
+    "attachedEntities": null,
+    "createdBy": "User"
+  }

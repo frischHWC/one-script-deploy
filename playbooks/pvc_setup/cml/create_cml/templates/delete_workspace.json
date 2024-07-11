@@ -1,0 +1,6 @@
+{
+    "workspaceName":"{{ workspace.name }}",
+    "environmentName":"{{ workspace.env_name }}",
+    "removeStorage":false,
+    "force":false
+}

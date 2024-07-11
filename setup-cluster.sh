@@ -26,11 +26,13 @@ export SETUP_ETC_HOSTS="true"
 # Steps to do
 export PRE_INSTALL="true"
 export PREPARE_ANSIBLE_DEPLOYMENT="true"
+export SETUP_DB_NO_GL="false"
 export INSTALL="true"
 export POST_INSTALL="true"
 export USER_CREATION="true"
-export DATA_LOAD="false"
+export DATA_LOAD="true"
 export DEMO="false"
+export IS_REBOOT_REQUIRED="false"
 
 # Auth & Log
 export DEFAULT_PASSWORD="Cloudera1234"
@@ -54,15 +56,15 @@ export REALM="FRISCH.COM"
 export ENCRYPTION_ACTIVATED="false"
 
 # Versions
-export JDK_VERSION="11"
-export CM_VERSION="7.11.3.6"
-export CDH_VERSION="7.1.9.4"
-export CSA_VERSION="1.11.0.0"
-export CFM_VERSION="2.1.6.0"
-export CEM_VERSION="2.1.2.0"
-export SPARK3_VERSION="3.3.7180.14"
+export JDK_VERSION="17"
+export CM_VERSION="7.11.3.9"
+export CDH_VERSION="7.1.9.14"
+export CSA_VERSION="1.12.0.0"
+export CFM_VERSION="2.1.7.0"
+export CEM_VERSION="2.1.3.0"
+export SPARK3_VERSION="3.3.7190.0"
 export OBSERVABILITY_VERSION="3.4.4"
-export PVC_VERSION="1.5.3"
+export PVC_VERSION="1.5.4"
 export AMBARI_VERSION="2.7.5.0"
 export HDP_VERSION="3.1.5.6091"
 export HDF_VERSION="3.5.2.0"
@@ -86,7 +88,7 @@ export DATABASE_VERSION="14"
 
 # OS Related
 export OS="centos"
-export OS_VERSION="7.9"
+export OS_VERSION="8.8"
 export INSTALL_PYTHON3="true"
 
 # PVC related
@@ -163,6 +165,8 @@ export CA_SERVERS=""
 export KMS_SERVERS=""
 export ANSIBLE_PYTHON_3_PARAMS=""
 export USE_ANSIBLE_PYTHON_3="false"
+export ANSIBLE_PYTHON_3_PATH="/usr/bin/python3"
+export SET_PYTHON_3_LINK="false"
 export PVC_ECS_SERVER_HOST=""
 export CLUSTER_NAME_STREAMING=""
 export USE_ROOT_CA="false"
@@ -209,6 +213,7 @@ function usage()
     echo ""
     echo "  --pre-install=$PRE_INSTALL : (Optional) To do setup scripts (Default) $PRE_INSTALL "
     echo "  --install=$INSTALL : (Optional) To do the installation, it is only for debugging purpose (Default) $INSTALL "
+    echo "  --setup-db-no-gl=$SETUP_DB_NO_GL : (Optional) To not use geerlinguy project to setup the DB (Default) $SETUP_DB_NO_GL "
     echo "  --post-install=$POST_INSTALL : (Optional) To do post install tasks (such as CM no unlogin) (Default) $POST_INSTALL"
     echo "  --user-creation=$USER_CREATION : (Optional) Creates two users with their keytabs and home directory on all nodes (Required if loading data) (Default) $USER_CREATION " 
     echo "  --data-load=$DATA_LOAD : (Optional) Whether to initiate post deployment tasks including data loading (Default) $DATA_LOAD "
@@ -219,6 +224,7 @@ function usage()
     echo "  --skip-pvc-prereqs=$SKIP_PVC_PREREQS : (Optional) To avoid launching pvc prerequisites (TLS DB) $SKIP_PVC_PREREQS"
     echo "  --debug=$DEBUG : (Optional) To setup debug mode for all playbooks (Default) $DEBUG"
     echo "  --log-dir=$LOG_DIR : (Optional) To specify where this script will logs its files (Default) $LOG_DIR "
+    echo "  --is-reboot-required=$IS_REBOOT_REQUIRED : (Optional) To reboot machines before installation (because some of them can be stuck forever in AWS) (Default) $IS_REBOOT_REQUIRED "
     echo ""
     echo ""
     echo " These are optionnal parameters to tune and configure differently the deployment :"
@@ -275,6 +281,8 @@ function usage()
     echo "  --os-version=$OS_VERSION : (Optional) OS version to use (Default) $OS_VERSION" 
     echo "  --install-python3=$INSTALL_PYTHON3 : (Optional) To install python3 on all hosts (Default) $INSTALL_PYTHON3 "
     echo "  --ansible-python-3=$USE_ANSIBLE_PYTHON_3 : (Optional) To use python3 for ansible (Default) $USE_ANSIBLE_PYTHON_3 "
+    echo "  --ansible-python-3-path=$ANSIBLE_PYTHON_3_PATH : (Optional) The path for python 3 on the platform (Default) $ANSIBLE_PYTHON_3_PATH "
+    echo "  --ansible-python-3-link=$SET_PYTHON_3_LINK : (Optional) To set a python 3 link from /usr/libexec/platform-python to /usr/bin/python3 to force ansible to use platform python 3 default (Default) $SET_PYTHON_3_LINK "
     echo ""
     echo "  --pvc=$PVC : (Optional) If PVC should be deployed and configured (Default) $PVC "
     echo "  --pvc-type=$PVC_TYPE : (Optional) Which type of PVC (OC or ECS) (Default) $PVC_TYPE "
@@ -380,6 +388,9 @@ while [ "$1" != "" ]; do
         --install)
             INSTALL=$VALUE
             ;; 
+        --setup-db-no-gl)
+            SETUP_DB_NO_GL=$VALUE
+            ;;
         --post-install)
             POST_INSTALL=$VALUE
             ;;  
@@ -410,6 +421,9 @@ while [ "$1" != "" ]; do
         --log-dir)
             LOG_DIR=$VALUE
             ;; 
+        --is-reboot-required)
+            IS_REBOOT_REQUIRED=$VALUE
+            ;;
         --default-password)
             DEFAULT_PASSWORD=$VALUE
             ;;  
@@ -544,6 +558,12 @@ while [ "$1" != "" ]; do
             ;;
         --use-ansible-python-3)
             USE_ANSIBLE_PYTHON_3=$VALUE
+            ;;
+        --ansible-python-3-path)
+            ANSIBLE_PYTHON_3_PATH=$VALUE
+            ;;
+        --ansible-python-3-link)
+            SET_PYTHON_3_LINK=$VALUE
             ;;
         --pvc)
             PVC=$VALUE
@@ -682,6 +702,7 @@ done
 
 # Load logger
 . ./logger.sh
+. ./functions.sh
 
 logger info ""
 logger info:cyan "#bold:############ Start of One Script Deploy ############"
@@ -1094,7 +1115,7 @@ fi
 if [ "${DISTRIBUTION_TO_DEPLOY}" = "CDP" ] && [ -z ${DATAGEN_CSD_URL} ] && [ -z ${DATAGEN_REPO_PARCEL} ]
 then
     CDH_MAIN_VERSION=${CDH_VERSION:0:5}
-    logger info " Will guess Datagen Parcel Repo and CSD from Datagen Version $DATAGEN_VERSION and CDH main ersion"
+    logger info " Will guess Datagen Parcel Repo and CSD from Datagen Version $DATAGEN_VERSION and CDH main version"
     export DATAGEN_REPO_PARCEL="https://datagen-repo.s3.eu-west-3.amazonaws.com/${DATAGEN_VERSION}/CDP/${CDH_MAIN_VERSION}/parcels/"
     export DATAGEN_CSD_URL="https://datagen-repo.s3.eu-west-3.amazonaws.com/${DATAGEN_VERSION}/CDP/${CDH_MAIN_VERSION}/csd/DATAGEN-${DATAGEN_VERSION}.${CDH_MAIN_VERSION}.jar"
 fi
@@ -1254,6 +1275,10 @@ then
         export PVC_APP_DOMAIN=${PVC_ECS_SERVER_HOST}
     fi
 fi
+
+# Useful array of all nodes
+NODE_IPA_AS_ARRAY=( `echo ${NODE_IPA}` )
+ALL_NODES=( "${NODES[@]}" "${NODE_IPA_AS_ARRAY[@]}" "${NODES_KTS[@]}" "${NODES_PVC_ECS_SORTED[@]}" )
 
 # To adjust the number of lines to analyze from ansible response
 NUMBER_OF_NODES=$(wc ${HOSTS_FILE} | awk '{print $1}')
@@ -1468,7 +1493,7 @@ export ANSIBLE_CONFIG=$(pwd)/ansible.cfg
 
 if [ "${USE_ANSIBLE_PYTHON_3}" == "true" ]
 then
-    export ANSIBLE_PYTHON_3_PARAMS='-e ansible_python_interpreter=/usr/bin/python3'
+    export ANSIBLE_PYTHON_3_PARAMS="-e ansible_python_interpreter=${ANSIBLE_PYTHON_3_PATH}"
 fi
 
 # Print Env variables
@@ -1489,7 +1514,7 @@ logger info ""
 if [ "${PRE_INSTALL}" = "true" ] 
 then
     logger info "############ #bold:Setup cluster hosts#end_bold ############"
-    launch_playbook pre_install "Hosts Ready" "Could not prepare Hosts" 280 420 2 false
+    launch_playbook pre_install "Hosts Ready" "Could not prepare Hosts" 360 600 2 false
 fi
 
 if [ "${PREPARE_ANSIBLE_DEPLOYMENT}" = "true" ]
@@ -1519,6 +1544,11 @@ then
         ################################################
         ######## Installation of CDP step by step in order to be able to track installation #######
         ################################################
+        if [ "${IS_REBOOT_REQUIRED}" == "true" ]
+        then
+            restart_nodes
+        fi
+        
         logger info "###### #bold:Verificating cluster Definition#end_bold ######"
         launch_playbook verify_inventory_and_definition "Cluster Definition Verified" "Could not Verify Cluster Definition" 12 120 0 "true"
 
@@ -1537,6 +1567,11 @@ then
             launch_playbook create_freeipa "Free IPA Installed" "Could not deploy Free IPA" 600 1200 2 true
         fi
 
+        if [ "${IS_REBOOT_REQUIRED}" == "true" ]
+        then
+            restart_nodes
+        fi
+
         logger info "###### #bold:Installing Cloudera Manager#end_bold ######"
         launch_playbook install_cloudera_manager "Cloudera Manager Installed" "Could not install Cloudera Manager" 600 1200 2 true
 
@@ -1553,6 +1588,11 @@ then
         then
             logger info "###### #bold:Enabling Auto-TLS#end_bold ######"
             launch_playbook extra_auto_tls "Auto-TLS Enabled" "Could not enable Auto-TLS" 280 600 2 true
+        fi
+
+        if [ "${IS_REBOOT_REQUIRED}" = "true" ]
+        then
+            restart_nodes
         fi
 
         logger info "From now, you can follow deployment directly in CM: "
@@ -1576,7 +1616,7 @@ then
         if [ "${ENCRYPTION_ACTIVATED}" = "true" ]
         then
             logger info "###### #bold:Setting up Data Encryption at Rest#end_bold ######"
-            launch_playbook setup_hdfs_encryption "Data Encryption at Rest Setup" "Could not Setup Data Encryption at Rest" 600 3600 2 true
+            launch_playbook setup_hdfs_encryption "Data Encryption at Rest Setup" "Could not Setup Data Encryption at Rest" 1200 3600 2 true
         fi
         
     fi
@@ -1615,7 +1655,7 @@ fi
 if [ "${PVC}" = "true" ] && [ "${CONFIGURE_PVC}" = "true" ]
 then
     logger info "############ #bold:Configuring PvC cluster#end_bold ############" 
-    launch_playbook pvc_setup "PvC Configured" "Could not configure PVC" 3600 5400 2 false
+    launch_playbook pvc_setup "PvC Configured" "Could not configure PVC" 3600 5400 0 false
 fi
 
 if [ "${DATA_LOAD}" = "true" ]

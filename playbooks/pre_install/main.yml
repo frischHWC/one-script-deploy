@@ -17,6 +17,14 @@
 # under the License.
 #
 ---
+- name: Set python 3 to platform version as it is required for installation (at least)
+  hosts: all
+  gather_facts: false
+  strategy: free
+  become: true
+  roles: 
+    - { role: set_python3_platform_version , when: set_python3_link }
+
 - name: Setup network requirements for all machines
   hosts: all
   gather_facts: false

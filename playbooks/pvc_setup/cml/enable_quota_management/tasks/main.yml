@@ -17,8 +17,11 @@
 # under the License.
 #
 ---
-- name: Enable Quota Management (on ECS PvC 1.5.2 only)
+- name: Enable Quota Management (on ECS PvC 1.5.2-4 only)
   shell: /bin/bash -i -c "kubectl-ecs -n cdp set env deployment/dp-mlx-control-plane-app ENABLE_UMBRA_INTEGRATION=true"
+
+- name: Enable Quota Management (on ECS PvC 1.5.2-4 only)
+  shell: /bin/bash -i -c "kubectl-ecs -n cdp set env deployment/dp-cadence-worker ENABLE_UMBRA_INTEGRATION=true"
 
 - name: Sleep for 15 seconds for letting quota management to be enabled
   wait_for:

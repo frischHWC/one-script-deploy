@@ -32,7 +32,7 @@
 
 - name: Install cdpcli
   pip:
-    name: cdpcli>=0.9.54
+    name: cdpcli>=0.9.117
     executable: pip3
 
 - name: Install unzip

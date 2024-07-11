@@ -200,6 +200,20 @@
       ignore_errors: yes
 
 ### CDW ####
+- name: Create Cloudera Data Warehouse's minimal sizes
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: true
+  tasks: 
+    - name: create CDWs
+      include_role:
+        name: cdw/cdw_minimal_size
+      with_items: "{{ warehouses }}"
+      vars: 
+        warehouse: "{{ item }}"
+      when: cdw | default(false) and pvc_version is version('1.5.4', '>=') and pvc_eco_resources
+      ignore_errors: yes
+
+
 - name: Create Cloudera Data Warehouse
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: true

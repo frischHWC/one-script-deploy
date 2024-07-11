@@ -132,6 +132,8 @@ clusters:
         SERVICEWIDE:
           ozone.service.id: "{{ cluster_name }}"
           ozone.scm.primordial.node.id: "{{  groups.cluster_master_nodes | first | default(omit) }}"
+        OZONE_MANAGER:
+          ozone-conf/ozone-site.xml_role_safety_valve: <property><name>ozone.om.snapshot.load.native.lib</name><value>false</value></property>
 
       SPARK_ON_YARN:
         SERVICEWIDE:
@@ -185,6 +187,7 @@ clusters:
         RESOURCEMANAGER:
           yarn_scheduler_maximum_allocation_mb: 24576
           yarn_scheduler_maximum_allocation_vcores: 12
+          resourcemanager_config_safety_valve: <property><name>yarn.resourcemanager.application-tag-based-placement.enable</name><value>true</value></property><property><name>yarn.resourcemanager.application-tag-based-placement.username.whitelist</name><value>hive</value></property>
         NODEMANAGER:
           yarn_nodemanager_resource_memory_mb: 24576
           yarn_nodemanager_resource_cpu_vcores: 12

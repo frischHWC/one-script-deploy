@@ -87,3 +87,4 @@ pvc_ecs_server_host: ${PVC_ECS_SERVER_HOST}
 # DATABASE
 database_type: ${DATABASE_TYPE}
 database_version: ${DATABASE_VERSION}
+setup_db_no_gl: ${SETUP_DB_NO_GL}

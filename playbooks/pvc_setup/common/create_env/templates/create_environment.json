@@ -13,4 +13,4 @@
     "domain": "{{ env_domain | default('') }}",
     "dockerConfigJson": "",
     "description": ""
-  }
+}

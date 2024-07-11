@@ -1,6 +1,7 @@
 #additional packages that may be useful
 [extras]
 name=CentOS-{{ os_version }}- Extras
-mirrorlist=http://mirrorlist.centos.org/?release={{ os_version[:1] }}&arch=$basearch&repo=extras
+#mirrorlist=http://vault.centos.org/?release={{ os_version[:1] }}&arch=$basearch&repo=extras
+baseurl=http://vault.centos.org/centos/{{ os_version[:1] }}/extras/\$basearch/
 enabled=1
 gpgcheck=0

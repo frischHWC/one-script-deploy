@@ -37,3 +37,4 @@ keystore_password: ${DEFAULT_PASSWORD}
 truststore_password: ${DEFAULT_PASSWORD}
 pvc: ${PVC}
 pvc_app_domain: ${PVC_APP_DOMAIN}
+set_python3_link: ${SET_PYTHON_3_LINK}

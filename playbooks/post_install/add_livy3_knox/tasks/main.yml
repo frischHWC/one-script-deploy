@@ -135,7 +135,7 @@
   when: debug | default(false)
 
 - set_fact:
-    new_gateway_descriptor_cdp_proxy: "{{ gateway_descriptor_cdp_proxy }}#LIVY_FOR_SPARK3:url={{ livy3_protocol }}://{{ livy3_host }}:{{ livy3_port }}#LIVY_FOR_SPARK3:version=0.6.0"
+    new_gateway_descriptor_cdp_proxy: "{{ gateway_descriptor_cdp_proxy }}#LIVY_FOR_SPARK3:url={{ livy3_protocol }}://{{ livy3_host }}:{{ livy3_port }}#LIVY_FOR_SPARK3:version=0.7.2"
 
 
 - set_fact:
@@ -155,7 +155,7 @@
   when: debug | default(false)
 
 - set_fact:
-    new_gateway_descriptor_cdp_proxy_api: "{{ gateway_descriptor_cdp_proxy_api }}#LIVY_FOR_SPARK3:url={{ livy3_protocol }}://{{ livy3_host }}:{{ livy3_port }}#LIVY_FOR_SPARK3:version=0.6.0"
+    new_gateway_descriptor_cdp_proxy_api: "{{ gateway_descriptor_cdp_proxy_api }}#LIVY_FOR_SPARK3:url={{ livy3_protocol }}://{{ livy3_host }}:{{ livy3_port }}#LIVY_FOR_SPARK3:version=0.7.2"
 
 - name: Push new Knox config
   uri:

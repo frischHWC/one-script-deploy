@@ -61,6 +61,11 @@
   vars:
     query: "[?name == '{{ vc.cde_service_name }}' && status != 'ClusterDeletionCompleted' ].id | [0]"
 
+- name: DEBUG - cde_service_id
+  debug:
+    msg: "{{ cde_service_id }}"
+  when: debug | default(false)
+
 - name: Get CDE VCs
   uri:
     url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance"
@@ -77,7 +82,13 @@
 - set_fact:
     cde_vc_id: "{{ cde_vcs.json | community.general.json_query(query_id) }}"
   vars:
-    query_id: "[?name == '{{ vc.name }}'].id | [0]"
+    query_id: "[?name == '{{ vc.name }}' ].id | [0]"
+
+- name: DEBUG - cde_vc_id
+  debug:
+    msg: "{{ cde_vc_id }}"
+  when: debug | default(false)
+
 
 - name: Get CDE VC Details
   uri:

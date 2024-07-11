@@ -35,6 +35,57 @@
     nfs_storage_class_to_use: "{{ oc_nfs_storage_class }}"
   when: pvc_type == 'OC' and ( workspace.nfs_storage_class is not defined or workspace.nfs_storage_class == 'longhorn' )
 
+# TODO: Remake this to check it is existing before 
+- name: Check CML workspace exists
+  uri:
+    url: "{{ cml_endpoint_api }}/listWorkspaces"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{}"
+    status_code: [200, 202]
+    return_content: yes
+    validate_certs: no
+  register: cml_workspaces_list
+
+- set_fact:
+    workspace_crn: "{{ cml_workspaces_list.json | community.general.json_query(query) }}"
+  vars:
+    query: "workspaces[?instanceName == '{{ workspace.name }}' ].crn | [0]"
+
+- name: DEBUG - workspace_crn
+  debug:
+    msg: "{{ workspace_crn }}"
+  when: debug | default(false)
+
+- set_fact:
+    is_workspace_existing: "{{ false if workspace_crn == '' else true }}"
+
+# Delete workspace if existing
+- name: Delete existing workspace
+  uri:
+    url: "{{ cml_endpoint_api }}/deleteWorkspace"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', 'delete_workspace.json') }}"
+    status_code: [200, 202]
+    return_content: yes
+    validate_certs: no
+  register: cml_workspaces_list
+  when: is_workspace_existing
+
+- name: Wait for Deletion to be done
+  pause:
+    seconds: 60
+  when: is_workspace_existing
+
 # Create Workspace
 - name: Create CML Workspace
   uri:
@@ -51,6 +102,11 @@
     validate_certs: no
   register: answer_to_create_cml
 
+- name: Wait for Creation to be acknowledged
+  pause:
+    seconds: 120
+
+# Wait for CML workspace to be created
 - name: Check CML creation
   uri:
     url: "{{ cml_endpoint_api }}/describeWorkspace"
@@ -64,7 +120,7 @@
     status_code: [200, 202]
     return_content: yes
     validate_certs: no
-  register: cml_activation
-  until: " cml_activation.json.workspace.instanceStatus == 'installation:finished' "
-  retries: 30
-  delay: 60
+  register: cml_activation_answer
+  until: " cml_activation_answer.json.workspace.instanceStatus == 'installation:finished' "
+  retries: 60
+  delay: 30

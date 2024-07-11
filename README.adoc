@@ -16,7 +16,7 @@ image:images/one-script-all.gif[Example of a basic launch]
 
 | &#10003;
 | basic
-| CDP 7.1.9.4 & CM 7.11.3.6
+| CDP 7.1.9.14 & CM 7.11.3.9
 | CENTOS 7.9
 | Postgres 14
 | MIT KDC
@@ -25,7 +25,7 @@ image:images/one-script-all.gif[Example of a basic launch]
 
 | &#10003;
 | full
-| CDP 7.1.9.4 & CM 7.11.3.6
+| CDP 7.1.9.14 & CM 7.11.3.9
 | CENTOS 7.9
 | Postgres 14
 | MIT KDC
@@ -34,7 +34,7 @@ image:images/one-script-all.gif[Example of a basic launch]
 
 | &#10003;
 | all-services
-| CDP 7.1.9.4 & CM 7.11.3.6
+| CDP 7.1.9.14 & CM 7.11.3.9
 | CENTOS 7.9
 | Postgres 14
 | MIT KDC
@@ -43,7 +43,7 @@ image:images/one-script-all.gif[Example of a basic launch]
 
 | &#10003;
 | streaming
-| CDP 7.1.9.4 & CM 7.11.3.6 & CFM 2.1.6
+| CDP 7.1.9.4 & CM 7.11.3.6 & CFM 2.1.7
 | CENTOS 7.9
 | Postgres 14
 | MIT KDC
@@ -52,7 +52,7 @@ image:images/one-script-all.gif[Example of a basic launch]
 
 | &#10003;
 | cdp-streaming-with-efm
-| CDP 7.1.9.4 & CM 7.11.3.6 & CFM 2.1.6 & EFM 2.1.2
+| CDP 7.1.9.4 & CM 7.11.3.6 & CFM 2.1.7 & EFM 2.1.2
 | RHEL 8.8
 | Postgres 14
 | MIT KDC
@@ -61,7 +61,7 @@ image:images/one-script-all.gif[Example of a basic launch]
 
 | &#10003;
 | cdp-observability
-| CDP 7.1.9.4 & CM 7.11.3.6
+| CDP 7.1.9.14 & CM 7.11.3.9 & Observability 3.4.4
 | CENTOS 7.9
 | Postgres 14
 | MIT KDC
@@ -79,7 +79,7 @@ image:images/one-script-all.gif[Example of a basic launch]
 
 | &#10003;
 | pvc
-| CDP 7.1.9.4 & CM 7.11.3.2 & PvC 1.5.3
+| CDP 7.1.9.14 & CM 7.11.3.9 & PvC 1.5.4
 | CENTOS 7.9
 | Postgres 14
 | Free IPA
@@ -88,12 +88,12 @@ image:images/one-script-all.gif[Example of a basic launch]
 
 | &#10003;
 | all-services-pvc
-| CDP 7.1.9.4 & CM 7.11.3.2 & PvC 1.5.3
+| CDP 7.1.9.14 & CM 7.11.3.9 & PvC 1.5.4
 | CENTOS 7.9
 | Postgres 14
 | Free IPA
 | True
-| Relaunch manually end of installation as cluster template import is very long and timeouts.
+| 
 
 | 
 | 

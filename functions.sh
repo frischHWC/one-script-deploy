@@ -97,7 +97,7 @@ function launch_playbook() {
             cp playbooks/${playbook}/extra_vars.yml /tmp/${playbook}_extra_vars.yml
             envsubst < /tmp/${playbook}_extra_vars.yml > /tmp/${playbook}_extra_vars.yml.tmp && mv /tmp/${playbook}_extra_vars.yml.tmp /tmp/${playbook}_extra_vars.yml
             logger info " Follow progression in: #underline:$log_file "
-            ansible-playbook -i ${HOSTS_FILE} playbooks/${playbook}/main.yml --extra-vars "@/tmp/${playbook}_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} > $log_file 2>&1 &
+            ansible-playbook -i ${HOSTS_FILE} playbooks/${playbook}/main.yml --extra-vars "@/tmp/${playbook}_extra_vars.yml" ${ANSIBLE_PYTHON_3_PARAMS} >> $log_file 2>&1 &
         fi
 
         local pid=$!
@@ -156,4 +156,24 @@ function launch_playbook() {
         exit 1 
     fi
     
+}
+
+
+function restart_nodes() {
+    logger info "Restarting nodes"
+    for i in ${!ALL_NODES[@]}
+    do
+        ssh -q ${NODE_USER}@${ALL_NODES[$i]} "sudo reboot"
+    done
+    for i in ${!ALL_NODES[@]}
+    do
+        while true ; do
+            if ssh -q root@${ALL_NODES[$i]} true ; then
+                logger info "Node #bold:${ALL_NODES[$i]} is alive"
+                break
+            fi
+            sleep 5
+        done
+    done
+    logger success "Nodes Restarted"
 }

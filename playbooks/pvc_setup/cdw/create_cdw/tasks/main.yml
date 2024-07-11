@@ -40,11 +40,19 @@
   when: pvc_version is version('1.5.2', '>=')
 
 - set_fact:
+    create_hive_vw_template: 'create_hive_vw_v1.5.4.json'
+  when: pvc_version is version('1.5.4', '>=')
+
+- set_fact:
     create_impala_vw_template: 'create_impala_vw.json'
 
 - set_fact:
     create_impala_vw_template: 'create_impala_vw_v1.5.2.json'
   when: pvc_version is version('1.5.2', '>=')
+
+- set_fact:
+    create_impala_vw_template: 'create_impala_vw_v1.5.4.json'
+  when: pvc_version is version('1.5.4', '>=')
 
 
 - name: Get Environment CRN
@@ -106,11 +114,12 @@
     return_content: yes
     validate_certs: no
   register: answer_to_server_settings
+  when: pvc_version is version('1.5.4', '<=')
 
 - name: DEBUG - answer_to_server_settings
   debug:
     msg: "{{ answer_to_server_settings }}"
-  when: dwx_env_status != 'Running'
+  when: pvc_version is version('1.5.4', '<=')
 
 
 # Activate env (that will trigger default Database Catalog to be created)
@@ -269,36 +278,6 @@
   debug:
     msg: "{{ dwx_dbc_id }}"
     
-# TODO: Here you change deployment resources of DBC to lower it. To remove it and use helm charts upgrae instead.
-
-- name: Pause 5 seconds to let the deployments to be created
-  pause:
-    seconds: 5
-  when: pvc_eco_resources
-
-- name: Lower Metastore Memory
-  shell: '/bin/bash -i -c "kubectl-ecs -n warehouse-{{ warehouse.env_name }}-datalake-default set resources statefulsets -l app=metastore --requests memory=1G"'
-  when: pvc_eco_resources
-
-- name: Lower Metastore CPU
-  shell: '/bin/bash -i -c "kubectl-ecs -n warehouse-{{ warehouse.env_name }}-datalake-default set resources statefulsets -l app=metastore --requests cpu=500m"'
-  when: pvc_eco_resources
-
-- name: Restart Metastore pods
-  shell: '/bin/bash -i -c "kubectl-ecs -n warehouse-{{ warehouse.env_name }}-datalake-default delete pod -l app=metastore"'
-  when: pvc_eco_resources
-
-- name: Lower Hue Query Processor Memory
-  shell: '/bin/bash -i -c "kubectl-ecs -n warehouse-{{ warehouse.env_name }}-datalake-default set resources statefulsets -l app=hue-query-processor --requests memory=1G"'
-  when: pvc_eco_resources
-
-- name: Lower Hue Query Processor CPU
-  shell: '/bin/bash -i -c "kubectl-ecs -n warehouse-{{ warehouse.env_name }}-datalake-default set resources statefulsets -l app=hue-query-processor --requests cpu=250m"'
-  when: pvc_eco_resources
-
-- name: Restart Hue Query Processor pods
-  shell: '/bin/bash -i -c "kubectl-ecs -n warehouse-{{ warehouse.env_name }}-datalake-default delete pod -l app=hue-query-processor"'
-  when: pvc_eco_resources
 
 # Wait for DBC to be running 
 - name: Check Database Catalog Activation
@@ -339,63 +318,6 @@
   register: answer_to_hive_activation
   when: warehouse.type == 'hive' | default(false)
 
-# TODO: Here you change deployment resources of Hive VW to lower it.  To remove it and use helm charts upgrae instead.
-
-- name: Pause 10 seconds to let the deployments to be created
-  pause:
-    seconds: 10
-  when: pvc_eco_resources
-
-- name: Lower HS2 Memory
-  shell: '/bin/bash -i -c "kubectl-ecs -n compute-{{ warehouse.name }} set resources statefulsets -l app=hiveserver2 --requests memory=1G"'
-  when: pvc_eco_resources
-
-- name: Lower HS2 CPU
-  shell: '/bin/bash -i -c "kubectl-ecs -n compute-{{ warehouse.name }} set resources statefulsets -l app=hiveserver2 --requests cpu=500m"'
-  when: pvc_eco_resources
-
-- name: Restart HS2 pods
-  shell: '/bin/bash -i -c "kubectl-ecs -n compute-{{ warehouse.name }} delete pod -l app=hiveserver2"'
-  when: pvc_eco_resources
-
-- name: Lower Hue Memory
-  shell: '/bin/bash -i -c "kubectl-ecs -n compute-{{ warehouse.name }} set resources statefulsets -l app=huebackend --requests memory=1G"'
-  when: pvc_eco_resources
-
-- name: Lower Hue CPU
-  shell: '/bin/bash -i -c "kubectl-ecs -n compute-{{ warehouse.name }} set resources statefulsets -l app=huebackend --requests cpu=250m"'
-  when: pvc_eco_resources
-
-- name: Restart Hue pods
-  shell: '/bin/bash -i -c "kubectl-ecs -n compute-{{ warehouse.name }} delete pod -l app=huebackend"'
-  when: pvc_eco_resources
-
-- name: Lower Query Coordinator Memory
-  shell: '/bin/bash -i -c "kubectl-ecs -n compute-{{ warehouse.name }} set resources statefulsets -l app=query-coordinator --requests memory=2G"'
-  when: pvc_eco_resources
-
-- name: Lower Query Coordinator CPU
-  shell: '/bin/bash -i -c "kubectl-ecs -n compute-{{ warehouse.name }} set resources statefulsets -l app=query-coordinator --requests cpu=500m"'
-  when: pvc_eco_resources
-
-- name: Restart Query Coordinator pods
-  shell: '/bin/bash -i -c "kubectl-ecs -n compute-{{ warehouse.name }} delete pod -l app=query-coordinator"'
-  when: pvc_eco_resources
-
-- name: Lower Query Executor Memory
-  shell: '/bin/bash -i -c "kubectl-ecs -n compute-{{ warehouse.name }} set resources statefulsets -l app=query-executor-0 --requests memory=4G"'
-  when: pvc_eco_resources
-
-- name: Lower Query Executor CPU
-  shell: '/bin/bash -i -c "kubectl-ecs -n compute-{{ warehouse.name }} set resources statefulsets -l app=query-executor-0 --requests cpu=1"'
-  when: pvc_eco_resources
-
-- name: Restart Query Executor pods
-  shell: '/bin/bash -i -c "kubectl-ecs -n compute-{{ warehouse.name }} delete pod -l app=query-executor-0"'
-  when: pvc_eco_resources
-
-
-
 # Create Impala VW
 - name: JSON to create Impala VW
   debug:
@@ -417,60 +339,3 @@
     validate_certs: no
   register: answer_to_impala_activation
   when: warehouse.type == 'impala' | default(false)
-
-# TODO: Here you change deployment resources of VW to lower it. To remove it and use helm charts upgrae instead.
-# TODO: To upgrade the helm is "pretty" hard as it is recreated each time but in cdw pod, there are some files to create the helm under:
-# /charts of pod standalone-compute-operator ?
-
-- name: Pause 10 seconds to let the deployments to be created
-  pause:
-    seconds: 10
-  when: pvc_eco_resources
-  
-- name: Lower Hue Memory
-  shell: '/bin/bash -i -c "kubectl-ecs -n impala-{{ warehouse.name }} set resources statefulsets -l app=huebackend --requests memory=1G"'
-  when: pvc_eco_resources
-
-- name: Lower Hue CPU
-  shell: '/bin/bash -i -c "kubectl-ecs -n impala-{{ warehouse.name }} set resources statefulsets -l app=huebackend --requests cpu=500m"'
-  when: pvc_eco_resources
-
-- name: Restart Hue pods
-  shell: '/bin/bash -i -c "kubectl-ecs -n impala-{{ warehouse.name }} delete pod -l app=huebackend"'
-  when: pvc_eco_resources
-
-- name: Lower Executor Memory
-  shell: '/bin/bash -i -c "kubectl-ecs -n impala-{{ warehouse.name }} set resources statefulsets -l app=impala-executor --requests memory=12G"'
-  when: pvc_eco_resources
-
-- name: Lower Executor CPU
-  shell: '/bin/bash -i -c "kubectl-ecs -n impala-{{ warehouse.name }} set resources statefulsets -l app=impala-executor --requests cpu=1"'
-  when: pvc_eco_resources
-
-- name: Restart Executor pods
-  shell: '/bin/bash -i -c "kubectl-ecs -n impala-{{ warehouse.name }} delete pod -l app=impala-executor"'
-  when: pvc_eco_resources
-
-- name: Lower Statestore Memory
-  shell: '/bin/bash -i -c "kubectl-ecs -n impala-{{ warehouse.name }} set resources deployments -l app=statestored --requests memory=512M"'
-  when: pvc_eco_resources
-
-- name: Lower Statestore CPU
-  shell: '/bin/bash -i -c "kubectl-ecs -n impala-{{ warehouse.name }} set resources deployments -l app=statestored --requests cpu=250m"'
-  when: pvc_eco_resources
-
-- name: Restart Statestore pods
-  shell: '/bin/bash -i -c "kubectl-ecs -n impala-{{ warehouse.name }} delete pod -l app=impala-executor"'
-  when: pvc_eco_resources
-
-- name: Lower Auto Scaler Memory
-  shell: '/bin/bash -i -c "kubectl-ecs -n impala-{{ warehouse.name }} set resources deployments -l app=impala-autoscaler --requests memory=512M"'
-  when: pvc_eco_resources
-
-- name: Lower Auto Scaler CPU
-  shell: '/bin/bash -i -c "kubectl-ecs -n impala-{{ warehouse.name }} set resources deployments -l app=impala-autoscaler --requests cpu=250m"'
-  when: pvc_eco_resources
-
-- name: Restart Auto Scaler pods
-  shell: '/bin/bash -i -c "kubectl-ecs -n impala-{{ warehouse.name }} delete pod -l app=impala-autoscaler"'
-  when: pvc_eco_resources

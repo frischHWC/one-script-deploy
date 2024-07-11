@@ -90,6 +90,7 @@ clusters:
         RESOURCEMANAGER:
           yarn_scheduler_maximum_allocation_mb: 24576
           yarn_scheduler_maximum_allocation_vcores: 12
+          resourcemanager_config_safety_valve: <property><name>yarn.resourcemanager.application-tag-based-placement.enable</name><value>true</value></property><property><name>yarn.resourcemanager.application-tag-based-placement.username.whitelist</name><value>hive</value></property>
         NODEMANAGER:
           yarn_nodemanager_resource_memory_mb: 24576
           yarn_nodemanager_resource_cpu_vcores: 12

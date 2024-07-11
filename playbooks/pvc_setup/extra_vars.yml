@@ -107,35 +107,35 @@ warehouses:
     query_isolation_max_nodes_per_query: 0 # default = 0
     allowed_group: "admin_group" # default = ''
 
-  - name: "impala-1-{{ cluster_name }}"
-    database_catalog_name: "{{ cluster_name_pvc }}-env" # Since 1.5.1, DBC name should be the same than Env name
-    env_name: "{{ cluster_name_pvc }}-env"
-    low_resource_mode: true
-    type: "impala"
-    # Optional
-    size: "xsmall" # default = xsmall
-    dbc_queue: root.default.finance # default = root.default
-    vw_queue: root.default.finance # default = root.default
-    min_nodes: 1 # default = 1
-    max_nodes: 5 # default = 5
-    # Advanced
-    auto_suspend_timeout: 300 # default = 300
-    enable_ha: true # default = true
-    scale_up_delay: 20 # default = 20
-    scale_down_delay: 20 # default = 20
-    wait_time: 60 # default = 60
-    disable_auto_suspend: false # default = false
-    legacy_multithreading: false # default = false
-    query_isolation_max_queries: 0 # default = 0
-    query_isolation_max_nodes_per_query: 0 # default = 0
-    allowed_group: "admin_group" # default = ''
-    ha_type: "activepassive" # default = activepassive
-    enable_catalog_ha: true # default = true
-    enable_proxy: false # default = false
-    enable_shutdown: false # default = false
-    shutdown_delay: 300 # default = 300
-    all_coordinators_active: false # default = false
-    num_active_coordinators: 2 # default = 2
+  # - name: "impala-1-{{ cluster_name }}"
+  #   database_catalog_name: "{{ cluster_name_pvc }}-env" # Since 1.5.1, DBC name should be the same than Env name
+  #   env_name: "{{ cluster_name_pvc }}-env"
+  #   low_resource_mode: true
+  #   type: "impala"
+  #   # Optional
+  #   size: "xsmall" # default = xsmall
+  #   dbc_queue: root.default.finance # default = root.default
+  #   vw_queue: root.default.finance # default = root.default
+  #   min_nodes: 1 # default = 1
+  #   max_nodes: 5 # default = 5
+  #   # Advanced
+  #   auto_suspend_timeout: 300 # default = 300
+  #   enable_ha: true # default = true
+  #   scale_up_delay: 20 # default = 20
+  #   scale_down_delay: 20 # default = 20
+  #   wait_time: 60 # default = 60
+  #   disable_auto_suspend: false # default = false
+  #   legacy_multithreading: false # default = false
+  #   query_isolation_max_queries: 0 # default = 0
+  #   query_isolation_max_nodes_per_query: 0 # default = 0
+  #   allowed_group: "admin_group" # default = ''
+  #   ha_type: "activepassive" # default = activepassive
+  #   enable_catalog_ha: true # default = true
+  #   enable_proxy: false # default = false
+  #   enable_shutdown: false # default = false
+  #   shutdown_delay: 300 # default = 300
+  #   all_coordinators_active: false # default = false
+  #   num_active_coordinators: 2 # default = 2
 
 
 ##################### 
@@ -154,14 +154,14 @@ vizs:
 ##################### 
 oc_nfs_storage_class: ocs-storagecluster-cephfs
 workspaces:
-  - name: "{{ cluster_name_pvc }}-workspace-1"
+  - name: "{{ cluster_name_pvc }}-workspace"
     env_name: "{{ cluster_name_pvc }}-env"
     # Optional
     disable_tls: false # default = false
     enable_monitoring: true # default = true
     enable_governance: true # default = false
     enable_model_metrics: true # default = false
-    static_sub_domain: workspace1 # default = ''
+    static_sub_domain: workspace2 # default = ''
     nfs_disk_size: 100 # default = 1000 (It is in GiB, so 1000 = 1 TiB)
     nfs_storage_class: longhorn # default = longhorn (change it if running on OC)
     ml_gov_principal: mlgov # default = mlgov
@@ -202,21 +202,22 @@ virtual_clusters:
     log_retention_enabled: true # default = true
     log_retention_days: 30 # default = 10
 
-  - name: "spark-2-{{ cluster_name }}"
-    env_name: "{{ cluster_name_pvc }}-env"
-    cde_service_name: "cde-service-1"
-    spark_version: "2.4.7"
-    tier: tier-2 
-    session_timeout: 8h 
-    queue: root.default.customer
-    service_pool_quota_cpu: 32 
-    service_pool_quota_mem: 100Gi
-    service_base_quota_cpu: 8
-    service_base_quota_mem: 20Gi
-    vc_quota_cpu: 16
-    vc_quota_mem: 48Gi
-    vc_quota_min_cpu: 8
-    vc_quota_min_mem: 32Gi
+  # Spark 2 is becoming deprecated, so just comment creation of its VC
+  # - name: "spark-2-{{ cluster_name }}"
+  #   env_name: "{{ cluster_name_pvc }}-env"
+  #   cde_service_name: "cde-service-1"
+  #   spark_version: "2.4.8"  # From 1.5.3, it is 2.4.8,, before it is 2.4.7
+  #   tier: tier-2 
+  #   session_timeout: 8h 
+  #   queue: root.default.customer
+  #   service_pool_quota_cpu: 32 
+  #   service_pool_quota_mem: 100Gi
+  #   service_base_quota_cpu: 8
+  #   service_base_quota_mem: 20Gi
+  #   vc_quota_cpu: 16
+  #   vc_quota_mem: 48Gi
+  #   vc_quota_min_cpu: 8
+  #   vc_quota_min_mem: 32Gi
 
 # Below user/password is used to authentify against a CDE Service to download CDE tools (it only needs to be a valid LDAP user)
 cde_user: ${DEFAULT_ADMIN_USER} 
@@ -237,15 +238,15 @@ user_rights:
       - name: "{{ cluster_name_pvc }}-env"
         roles: [ "DEAdmin", "DEUser", "DWAdmin", "DWUser", "MLAdmin", "MLUser"]
     workspaces: # Optionnal: If not defined no keytab pushed to workspace
-      - name: "{{ cluster_name_pvc }}-workspace-1" 
+      - name: "{{ cluster_name_pvc }}-workspace" 
         env_name: "{{ cluster_name_pvc }}-env"
     virtual_clusters: # Optionnal: If not defined no keytab pushed to cde
       - name: "spark-3-{{ cluster_name }}"
         env_name: "{{ cluster_name_pvc }}-env"
         cde_service_name: "cde-service-1"
-      - name: "spark-2-{{ cluster_name }}"
-        env_name: "{{ cluster_name_pvc }}-env"
-        cde_service_name: "cde-service-1"
+      # - name: "spark-2-{{ cluster_name }}"
+      #   env_name: "{{ cluster_name_pvc }}-env"
+      #   cde_service_name: "cde-service-1"
   - name: batman
     keytab: /home/batman/batman.keytab 
     password: ${DEFAULT_PASSWORD}
@@ -257,9 +258,9 @@ user_rights:
       - name: "spark-3-{{ cluster_name }}"
         env_name: "{{ cluster_name_pvc }}-env"
         cde_service_name: "cde-service-1"
-      - name: "spark-2-{{ cluster_name }}"
-        env_name: "{{ cluster_name_pvc }}-env"
-        cde_service_name: "cde-service-1"
+      # - name: "spark-2-{{ cluster_name }}"
+      #   env_name: "{{ cluster_name_pvc }}-env"
+      #   cde_service_name: "cde-service-1"
 
 #####################   
 # Yunikorn Queues

@@ -26,7 +26,7 @@ export SETUP_ETC_HOSTS="true"
 # Steps to do
 export PRE_INSTALL="true"
 export PREPARE_ANSIBLE_DEPLOYMENT="true"
-export SETUP_DB_NO_GL="false"
+export SETUP_DB_NO_GL="true"
 export INSTALL="true"
 export POST_INSTALL="true"
 export USER_CREATION="true"
@@ -87,7 +87,7 @@ export DATABASE_TYPE="postgresql"
 export DATABASE_VERSION="14"
 
 # OS Related
-export OS="centos"
+export OS="rhel"
 export OS_VERSION="8.8"
 export INSTALL_PYTHON3="true"
 
@@ -164,7 +164,7 @@ export KRB_SERVER_TYPE=""
 export CA_SERVERS=""
 export KMS_SERVERS=""
 export ANSIBLE_PYTHON_3_PARAMS=""
-export USE_ANSIBLE_PYTHON_3="false"
+export USE_ANSIBLE_PYTHON_3="true"
 export ANSIBLE_PYTHON_3_PATH="/usr/bin/python3"
 export SET_PYTHON_3_LINK="false"
 export PVC_ECS_SERVER_HOST=""
@@ -1546,11 +1546,6 @@ then
         ################################################
         ######## Installation of CDP step by step in order to be able to track installation #######
         ################################################
-        if [ "${IS_REBOOT_REQUIRED}" == "true" ]
-        then
-            restart_nodes
-        fi
-        
         logger info "###### #bold:Verificating cluster Definition#end_bold ######"
         launch_playbook verify_inventory_and_definition "Cluster Definition Verified" "Could not Verify Cluster Definition" 12 120 0 "true"
 

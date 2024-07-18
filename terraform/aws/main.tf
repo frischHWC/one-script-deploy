@@ -6,7 +6,8 @@ resource "aws_vpc" "${CLUSTER_NAME}_vpc" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "${CLUSTER_NAME}-vpc"
+    Name = "${CLUSTER_NAME}-vpc",
+    Owner = "${RESOURCE_OWNER}"
   }
 }
 
@@ -14,7 +15,8 @@ resource "aws_internet_gateway" "${CLUSTER_NAME}_igw" {
   vpc_id = aws_vpc.${CLUSTER_NAME}_vpc.id
 
   tags = {
-    Name = "${CLUSTER_NAME}-internet-gateway"
+    Name = "${CLUSTER_NAME}-internet-gateway",
+    Owner = "${RESOURCE_OWNER}"
   }
 }
 
@@ -25,7 +27,8 @@ resource "aws_subnet" "${CLUSTER_NAME}_subnet" {
   map_public_ip_on_launch = true
   
   tags = {
-    Name = "${CLUSTER_NAME}-subnet"
+    Name = "${CLUSTER_NAME}-subnet",
+    Owner = "${RESOURCE_OWNER}"
   }
 }
 
@@ -33,7 +36,8 @@ resource "aws_route_table" "${CLUSTER_NAME}_route_table" {
   vpc_id = aws_vpc.${CLUSTER_NAME}_vpc.id
 
   tags = {
-    Name = "${CLUSTER_NAME}-route-table"
+    Name = "${CLUSTER_NAME}-route-table",
+    Owner = "${RESOURCE_OWNER}"
   }
 }
 
@@ -71,7 +75,8 @@ resource "aws_security_group" "${CLUSTER_NAME}_internal_security_group" {
   }
 
   tags = {
-    Name = "${CLUSTER_NAME}-sg"
+    Name = "${CLUSTER_NAME}-sg",
+    Owner = "${RESOURCE_OWNER}"
   }
   
 }
@@ -92,6 +97,14 @@ resource "aws_security_group" "${CLUSTER_NAME}_external_security_group" {
   ingress {
     from_port   = 7180
     to_port     = 7180
+    protocol    = "tcp"   
+    cidr_blocks = [${WHITELIST_IP}] 
+  }
+
+  # For Control Plane & ECS services
+  ingress {
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"   
     cidr_blocks = [${WHITELIST_IP}] 
   }
@@ -138,7 +151,8 @@ resource "aws_security_group" "${CLUSTER_NAME}_external_security_group" {
   }
 
   tags = {
-    Name = "${CLUSTER_NAME}-sg"
+    Name = "${CLUSTER_NAME}-sg",
+    Owner = "${RESOURCE_OWNER}"
   }
   
 }
@@ -162,7 +176,8 @@ resource "aws_instance" "${CLUSTER_NAME}-master" {
   }
   
   tags = {
-    Name = "master-${format("%02d", count.index + 1)}.${DOMAIN_NAME}"
+    Name = "master-${format("%02d", count.index + 1)}.${DOMAIN_NAME}",
+    Owner = "${RESOURCE_OWNER}"
   }
 
 }
@@ -183,7 +198,8 @@ resource "aws_instance" "${CLUSTER_NAME}-worker" {
   }
   
   tags = {
-    Name = "worker-${format("%02d", count.index + 1)}.${DOMAIN_NAME}"
+    Name = "worker-${format("%02d", count.index + 1)}.${DOMAIN_NAME}",
+    Owner = "${RESOURCE_OWNER}"
   }
 
 }
@@ -204,7 +220,8 @@ resource "aws_instance" "${CLUSTER_NAME}-worker-stream" {
   }
   
   tags = {
-    Name = "worker-stream-${format("%02d", count.index + 1)}.${DOMAIN_NAME}"
+    Name = "worker-stream-${format("%02d", count.index + 1)}.${DOMAIN_NAME}",
+    Owner = "${RESOURCE_OWNER}"
   }
 
 }
@@ -225,7 +242,8 @@ resource "aws_instance" "${CLUSTER_NAME}-ipa" {
   }
   
   tags = {
-    Name = "ipa-${format("%02d", count.index + 1)}.${DOMAIN_NAME}"
+    Name = "ipa-${format("%02d", count.index + 1)}.${DOMAIN_NAME}",
+    Owner = "${RESOURCE_OWNER}"
   }
 
 }
@@ -246,7 +264,8 @@ resource "aws_instance" "${CLUSTER_NAME}-kts" {
   }
   
   tags = {
-    Name = "kts-${format("%02d", count.index + 1)}.${DOMAIN_NAME}"
+    Name = "kts-${format("%02d", count.index + 1)}.${DOMAIN_NAME}",
+    Owner = "${RESOURCE_OWNER}"
   }
 
 }
@@ -267,7 +286,8 @@ resource "aws_instance" "${CLUSTER_NAME}-ecs-master" {
   }
   
   tags = {
-    Name = "ecs-master-${format("%02d", count.index + 1)}.${DOMAIN_NAME}"
+    Name = "ecs-master-${format("%02d", count.index + 1)}.${DOMAIN_NAME}",
+    Owner = "${RESOURCE_OWNER}"
   }
 
 }
@@ -288,7 +308,8 @@ resource "aws_instance" "${CLUSTER_NAME}-ecs-worker" {
   }
   
   tags = {
-    Name = "ecs-worker-${format("%02d", count.index + 1)}.${DOMAIN_NAME}"
+    Name = "ecs-worker-${format("%02d", count.index + 1)}.${DOMAIN_NAME}",
+    Owner = "${RESOURCE_OWNER}"
   }
 
 }

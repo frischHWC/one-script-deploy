@@ -96,6 +96,7 @@ nfs_provisioned: 500
 # longhorn_replication: 2
 # ecs_longhorn_storage: /ecs/longhorn-storage
 # ecs_local_storage: /ecs/local-storage
+ecs_service_env_safety_valve: "${EXTRA_ECS_SERVICE_SAFETY_VALVE}"
 
 # DATAGEN
 datagen_as_a_service: ${DATAGEN_AS_A_SERVICE}

@@ -74,3 +74,5 @@
   gather_facts: false
   roles: 
     - { role: copy_certs , when: use_root_ca }
+
+# TODO: Raise MaxSessions to 100 in a new file under /etc/ssh/ssh.config.d/

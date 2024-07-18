@@ -113,6 +113,7 @@ export PVC_ECO_RESOURCES="false"
 export SETUP_PVC_TOOLS="false"
 export ECS_SSD_DEDICATED_NODES=""
 export ECS_GPU_DEDICATED_NODES=""
+export NEED_EXTRA_ECS_SERVICE_SAFETY_VALVE="false"
 
 # External CSD
 export USE_CSA="false"
@@ -301,6 +302,7 @@ function usage()
     echo "  --pvc-eco-resources=$PVC_ECO_RESOURCES : (Optional) To reduce footprint of pvc deployment by making a mini-small cluster (Default) $PVC_ECO_RESOURCES"
     echo "  --ecs-gpu-dedicated-nodes=$ECS_GPU_DEDICATED_NODES : (Optional) To specify an ECS node that will be tainted for only GPU Use (assuming it has GPU) (Default) $ECS_GPU_DEDICATED_NODES"
     echo "  --ecs-ssd-dedicated-nodes=$ECS_SSD_DEDICATED_NODES : (Optional) To specify an ECS node that will be tainted for only SSD Use for CDW (isolating CDW workloads also) (Default) $ECS_SSD_DEDICATED_NODES"
+    echo "  --extra-ecs-safety-valve=$NEED_EXTRA_ECS_SERVICE_SAFETY_VALVE (Optional) To add extra ecs service safety valve for specific installations (Default) $NEED_EXTRA_ECS_SERVICE_SAFETY_VALVE"
     echo ""
     echo "  --install-repo-url=$INSTALL_REPO_URL : (Optional) Install repo URL (Default) $INSTALL_REPO_URL  "
     echo "  --ansible-repo-dir=$ANSIBLE_REPO_DIR : (Optional) Directory where install repo will be deployed (Default) $ANSIBLE_REPO_DIR "
@@ -612,6 +614,9 @@ while [ "$1" != "" ]; do
             ;;
         --ecs-ssd-dedicated-nodes)
             ECS_SSD_DEDICATED_NODES=$VALUE
+            ;;
+        --extra-ecs-safety-valve)
+            EXTRA_ECS_SERVICE_SAFETY_VALVE=$VALUE
             ;;
         --setup-pvc-tools)
             SETUP_PVC_TOOLS=$VALUE
@@ -1284,6 +1289,9 @@ then
     fi
 fi
 
+if [ "${NEED_EXTRA_ECS_SERVICE_SAFETY_VALVE}" == true ] ; then
+    export EXTRA_ECS_SERVICE_SAFETY_VALVE='RKE2_RESOLV_CONF=/etc/resolv.conf'
+fi
 
 # To adjust the number of lines to analyze from ansible response
 NUMBER_OF_NODES=$(wc ${HOSTS_FILE} | awk '{print $1}')

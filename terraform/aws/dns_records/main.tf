@@ -13,6 +13,11 @@ variable "machines_ids" {
   }
 }
 
+variable "is_pvc" {
+  type    = bool
+  default = ${IS_PVC}
+}
+
 # NETWORK RESOURCES
 
 resource "aws_route53_zone" "${CLUSTER_NAME}_zone" {
@@ -20,6 +25,9 @@ resource "aws_route53_zone" "${CLUSTER_NAME}_zone" {
   vpc {
     vpc_id              = "${VPC_ID}"
     vpc_region          = "${REGION}"
+  }
+  tags = {
+    Owner = "${RESOURCE_OWNER}"
   }
 }
 
@@ -31,6 +39,25 @@ resource "aws_route53_record" "domain_record" {
   ttl     = "300"
   records = ["${FIRST_MASTER_IP}"]
 }
+
+# Create routes to first ECS Master AS Control Plane
+resource "aws_route53_record" "ecs_domain_record" {
+  count = var.is_pvc == true ? 1 : 0
+  zone_id = aws_route53_zone.${CLUSTER_NAME}_zone.zone_id
+  name    = "console-cdp.apps.${ECS_MASTER_NODE_1}"
+  type    = "A"
+  ttl     = "300"
+  records = ["${ECS_MASTER_1_IP}"]
+}
+resource "aws_route53_record" "ecs_wild_domain_record" {
+  count = var.is_pvc == true ? 1 : 0
+  zone_id = aws_route53_zone.${CLUSTER_NAME}_zone.zone_id
+  name    = "*.apps.${ECS_MASTER_NODE_1}"
+  type    = "A"
+  ttl     = "300"
+  records = ["${ECS_MASTER_1_IP}"]
+}
+
 
 # Create DNS records for ALL machines with normal and wildcard record
 resource "aws_route53_record" "hosts_records" {
@@ -57,7 +84,8 @@ resource "aws_eip" "hosts_elastic_ips" {
   instance = each.value
   domain   = "vpc"
   tags = {
-    Name = each.key
+    Name = each.key,
+    Owner = "${RESOURCE_OWNER}"
   }
 }
 

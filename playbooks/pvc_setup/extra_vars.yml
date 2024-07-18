@@ -76,7 +76,7 @@ environments:
 ##################### 
 # CDW
 ##################### 
-local_block_storage_class: ocs-storagecluster-ceph-rbd
+local_block_storage_class: ocs-storagecluster-cephfs
 delegation_username: admin
 delegation_password: "{{ ipa_bind_password }}"
 setup_server_settings: true
@@ -161,7 +161,7 @@ workspaces:
     enable_monitoring: true # default = true
     enable_governance: true # default = false
     enable_model_metrics: true # default = false
-    static_sub_domain: workspace2 # default = ''
+    static_sub_domain: workspace # default = ''
     nfs_disk_size: 100 # default = 1000 (It is in GiB, so 1000 = 1 TiB)
     nfs_storage_class: longhorn # default = longhorn (change it if running on OC)
     ml_gov_principal: mlgov # default = mlgov

@@ -29,6 +29,8 @@ export PUBLIC_KEY_PATH=~/.ssh/id_rsa.pub
 export PRIVATE_KEY_PATH="~/.ssh/id_rsa"
 export INITIAL_NODE_USER="rocky"
 export WHITELIST_IPS=""
+# Use for tagging resources on 
+export RESOURCE_OWNER=$(whoami)
 
 # Related to AWS
 export AWS_ACCESS_KEY_ID=""
@@ -68,6 +70,7 @@ export DOMAIN_NAME=""
 export DEBUG="false"
 export APPLY_CLOUD_MACHINES_PREREQUISITES="true"
 export TF_BASE_WORK_DIR="/tmp"
+export IS_PVC=false
 
 
 function usage()
@@ -84,6 +87,7 @@ function usage()
     echo "  --public-key-path=$PUBLIC_KEY_PATH : The path to your public key, used to setup password-less connections to nodes (Default) ${PUBLIC_KEY_PATH}"
     echo "  --private-key-path=$PRIVATE_KEY_PATH : Mandatory to get access to machines"
     echo "  --initial-node-user=$INITIAL_NODE_USER : Mandatory to get access to machines"
+    echo "  --resource-owner=$RESOURCE_OWNER : Use to tag resources on Cloud Provider (Default) $RESOURCE_OWNER"
     echo ""
     echo " Parameters only required for AWS : "
     echo "  --aws-access-key=$AWS_ACCESS_KEY_ID : Mandatory to get access to AWS account"
@@ -155,6 +159,9 @@ while [ "$1" != "" ]; do
             ;;
         --initial-node-user)
             INITIAL_NODE_USER=$VALUE
+            ;;
+        --resource-owner)
+            RESOURCE_OWNER=$VALUE
             ;;
         --debug)
             DEBUG=$VALUE
@@ -343,6 +350,7 @@ then
         fi
         export ENCRYPTION_ACTIVATED="true"
         export FREE_IPA="true"
+        export IS_PVC=true
     elif [ "${CLUSTER_TYPE}" = "all-services-pvc-ecs" ]
     then
         if [ "${MASTER_COUNT}" = 0 ]
@@ -359,6 +367,7 @@ then
         fi
         export ENCRYPTION_ACTIVATED="true"
         export FREE_IPA="true"
+        export IS_PVC=true
         if [ "${ECS_MASTER_COUNT}" = 0 ]
         then
             export ECS_MASTER_COUNT=1
@@ -378,6 +387,7 @@ then
             export WORKER_COUNT=3
         fi
         export FREE_IPA="true"
+        export IS_PVC=true
         if [ "${ECS_MASTER_COUNT}" = 0 ]
         then
             export ECS_MASTER_COUNT=1
@@ -397,6 +407,7 @@ then
             export WORKER_COUNT=3
         fi
         export FREE_IPA="true"
+        export IS_PVC=true
     elif [ "${CLUSTER_TYPE}" = "streaming" ]
     then
         if [ "${MASTER_COUNT}" = 0 ]
@@ -487,7 +498,7 @@ fi
 
 if [ -z ${DOMAIN_NAME} ]
 then
-    export DOMAIN_NAME="${CLUSTER_NAME}.${KEY_PAIR_NAME}.onescript.vpc.com"
+    export DOMAIN_NAME="${CLUSTER_NAME}.onescript.vpc.com"
 fi
 
 # Split WHITELIST_IP
@@ -590,6 +601,7 @@ export ECS_MASTER_NODES=""
 if [ ${ECS_MASTER_COUNT} != 0 ]
 then
     export ECS_MASTER_NODES=$(terraform output -json ecs-master | jq -r '.[0] | @sh ' | tr -d \' | sort | uniq)
+    export ECS_MASTER_NODE_1=$(echo $ECS_MASTER_NODES | cut -d' ' -f1 )
     terraform output ip_hosts_ecs_master >> ${TF_INTERNAL_MACHINE_IDS_FILE}
     terraform output ip_internal_hosts_ecs_master >> ${TF_INTERNAL_HOSTS_FILE}
     export ECS_MASTER_IDS=$(terraform output -json ecs-master_ids | jq -r '.[0] | @sh ' | sort | uniq)
@@ -635,6 +647,11 @@ while IFS= read -r line; do
 done < "$TF_INTERNAL_MACHINE_IDS_FILE"
 export HOST_NAME_MACHINES_ID_MAP=$(cat $FILE_CONTAINING_HOST_NAME_MACHINES_ID_MAP)
 
+# Create a record for: (*.)console-cdp.apps.ECS_MASTER_1 to its IP
+if [ "$IS_PVC" == "true" ] ; then
+    export ECS_MASTER_1_IP=$( grep $ECS_MASTER_NODE_1 ${TF_INTERNAL_HOSTS_FILE} | cut -d' ' -f1)
+fi
+
 # Create DNS records for ALL machines
 export FIRST_MASTER_IP=$(head -1 ${TF_INTERNAL_HOSTS_FILE} | cut -d ' ' -f 1)
 export FILE_CONTAINING_HOSTNAME_IP_MAP=$(mktemp)
@@ -664,6 +681,14 @@ cd ${CURRENT_DIR}
 
 logger success "Finished Provisioning Advanced Netwoork Requirements"
 
+# Add this line to /etc/hosts: console-cdp.apps.ecs-master-01.firstpvc.onescript.vpc.com
+EXTRA_ECS_LINE=""
+if [ "$IS_PVC" == "true" ] ; then
+    if [ ! -z ${ECS_MASTER_1_IP} ]; then
+        ECS_MASTER_1_EXT_IP=$(grep ${ECS_MASTER_NODE_1} ${TF_HOSTS_FILE} | cut -d' ' -f1 )
+        EXTRA_ECS_LINE="${ECS_MASTER_1_EXT_IP} console-cdp.apps.${ECS_MASTER_NODE_1}"
+    fi
+fi
 
 ## Get IPs 
 export MACHINES_WITH_IPS=$(cat ${TF_HOSTS_FILE}) 
@@ -676,6 +701,7 @@ else
     echo ""
     echo "## Cluster ${CLUSTER_NAME} ##"
     echo "${MACHINES_WITH_IPS}"
+    echo "${EXTRA_ECS_LINE}"
     echo ""
     read -p "Press Enter to continue:"
     echo ""
@@ -715,6 +741,8 @@ then
               ssh -q -i ${PRIVATE_KEY_PATH} root@${NODES[$i]} "sudo echo 'Red Hat Enterprise Linux release 8.8 (Ootpa)' > /etc/redhat-release"
               ssh -q -i ${PRIVATE_KEY_PATH} root@${NODES[$i]} "sudo echo 'ID=\"rhel\"' >> /etc/os-release"
             fi
+            # Install python 3 for ansible deployment
+            ssh -q -i ${PRIVATE_KEY_PATH} root@${NODES[$i]} "sudo yum -y install python3 >/dev/null 2>&1 "
             # Make a reboot of machines to make sure all previous prereqs are applied
             ssh -q -i ${PRIVATE_KEY_PATH} root@${NODES[$i]} "sudo reboot"
         fi
@@ -745,6 +773,9 @@ logger info "Launching Setup of cluster"
 logger info "Launching Command:"
 echo "
 ./setup-cluster.sh ${ALL_PARAMETERS} \
+  --is-reboot-required=true \
+  --setup-etc-hosts=false \
+  --extra-ecs-safety-valve=true \
   --node-user='root' \
   --node-key="${PRIVATE_KEY_PATH}" \
   --nodes-base="${BASE_MASTERS} ${BASE_WORKERS} ${BASE_WORKERS_STREAM}" \
@@ -754,6 +785,9 @@ echo "
 "
 
 ./setup-cluster.sh ${ALL_PARAMETERS} \
+  --is-reboot-required=true \
+  --setup-etc-hosts=false \
+  --extra-ecs-safety-valve=true \
   --node-user='root' \
   --node-key="${PRIVATE_KEY_PATH}" \
   --nodes-base="${BASE_MASTERS} ${BASE_WORKERS} ${BASE_WORKERS_STREAM}" \

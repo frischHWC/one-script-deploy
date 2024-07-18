@@ -91,7 +91,7 @@ function launch_playbook() {
         if [ "$remote_launch" = "true" ] ; then
             log_file="${LOG_DIR}/deployment.log"
             logger info " Follow progression in: #underline:$log_file "
-            ssh ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml ${playbook}.yml ${ANSIBLE_PYTHON_3_PARAMS}" >> $log_file 2>&1 &
+            ssh -o ServerAliveInterval=60 ${NODE_USER}@${NODE_0} "cd ~/deployment/ansible-repo/ ; ansible-playbook -i hosts --extra-vars @environment/extra_vars.yml ${playbook}.yml ${ANSIBLE_PYTHON_3_PARAMS}" >> $log_file 2>&1 &
         else
             log_file="${LOG_DIR}/${playbook}.log"
             cp playbooks/${playbook}/extra_vars.yml /tmp/${playbook}_extra_vars.yml

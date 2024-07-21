@@ -269,14 +269,14 @@ setup_yunikorn_queues: true
 yunikorn_root_queue:
   mem: 1T
   cpu: 1000
-  gpu: 0
+  gpu: 2
 
 yunikorn_child_queues:
   - name: finance # Required
     # Optional
     mem_max: 500G # Optionnal default to 100G
     cpu_max: 250 # Optionnal defautl to 25
-    gpu_max: 0 # Optionnal defautl to 0
+    gpu_max: 2 # Optionnal defautl to 0
     mem_guaranteed: 200G # Optionnal defautl to 100G
     cpu_guaranteed: 100 # Optionnal defautl to 25
     gpu_guaranteed: 0 # Optionnal defautl to 0
@@ -296,8 +296,10 @@ yunikorn_child_queues:
   - name: customer
     mem_max: 250G
     cpu_max: 150
+    gpu_max: 2
     mem_guaranteed: 100G
-    cpu_guaranteed: 50 
+    cpu_guaranteed: 50
+    gpu_guaranteed: 0
     tags: 
       - "experience:cml"
 

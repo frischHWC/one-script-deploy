@@ -57,8 +57,8 @@ export ENCRYPTION_ACTIVATED="false"
 
 # Versions
 export JDK_VERSION="17"
-export CM_VERSION="7.11.3.9"
-export CDH_VERSION="7.1.9.14"
+export CM_VERSION="7.11.3.11"
+export CDH_VERSION="7.1.9.1000"
 export CSA_VERSION="1.12.0.0"
 export CFM_VERSION="2.1.7.0"
 export CEM_VERSION="2.1.3.0"
@@ -144,7 +144,7 @@ export DATAGEN_REPO_URL="https://github.com/frischHWC/datagen"
 export DATAGEN_REPO_BRANCH="main"
 export DATAGEN_REPO_PARCEL=""
 export DATAGEN_CSD_URL=""
-export DATAGEN_VERSION="0.5.0"
+export DATAGEN_VERSION="1.0.0"
 export EDGE_HOST=""
 
 # Demo

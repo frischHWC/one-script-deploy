@@ -23,7 +23,6 @@
     name: jq
     state: present
 
-
 # CSD
 
 - name: Download CSD 

@@ -56,6 +56,9 @@ target_dir: /root/datagen
 data_gen_git_url: ${DATAGEN_REPO_URL}
 data_gen_git_branch: ${DATAGEN_REPO_BRANCH}
 
+# Needed to know if public certs will be imported
+tls: ${TLS} 
+
 
 ##### Old way #####
 

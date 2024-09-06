@@ -17,16 +17,7 @@
 # under the License.
 #
 ---
-- name: Install CSD & Parcel
-  hosts: cloudera_manager
-  gather_facts: false
-  roles: 
-    - install_csd_and_parcel
-
-# If required, import java certs to the truststore one
-- name: Add public Certs 
-  hosts: "{{ edge_host }}"
-  gather_facts: false
-  roles: 
-    - role: add_public_certs
-      when: tls
+# Pre-requisites for DATAGEN (installation of jq)
+- name: Import public certs to internal truststore
+  shell: "keytool -importkeystore -srckeystore /etc/pki/java/cacerts  -destkeystore /var/lib/cloudera-scm-agent/agent-cert/cm-auto-global_truststore.jks -srcstorepass changeit -deststorepass Cloudera1234"
+  ignore_errors: true

@@ -114,12 +114,12 @@
     return_content: yes
     validate_certs: no
   register: answer_to_server_settings
-  when: pvc_version is version('1.5.4', '<=')
+  when: pvc_version is version('1.5.5', '<=')
 
 - name: DEBUG - answer_to_server_settings
   debug:
     msg: "{{ answer_to_server_settings }}"
-  when: pvc_version is version('1.5.4', '<=')
+  when: pvc_version is version('1.5.5', '<=')
 
 
 # Activate env (that will trigger default Database Catalog to be created)

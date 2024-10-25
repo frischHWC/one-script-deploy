@@ -125,7 +125,7 @@
 
 - name: Download cde-utils.sh
   get_url:
-    url: "https://archive.cloudera.com/p/dex/cde/1.19.1/cde-utils.sh"
+    url: "https://archive.cloudera.com/p/cdp-pvc-ds/1.5.4/cde/cde-utils.sh"
     dest: ~/cde-utils.sh
     mode: '0775'
     username: "{{ paywall_user }}"

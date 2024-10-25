@@ -17,6 +17,13 @@
 # under the License.
 #
 ---
+# Tools
+- name: Simple tools or shortcuts to set on all hosts
+  hosts: all
+  gather_facts: true
+  roles: 
+    - role: simple_tools
+
 # CM check & config
 - name: CM Configuration post-install no unlog and fix TLS settings
   hosts: main

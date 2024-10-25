@@ -229,6 +229,8 @@ __Successful installation are marked with a &#10003; in SUCCESS column__
 
 ## Requirements
 
+It requires **Ansible** with minimum version 2.10 and maximum version 2.16.
+
 Launch the script ```requirements.sh``` to enable all requirements before launching the full script.
 
 You need to pass one parameter, which is the type of the machine where you are running it, it could be: rhel, debian, suse or mac.

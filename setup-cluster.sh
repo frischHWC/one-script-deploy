@@ -38,7 +38,7 @@ export IS_REBOOT_REQUIRED="false"
 export DEFAULT_PASSWORD="Cloudera1234"
 export DEFAULT_ADMIN_USER="francois"
 export DEBUG="false"
-export LOG_DIR="/tmp/deploy_to_cloudcat_logs/"$(date +%m-%d-%Y-%H-%M-%S)
+export LOG_DIR="/tmp/one_script_deploy_logs/"$(date +%m-%d-%Y-%H-%M-%S)
 
 # Ansible Deployment files 
 export DISTRIBUTION_TO_DEPLOY="CDP"
@@ -57,14 +57,14 @@ export ENCRYPTION_ACTIVATED="false"
 
 # Versions
 export JDK_VERSION="17"
-export CM_VERSION="7.11.3.11"
-export CDH_VERSION="7.1.9.1000"
+export CM_VERSION="7.11.3.14"
+export CDH_VERSION="7.1.9.1010"
 export CSA_VERSION="1.12.0.0"
 export CFM_VERSION="2.1.7.0"
-export CEM_VERSION="2.1.3.0"
+export CEM_VERSION="2.2.0.0"
 export SPARK3_VERSION="3.3.7190.0"
-export OBSERVABILITY_VERSION="3.4.4"
-export PVC_VERSION="1.5.4"
+export OBSERVABILITY_VERSION="3.5.2"
+export PVC_VERSION="1.5.4-h2"
 export AMBARI_VERSION="2.7.5.0"
 export HDP_VERSION="3.1.5.6091"
 export HDF_VERSION="3.5.2.0"
@@ -1535,6 +1535,11 @@ fi
 
 if [ "${INSTALL}" = "true" ]
 then
+    if [ "${IS_REBOOT_REQUIRED}" == "true" ]
+    then
+        restart_nodes
+    fi
+
     logger info "############ On #underline:${NODE_0}#end_underline : #bold:Launch Ansible Deployment#end_bold ############"
     logger info " Follow progression in: #underline:${LOG_DIR}/deployment.log "
     logger info ""
@@ -1551,6 +1556,7 @@ then
         fi
         logger info "Required Packages Installed"
 
+
         ################################################
         ######## Installation of CDP step by step in order to be able to track installation #######
         ################################################
@@ -1561,7 +1567,7 @@ then
         launch_playbook prepare_nodes "Pre-Requisites Applied" "Could not apply pre-requisites for nodes" 900 1200 2 true
 
         logger info "###### #bold:Installation of DB, (KDC, HA-Proxy, CA Server)#end_bold  ######"
-        launch_playbook create_infrastructure "Database Installed" "Could not create DB, KDC and HA Proxy" 360 900 2 true
+        launch_playbook create_infrastructure "Database Installed" "Could not create DB, KDC and HA Proxy" 600 1200 2 true
 
         logger info "###### #bold:Verificating parcels#end_bold ######"
         launch_playbook verify_parcels "Parcels Verified" "Could not verify Parcels" 60 180 0 true
@@ -1578,7 +1584,7 @@ then
         fi
 
         logger info "###### #bold:Installing Cloudera Manager#end_bold ######"
-        launch_playbook install_cloudera_manager "Cloudera Manager Installed" "Could not install Cloudera Manager" 600 1200 2 true
+        launch_playbook install_cloudera_manager "Cloudera Manager Installed" "Could not install Cloudera Manager" 900 1800 2 true
 
         if [ "${CM_VERSION:0:1}" = "5" ]
         then

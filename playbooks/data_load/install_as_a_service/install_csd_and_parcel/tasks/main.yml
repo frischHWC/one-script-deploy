@@ -36,6 +36,10 @@
     state: restarted
     name: cloudera-scm-server
 
+- name: Pause to let CM restarted 
+  pause: 
+    seconds: 30
+
 - name: wait cloudera-scm-server
   wait_for:
     host: "{{ cloudera_manager_host }}"

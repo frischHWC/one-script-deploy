@@ -142,7 +142,7 @@ clusters:
       SQL_STREAM_BUILDER:
         STREAMING_SQL_ENGINE:
           loadbalancer.url: "{{ groups.cloudera_manager | first | default(omit) }}"
-          default.admin.password: "{{ default_password }}" 
+          ssb.default.admin.password: "{{ default_password }}" 
           ssb-conf/application.properties_role_safety_valve: log.sqlio.restapi = true 
           ssb.yarn.ui.proxy: "/gateway/cdp-proxy/yarnuiv2/proxy"
           ssb.mve.proxy: "/gateway/cdp-proxy-api/ssb-mve-api"

@@ -137,7 +137,7 @@
       when: setup_pvc_tools and not skip_pvc_prereqs
 
 - name: Install k9s 
-  hosts: "{{ cloudera_manager_host }}"
+  hosts: "{{ pvc_ecs_server_host }}"
   gather_facts: false
   roles: 
     - role: tools/setup_k9s

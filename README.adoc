@@ -80,7 +80,7 @@ image:images/one-script-all.gif[Example of a basic launch]
 
 | &#10003;
 | pvc
-| CDP 7.3.1.0 & CM 7.13.1.0 & PvC 1.5.4
+| CDP 7.1.9.1015 & CM 7.11.3.26 & PvC 1.5.4
 | RHEL 8.8
 | Postgres 14
 | Free IPA
@@ -89,7 +89,7 @@ image:images/one-script-all.gif[Example of a basic launch]
 
 | &#10003;
 | all-services-pvc
-| CDP 7.3.1.0 & CM 7.13.1.0 & PvC 1.5.4
+| CDP 7.1.9.1015 & CM 7.11.3.26 & PvC 1.5.4
 | RHEL 8.8
 | Postgres 14
 | Free IPA

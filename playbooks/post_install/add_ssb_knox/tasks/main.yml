@@ -17,9 +17,12 @@
 # under the License.
 #
 ---
-- name: Get SSB full config
+
+
+# TODO: check how to make sure there is (or not) a LB
+- name: Get SSB full Roles
   uri:
-    url: "{{ cloudera_manager_url }}/api/v41/clusters/{{ cluster_name }}/services/{{ ssb_service_name }}/config?view=full"
+    url: "{{ cloudera_manager_url }}/api/v41/clusters/{{ cluster_name }}/services/{{ ssb_service_name }}/roles"
     user: "{{ cloudera_manager_user }}"
     password: "{{ cloudera_manager_password }}"
     method: GET
@@ -28,205 +31,25 @@
     return_content: yes
     validate_certs: no
     body_format: json
-  register: full_ssb_config
-
-- name: Get SSB LB full config
-  uri:
-    url: "{{ cloudera_manager_url }}/api/v31/clusters/{{ cluster_name }}/services/{{ ssb_service_name }}/roleConfigGroups/{{ ssb_service_name }}-LOAD_BALANCER-BASE/config?view=full"
-    user: "{{ cloudera_manager_user }}"
-    password: "{{ cloudera_manager_password }}"
-    method: GET
-    force_basic_auth: yes
-    status_code: 200
-    return_content: yes
-    validate_certs: no
-    body_format: json
-  register: full_ssb_lb_config
+  register: full_ssb_roles
 
 - set_fact:
-    ssb_ssl: "{{ full_ssb_lb_config.json | community.general.json_query(query) }}"
+    ssb_lb_role_name: "{{ full_ssb_roles.json | community.general.json_query(query) }}"
   vars:
-    query: "items[?name == 'ssl_enabled'].value | [0]"
+    query: "items[?type == 'LOAD_BALANCER'].name | [0]"
 
 - set_fact:
-    ssb_ssl: "{{ full_ssb_lb_config.json | community.general.json_query(query) }}"
-  vars:
-    query: "items[?name == 'ssl_enabled'].default | [0]"
-  when: ssb_ssl == ""
+    ssb_has_lb: "{{ true if ssb_lb_role_name!='' else false }}"
 
-- name: DEBUG - ssb_ssl
+- name: DEBUG - ssb_has_lb
   debug:
-    msg: "{{ ssb_ssl }}"
+    msg: "{{ ssb_has_lb }}"
   when: debug | default(false)
 
-- set_fact:
-    ssb_protocol: "{{ 'https' if ssb_ssl else 'http' }}"
+- name: Setup SSB with Load Balancer
+  include_tasks: ssb_lb.yml
+  when: ssb_has_lb
 
-- name: DEBUG - ssb_protocol
-  debug:
-    msg: "{{ ssb_protocol }}"
-  when: debug | default(false)
-
-
-
-- set_fact:
-    ssb_port: "{{ full_ssb_lb_config.json | community.general.json_query(query) }}"
-  vars:
-    query: "items[?name == 'ssb.sse.loadbalancer.server.secure.port'].value | [0]"
-  when: ssb_ssl
-
-- set_fact:
-    ssb_port: "{{ full_ssb_lb_config.json | community.general.json_query(query) }}"
-  vars:
-    query: "items[?name == 'ssb.sse.loadbalancer.server.secure.port'].default | [0]"
-  when: ssb_ssl and ssb_port == ""
- 
-- set_fact:
-    ssb_port: "{{ full_ssb_lb_config.json | community.general.json_query(query) }}"
-  vars:
-    query: "items[?name == 'ssb.sse.loadbalancer.server.secure.port'].value | [0]"
-  when: not ssb_ssl
-
-- set_fact:
-    ssb_port: "{{ full_ssb_lb_config.json | community.general.json_query(query) }}"
-  vars:
-    query: "items[?name == 'ssb.sse.loadbalancer.server.secure.port'].default | [0]"
-  when: not ssb_ssl and ssb_port == ""
-
-- name: DEBUG - ssb_port
-  debug:
-    msg: "{{ ssb_port }}"
-  when: debug | default(false)
-
-- set_fact:
-    ssb_api_port: "{{ full_ssb_lb_config.json | community.general.json_query(query) }}"
-  vars:
-    query: "items[?name == 'ssb.mve.loadbalancer.server.secure.port'].value | [0]"
-  when: ssb_ssl
-
-- set_fact:
-    ssb_api_port: "{{ full_ssb_lb_config.json | community.general.json_query(query) }}"
-  vars:
-    query: "items[?name == 'ssb.mve.loadbalancer.server.secure.port'].default | [0]"
-  when: ssb_ssl and ssb_api_port == ""
-
-- set_fact:
-    ssb_api_port: "{{ full_ssb_lb_config.json | community.general.json_query(query) }}"
-  vars:
-    query: "items[?name == 'ssb.mve.loadbalancer.server.port'].value | [0]"
-  when: not ssb_ssl
-
-- set_fact:
-    ssb_api_port: "{{ full_ssb_lb_config.json | community.general.json_query(query) }}"
-  vars:
-    query: "items[?name == 'ssb.mve.loadbalancer.server.port'].default | [0]"
-  when: not ssb_ssl and ssb_api_port == ""
-
-- name: DEBUG - ssb_api_port
-  debug:
-    msg: "{{ ssb_api_port }}"
-  when: debug | default(false)
-
-
-- name: Get SSB roles repartition
-  uri:
-    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ ssb_service_name }}/roles"
-    user: "{{ cloudera_manager_user }}"
-    password: "{{ cloudera_manager_password }}"
-    method: GET
-    force_basic_auth: yes
-    status_code: 200
-    return_content: yes
-    validate_certs: no
-    body_format: json
-    dest: /tmp/ssb_roles.json
-  register: ssb_roles
-
-- set_fact:
-    ssb_host: "{{ ssb_roles.json | community.general.json_query(query) | first }}"
-  vars:
-    query: "items[?type == 'LOAD_BALANCER'].hostRef.hostname"
-
-- name: DEBUG - ssb_host
-  debug:
-    msg: "{{ ssb_host }}"
-  when: debug | default(false)
-
-
-- name: Get Knox Gateway full config
-  uri:
-    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ knox_service_name }}/roleConfigGroups/{{ knox_service_name }}-KNOX_GATEWAY-BASE/config?view=full"
-    user: "{{ cloudera_manager_user }}"
-    password: "{{ cloudera_manager_password }}"
-    method: GET
-    force_basic_auth: yes
-    status_code: 200
-    return_content: yes
-    validate_certs: no
-    body_format: json
-  register: knox_full_config
-
-- set_fact:
-    gateway_descriptor_cdp_proxy: "{{ knox_full_config.json | community.general.json_query(query) }}"
-  vars:
-    query: "items[?name == 'gateway_descriptor_cdp_proxy'].value | [0]"
-
-- set_fact:
-    gateway_descriptor_cdp_proxy: "{{ knox_full_config.json | community.general.json_query(query) }}"
-  vars:
-    query: "items[?name == 'gateway_descriptor_cdp_proxy'].default | [0]"
-  when: gateway_descriptor_cdp_proxy == ""
-
-- name: DEBUG - gateway_descriptor_cdp_proxy
-  debug:
-    msg: "{{ gateway_descriptor_cdp_proxy }}"
-  when: debug | default(false)
-
-- set_fact:
-    new_gateway_descriptor_cdp_proxy: "{{ gateway_descriptor_cdp_proxy }}#SSB-SSE-UI-LB:url={{ ssb_protocol }}://{{ ssb_host }}:{{ ssb_port }}#SSB-SSE-UI-LB:httpclient.connectionTimeout=5m#SSB-SSE-UI-LB:httpclient.socketTimeout=5m#SSB-SSE-UI-LB:version=1.9.0#SSB-SSE-WS-LB:url=wss://{{ ssb_host }}:{{ ssb_port }}#SSB-SSE-WS:version=1.9.0"
-
-
-- set_fact:
-    gateway_descriptor_cdp_proxy_api: "{{ knox_full_config.json | community.general.json_query(query) }}"
-  vars:
-    query: "items[?name == 'gateway_descriptor_cdp_proxy_api'].value | [0]"
-
-- set_fact:
-    gateway_descriptor_cdp_proxy_api: "{{ knox_full_config.json | community.general.json_query(query) }}"
-  vars:
-    query: "items[?name == 'gateway_descriptor_cdp_proxy_api'].default | [0]"
-  when: gateway_descriptor_cdp_proxy_api == ""
-
-- name: DEBUG - gateway_descriptor_cdp_proxy_api
-  debug:
-    msg: "{{ gateway_descriptor_cdp_proxy_api }}"
-  when: debug | default(false)
-
-- set_fact:
-    new_gateway_descriptor_cdp_proxy_api: "{{ gateway_descriptor_cdp_proxy_api }}#SSB-MVE-API-LB:url={{ ssb_protocol }}://{{ ssb_host }}:{{ ssb_api_port }}#SSB-MVE-API-LB:version=1.9.0"
-
-- name: Push new Knox config
-  uri:
-    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ knox_service_name }}/roleConfigGroups/{{ knox_service_name }}-KNOX_GATEWAY-BASE/config"
-    user: "{{ cloudera_manager_user }}"
-    password: "{{ cloudera_manager_password }}"
-    method: PUT
-    force_basic_auth: yes
-    status_code: 200
-    return_content: yes
-    validate_certs: no
-    body_format: json
-    body: "{{ lookup('template', 'ssb_knox_url.json' ) }}"
-
-- name: Push new Knox API config
-  uri:
-    url: "{{ cloudera_manager_api_url }}/clusters/{{ cluster_name }}/services/{{ knox_service_name }}/roleConfigGroups/{{ knox_service_name }}-KNOX_GATEWAY-BASE/config"
-    user: "{{ cloudera_manager_user }}"
-    password: "{{ cloudera_manager_password }}"
-    method: PUT
-    force_basic_auth: yes
-    status_code: 200
-    return_content: yes
-    validate_certs: no
-    body_format: json
-    body: "{{ lookup('template', 'ssb_knox_url_api.json' ) }}"
+- name: Setup SSB without Load Balancer
+  include_tasks: ssb_no_lb.yml
+  when: not ssb_has_lb

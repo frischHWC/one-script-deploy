@@ -22,8 +22,6 @@ ${NODE_0}
 [custom_repo]
 ${NODE_0}
 
-${KTS_SERVERS}
-
 ${KMS_SERVERS}
 
 ${CA_SERVERS}
@@ -35,7 +33,6 @@ cluster_master_nodes
 cluster_worker_nodes
 cluster_worker_no_hadoop
 cloudera_manager
-${KTS_SERVERS_GROUP}
 
 [all:vars]
 tls=False

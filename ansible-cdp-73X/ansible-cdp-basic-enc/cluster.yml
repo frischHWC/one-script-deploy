@@ -19,18 +19,22 @@
 ---
 clusters:
   - name: "{{ cluster_name }}"
-    services: [HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, KAFKA, PHOENIX, QUEUEMANAGER, SPARK_ON_YARN, TEZ, OBSERVABILITY, YARN, ZOOKEEPER]
+    # Remove undesired services below
+    services: [HBASE, HDFS, HIVE, HIVE_ON_TEZ, INFRA_SOLR, QUEUEMANAGER, RANGER, RANGER_KMS, SPARK3_ON_YARN, TEZ, YARN, ZOOKEEPER]
     security:
       kerberos: "{{ kerberos_activated }}"
+      hdfs_encryption: "{{ encryption_activated }}"
     repositories:
       - "{{ cdh_repo }}"  
-      - "{{ observability_repo }}"
+    data_contexts:
+      - name: SDX
+        services: [HDFS, HIVE, RANGER]
     configs: 
       HBASE:
         SERVICEWIDE:
           hbase_restserver_security_authentication: "{{ hbase_auth }}"
           hadoop_secure_web_ui: "{{ kerberos_activated }}"
-          hbase_superuser: "observability"
+          hbase_superuser: "{{ default_admin_user }}"
         REGIONSERVER:  
           hbase_regionserver_wal_codec: org.apache.hadoop.hbase.regionserver.wal.IndexedWALEditCodec
       HDFS:
@@ -38,7 +42,7 @@ clusters:
           dfs_ha_fencing_methods: 'shell(true)'
           dfs_namenode_acls_enabled: true
           hdfs_verify_ec_with_topology_enabled: false
-          dfs_permissions_supergroup: observability
+          dfs_permissions_supergroup: admin_group
         DATANODE:
           dfs_data_dir_list: /dfs/dn
           dfs_datanode_failed_volumes_tolerated: 0
@@ -51,24 +55,42 @@ clusters:
           dfs_journalnode_edits_dir: /dfs/jn  
         SECONDARYNAMENODE:
           fs_checkpoint_dir_list: /dfs/snn
+      HIVE:
+        HIVEMETASTORE:
+          hive_enable_db_notification: true
+          hive_metastore_delegation_token_store: org.apache.hadoop.hive.thrift.DBTokenStore 
+        SERVICEWIDE:
+          ranger_security_safety_valve: "<property><name>xasecure.hive.uri.permission.coarse.check</name><value>true</value></property>"
       HIVE_ON_TEZ:
         HIVESERVER2:
           hive_server2_transport_mode: "all"
-      IMPALA:
-        IMPALAD:
-          scratch_dirs: /tmp/impala
-          enable_audit_event_log: true 
-
-      OBSERVABILITY:
+      INFRA_SOLR:
         SERVICEWIDE:
-          kafka_broker_port: "{{ kafka_port }}"
-          
-      PHOENIX:
-        PHOENIX_QUERY_SERVER:
-          ssl_enabled: false
+          enable_ranger_authorization: true
+      RANGER:
+        SERVICEWIDE:
+          keyadmin_user_password: "{{ default_password }}"
+          rangeradmin_user_password: "{{ default_password }}"
+          rangertagsync_user_password: "{{ default_password }}"
+          rangerusersync_user_password: "{{ default_password }}" 
+        RANGER_USERSYNC:
+          ranger.usersync.source.impl.class: "{% if free_ipa == true %}org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder{% else %}org.apache.ranger.unixusersync.process.UnixUserGroupBuilder{% endif %}"
+          ranger.usersync.ldap.url: "{{ ipa_ldap_url }}"
+          ranger.usersync.ldap.binddn: "{{ ipa_ldap_user_bind_dn }}"
+          ranger_usersync_ldap_ldapbindpassword: "{{ ipa_ldap_user_bind_password }}"
+          ranger.usersync.ldap.user.searchbase: "{{ ipa_ldap_user_search_base }}"
+          ranger.usersync.ldap.user.objectclass: "person"
+          ranger.usersync.ldap.user.searchfilter: "uid=*"
+          ranger.usersync.ldap.user.nameattribute: "uid"
+          ranger.usersync.ldap.referral: "follow"
+          ranger.usersync.group.searchbase: "{{ ipa_ldap_group_search_base }}"
+          ranger.usersync.group.objectclass: "groupofnames"
+          ranger.usersync.group.nameattribute: "cn"
+          ranger.usersync.group.memberattributename: "member"
+          ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:g:admin_group&ROLE_SYS_ADMIN:u:{{ default_admin_user }}"
       YARN:
         SERVICEWIDE:
-          yarn_admin_acl: "${yarn_user},observability"
+          yarn_admin_acl: "${yarn_user},{{ default_admin_user }}"
         RESOURCEMANAGER:
           yarn_scheduler_maximum_allocation_mb: 24576
           yarn_scheduler_maximum_allocation_vcores: 12
@@ -80,53 +102,52 @@ clusters:
           yarn_nodemanager_log_dirs: /var/log/nm
         GATEWAY:
           mapred_submit_replication: 3
-          mapred_reduce_tasks: 6 
+          mapred_reduce_tasks: 6    
       ZOOKEEPER:
         SERVICEWIDE:
           zookeeper_datadir_autocreate: true
     host_templates:
-      ObservabilityMaster1:
+      Edge:
+        HBASE: [GATEWAY]
+        HDFS: [JOURNALNODE, GATEWAY]
+        HIVE: [GATEWAY]
+        HIVE_ON_TEZ: [GATEWAY]
+        TEZ: [GATEWAY]
+        RANGER_KMS: [RANGER_KMS_SERVER]
+        SPARK3_ON_YARN: [GATEWAY]
+        YARN: [GATEWAY]
+        ZOOKEEPER: [SERVER]
+      Master1:
+        INFRA_SOLR: [SOLR_SERVER]
         HBASE: [MASTER, GATEWAY]
         HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
         HIVE: [HIVEMETASTORE, GATEWAY]
         HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
-        HUE: [HUE_SERVER, HUE_LOAD_BALANCER]
-        PHOENIX: [PHOENIX_QUERY_SERVER]
-        IMPALA: [STATESTORE, CATALOGSERVER]
-        KAFKA: [GATEWAY]
-        SPARK_ON_YARN: [GATEWAY]
+        RANGER: [RANGER_TAGSYNC, RANGER_USERSYNC]
+        SPARK3_ON_YARN: [GATEWAY]
         TEZ: [GATEWAY]
         YARN: [RESOURCEMANAGER, GATEWAY]
         QUEUEMANAGER: [QUEUEMANAGER_STORE, QUEUEMANAGER_WEBAPP]
         ZOOKEEPER: [SERVER]         
-      ObservabilityMaster2:
+      Master2:
+        INFRA_SOLR: [SOLR_SERVER]
         HBASE: [MASTER, HBASERESTSERVER, HBASETHRIFTSERVER, GATEWAY]
         HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
         HIVE: [HIVEMETASTORE, GATEWAY]
         HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
-        KAFKA: [GATEWAY]
-        PHOENIX: [PHOENIX_QUERY_SERVER]
-        SPARK_ON_YARN: [SPARK_YARN_HISTORY_SERVER, GATEWAY]
+        RANGER: [RANGER_ADMIN]
+        SPARK3_ON_YARN: [SPARK3_YARN_HISTORY_SERVER, GATEWAY]
         TEZ: [GATEWAY]
         YARN: [RESOURCEMANAGER, JOBHISTORY, GATEWAY]
-        ZOOKEEPER: [SERVER]   
-      ObservabilityExclusive:
-        HDFS: [JOURNALNODE, GATEWAY]
-        ZOOKEEPER: [SERVER]
-        OBSERVABILITY: [DBUS_API_SERVICE, SIGMA_ADB_SERVICE, SIGMAADMIN_API_SERVICE, SIGMA_API_SERVICE, SIGMA_BASELINE_SERVICE, SIGMA_DBUS_SERVICE, SIGMA_ENTITIES_SERVICE, SIGMA_PIPELINES_SERVICE, SIGMA_SDX_SERVICE, THUNDERHEAD_SIGMA_CONSOLE]
-      ObservabilityWorker:
+        ZOOKEEPER: [SERVER]  
+      Workers:
         HBASE: [REGIONSERVER, GATEWAY]
         HDFS: [DATANODE, GATEWAY]
         HIVE: [GATEWAY]
         HIVE_ON_TEZ: [GATEWAY]
-        PHOENIX: [PHOENIX_QUERY_SERVER]
-        IMPALA: [IMPALAD]
-        KAFKA: [KAFKA_BROKER, GATEWAY]
         TEZ: [GATEWAY]
-        SPARK_ON_YARN: [GATEWAY]
-        YARN: [NODEMANAGER, GATEWAY] 
-        OBSERVABILITY: [DBUS_API_SERVICE, SIGMA_ADB_SERVICE, SIGMA_BASELINE_SERVICE, SIGMA_DBUS_SERVICE, SIGMA_ENTITIES_SERVICE, SIGMA_PIPELINES_SERVICE, SIGMA_SDX_SERVICE]
-
+        SPARK3_ON_YARN: [GATEWAY]
+        YARN: [NODEMANAGER, GATEWAY]  
 
 mgmt:
   name: Cloudera Management Service

@@ -1,5 +1,25 @@
 # Releases Notes
 
+## v3.0
+
+### New Features:
+
+- Restructure ansible files in directories
+- Update to latest versions
+- Support for CDP 7.3.1
+- Support of PvC 1.5.4
+- Support of Datagen 1.0.0
+- Archives of 7.1.9 with 5 cluster types
+
+### Bug Fixed
+
+- No longer issues with stale connections
+
+### WIP:
+
+- Optimization of parameters for cluster set
+- PvC on AWS (Requires some PTR Records)
+
 ## v2.0
 
 ### New Features:

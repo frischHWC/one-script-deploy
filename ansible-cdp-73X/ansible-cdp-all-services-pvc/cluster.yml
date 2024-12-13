@@ -18,20 +18,14 @@
 #
 ---
 clusters:
-  - name: "{{ cluster_name }}-kts"
-    type: kts
-    repositories:
-      - "{{ cdh_repo }}"
-
   - name: "{{ cluster_name }}"
-    services: [ATLAS, CRUISE_CONTROL, FLINK, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, KS_INDEXER, KUDU, LIVY, LIVY_FOR_SPARK3, NIFI, NIFIREGISTRY, OMID, OOZIE, OZONE, PHOENIX, QUERY_PROCESSOR, QUEUEMANAGER, RANGER, SCHEMAREGISTRY, SPARK_ON_YARN, SPARK3_ON_YARN, SOLR, SQL_STREAM_BUILDER, STREAMS_MESSAGING_MANAGER, TEZ, YARN, ZOOKEEPER]
+    services: [ATLAS, CRUISE_CONTROL, FLINK, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, IMPALA, INFRA_SOLR, KAFKA, KNOX, KS_INDEXER, KUDU, LIVY_FOR_SPARK3, NIFI, NIFIREGISTRY, OMID, OOZIE, OZONE, PHOENIX, QUERY_PROCESSOR, QUEUEMANAGER, RANGER, RANGER_KMS, SCHEMAREGISTRY, SPARK3_ON_YARN, SOLR, SQL_STREAM_BUILDER, STREAMS_MESSAGING_MANAGER, TEZ, YARN, ZOOKEEPER]
     security:
       kerberos: "{{ kerberos_activated }}"
       hdfs_encryption: "{{ encryption_activated }}"
     repositories:
       - "{{ cdh_repo }}"
       - "{{ csa_repo }}"
-      - "{{ spark3_repo }}"
       - "{{ cfm_repo }}"
 
     data_contexts:
@@ -130,9 +124,6 @@ clusters:
           fs_wal_dir: /kudu/wal
           fs_data_dirs: /kudu/data
 
-      LIVY:
-        LIVY_SERVER:
-          livy_spnego_enabled: "{{ kerberos_activated }}" 
 
       LIVY_FOR_SPARK3:
         LIVY_SERVER_FOR_SPARK3:
@@ -147,6 +138,11 @@ clusters:
           nifi.web.https.port: 8080
           java.arg.2: -Xms2048m
           java.arg.3: -Xmx4096m
+          xml.authorizers.userGroupProvider.shell-user-group-provider.enabled: true
+          xml.authorizers.userGroupProvider.shell-user-group-provider.property.Exclude Groups: nifi
+          xml.authorizers.userGroupProvider.shell-user-group-provider.property.Exclude Users: nifi
+          staging/authorizers.xml_role_safety_valve: <property><name>xml.authorizers.userGroupProvider.composite-configurable-user-group-provider.property.User Group Provider 2</name><value>shell-user-group-provider</value></property>
+
 
       OOZIE:
         SERVICEWIDE:
@@ -164,10 +160,6 @@ clusters:
           ozone.administrators: "{{ default_admin_user }}"
         OZONE_MANAGER:
           ozone-conf/ozone-site.xml_role_safety_valve: <property><name>ozone.om.snapshot.load.native.lib</name><value>false</value></property>
-
-      SPARK_ON_YARN:
-        SERVICEWIDE:
-          atlas_service: "atlas"
 
       RANGER:
         SERVICEWIDE:
@@ -215,7 +207,6 @@ clusters:
           
       SQL_STREAM_BUILDER:
         STREAMING_SQL_ENGINE:
-          loadbalancer.url: "{{ groups.cloudera_manager | first | default(omit) }}"
           ssb.default.admin.password: "{{ default_password }}" 
           ssb-conf/application.properties_role_safety_valve: log.sqlio.restapi = true 
           ssb.yarn.ui.proxy: "/gateway/cdp-proxy/yarnuiv2/proxy"
@@ -258,13 +249,11 @@ clusters:
         KAFKA: [GATEWAY]
         KNOX: [KNOX_GATEWAY]
         LIVY_FOR_SPARK3: [GATEWAY]
-        LIVY: [GATEWAY]
         OZONE: [OZONE_PROMETHEUS, S3_GATEWAY, OZONE_RECON, GATEWAY]
         TEZ: [GATEWAY]
+        RANGER_KMS: [RANGER_KMS_SERVER]
         SOLR: [GATEWAY]
-        SPARK_ON_YARN: [GATEWAY]
         SPARK3_ON_YARN: [GATEWAY]
-        SQL_STREAM_BUILDER: [LOAD_BALANCER]
         YARN: [GATEWAY]
 
       Master1:
@@ -280,12 +269,10 @@ clusters:
         KAFKA: [GATEWAY]
         KUDU: [KUDU_MASTER]
         LIVY_FOR_SPARK3: [GATEWAY]
-        LIVY: [GATEWAY]
         OOZIE: [OOZIE_SERVER]
         OZONE: [OZONE_MANAGER, STORAGE_CONTAINER_MANAGER, GATEWAY]
         QUERY_PROCESSOR: [QUERY_PROCESSOR]
         SOLR: [GATEWAY]
-        SPARK_ON_YARN: [GATEWAY]
         SPARK3_ON_YARN: [GATEWAY]
         TEZ: [GATEWAY]
         YARN: [GATEWAY]
@@ -302,13 +289,11 @@ clusters:
         KAFKA: [GATEWAY]
         KUDU: [KUDU_MASTER]
         LIVY_FOR_SPARK3: [GATEWAY]
-        LIVY: [LIVY_SERVER, GATEWAY]
         NIFIREGISTRY: [NIFI_REGISTRY_SERVER]
         OZONE: [OZONE_MANAGER, STORAGE_CONTAINER_MANAGER, GATEWAY]
         PHOENIX: [PHOENIX_QUERY_SERVER]
         RANGER: [RANGER_ADMIN]
         SOLR: [GATEWAY]
-        SPARK_ON_YARN: [SPARK_YARN_HISTORY_SERVER, GATEWAY]
         SPARK3_ON_YARN: [GATEWAY]
         TEZ: [GATEWAY]
         YARN: [RESOURCEMANAGER, JOBHISTORY, GATEWAY]
@@ -325,7 +310,6 @@ clusters:
         KAFKA: [GATEWAY]
         KUDU: [KUDU_MASTER]
         LIVY_FOR_SPARK3: [LIVY_SERVER_FOR_SPARK3, GATEWAY]
-        LIVY: [GATEWAY]
         OMID: [OMID_TSO]
         OOZIE: [OOZIE_SERVER]
         OZONE: [OZONE_MANAGER, STORAGE_CONTAINER_MANAGER, GATEWAY]
@@ -334,7 +318,6 @@ clusters:
         SOLR: [GATEWAY]
         SCHEMAREGISTRY: [SCHEMA_REGISTRY_SERVER]
         STREAMS_MESSAGING_MANAGER: [STREAMS_MESSAGING_MANAGER_UI, STREAMS_MESSAGING_MANAGER_SERVER]
-        SPARK_ON_YARN: [GATEWAY]
         SPARK3_ON_YARN: [SPARK3_YARN_HISTORY_SERVER, GATEWAY]
         SQL_STREAM_BUILDER: [STREAMING_SQL_ENGINE, MATERIALIZED_VIEW_ENGINE]
         TEZ: [GATEWAY]
@@ -351,11 +334,9 @@ clusters:
         KS_INDEXER: [HBASE_INDEXER]
         KUDU: [KUDU_TSERVER]
         LIVY_FOR_SPARK3: [GATEWAY]
-        LIVY: [GATEWAY]
         OZONE: [OZONE_DATANODE, GATEWAY]
         TEZ: [GATEWAY]
         SOLR: [SOLR_SERVER, GATEWAY]
-        SPARK_ON_YARN: [GATEWAY]
         SPARK3_ON_YARN: [GATEWAY]
         YARN: [NODEMANAGER, GATEWAY]
 
@@ -372,7 +353,6 @@ clusters:
         OZONE: [GATEWAY]
         TEZ: [GATEWAY]
         SOLR: [GATEWAY]
-        SPARK_ON_YARN: [GATEWAY]
         SPARK3_ON_YARN: [GATEWAY]
         YARN: [GATEWAY]
         

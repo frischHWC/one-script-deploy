@@ -1,0 +1,43 @@
+[cloudera_manager]
+${NODE_0} host_template=Edge
+
+[cluster_master_nodes]
+${NODE_1} host_template=Master1
+${NODE_2} host_template=Master2
+${NODE_3} host_template=Master3
+
+[cluster_worker_nodes]
+${NODE_4} host_template=Workers
+${NODE_5} host_template=Workers
+${NODE_6} host_template=Workers
+
+[cluster_worker_no_hadoop]
+${NODE_7} host_template=StreamWorkers
+${NODE_8} host_template=StreamWorkers
+${NODE_9} host_template=StreamWorkers
+
+[db_server]
+${NODE_0}
+
+[custom_repo]
+${NODE_0}
+
+${KMS_SERVERS}
+
+${CA_SERVERS}
+
+${KRB5_SERVERS}
+
+[pvc_hosts]
+${NODES_ECS_PRINTABLE}
+
+[cluster:children]
+cluster_master_nodes
+cluster_worker_nodes
+cluster_worker_no_hadoop
+cloudera_manager
+pvc_hosts
+
+[all:vars]
+tls=False
+host_pattern_mismatch=ignore

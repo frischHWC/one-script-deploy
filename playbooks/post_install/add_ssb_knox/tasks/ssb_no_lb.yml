@@ -186,3 +186,18 @@
     validate_certs: no
     body_format: json
     body: "{{ lookup('template', 'ssb_knox_url_api.json' ) }}"
+
+# If using CDP 7.3.1, setup Knox dependency directly on SSB
+- name: Set SSB dependency to Knox
+  uri:
+    url: "{{ cloudera_manager_url }}/api/v41/clusters/{{ cluster_name }}/services/{{ ssb_service_name }}/config"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: PUT
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+    body: "{{ lookup('template', 'ssb_knox_dep.json' ) }}"
+  when: cloudera_cdh_version is version('7.3.0','>=')

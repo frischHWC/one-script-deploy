@@ -1,0 +1,8 @@
+{
+    "items": [
+      {
+        "name": "knox_service",
+        "value": "{{ knox_service_name }}"
+      }
+    ]
+  }

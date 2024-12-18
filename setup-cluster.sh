@@ -146,7 +146,7 @@ export DATAGEN_REPO_URL="https://github.com/frischHWC/datagen"
 export DATAGEN_REPO_BRANCH="main"
 export DATAGEN_REPO_PARCEL=""
 export DATAGEN_CSD_URL=""
-export DATAGEN_VERSION="1.0.0"
+export DATAGEN_VERSION="1.0.1"
 export EDGE_HOST=""
 
 # Demo
@@ -830,6 +830,13 @@ then
         export PVC="true"
         export FREE_IPA="true"
         export PVC_TYPE="OC"
+        export CM_VERSION="7.11.3.26"
+        export CDH_VERSION="7.1.9.1015"
+        export CFM_VERSION="2.1.7.1000"
+        export CEM_VERSION="2.2.0.0"
+        export CSA_VERSION="1.13.2.0"
+        export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.9.zip"
+        export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.9"
     elif [ "${CLUSTER_TYPE}" = "all-services-pvc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-73X/ansible-cdp-all-services-pvc/hosts"
@@ -841,6 +848,13 @@ then
         export PVC="true"
         export FREE_IPA="true"
         export PVC_TYPE="ECS"
+        export CM_VERSION="7.11.3.26"
+        export CDH_VERSION="7.1.9.1015"
+        export CFM_VERSION="2.1.7.1000"
+        export CEM_VERSION="2.2.0.0"
+        export CSA_VERSION="1.13.2.0"
+        export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.9.zip"
+        export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.9"
     elif [ "${CLUSTER_TYPE}" = "pvc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-73X/ansible-cdp-pvc/hosts"
@@ -849,6 +863,10 @@ then
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-73X/ansible-cdp-pvc/extra_vars.yml"
         export PVC="true"
         export FREE_IPA="true"
+        export CM_VERSION="7.11.3.26"
+        export CDH_VERSION="7.1.9.1015"
+        export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.9.zip"
+        export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.9"
     elif [ "${CLUSTER_TYPE}" = "pvc-oc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-73X/ansible-cdp-pvc-oc/hosts"
@@ -858,6 +876,10 @@ then
         export PVC="true"
         export PVC_TYPE="OC"
         export FREE_IPA="true"
+        export CM_VERSION="7.11.3.26"
+        export CDH_VERSION="7.1.9.1015"
+        export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.9.zip"
+        export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.9"
     elif [ "${CLUSTER_TYPE}" = "observability" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-73X/ansible-cdp-observability/hosts"

@@ -20,6 +20,7 @@
 cloudera_manager_host: ${NODE_0} 
 cloudera_manager_user: admin 
 cloudera_manager_password: admin 
+cloudera_cdh_version: ${CDH_VERSION}
 cluster_name: ${CLUSTER_NAME} 
 auto_tls: ${TLS} 
 encryption_activated: ${ENCRYPTION_ACTIVATED}

@@ -18,8 +18,7 @@
 #
 ---
 
-
-# TODO: check how to make sure there is (or not) a LB
+# Check how to make sure there is (or not) a LB
 - name: Get SSB full Roles
   uri:
     url: "{{ cloudera_manager_url }}/api/v41/clusters/{{ cluster_name }}/services/{{ ssb_service_name }}/roles"

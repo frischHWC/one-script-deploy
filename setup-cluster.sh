@@ -830,13 +830,6 @@ then
         export PVC="true"
         export FREE_IPA="true"
         export PVC_TYPE="OC"
-        export CM_VERSION="7.11.3.26"
-        export CDH_VERSION="7.1.9.1015"
-        export CFM_VERSION="2.1.7.1000"
-        export CEM_VERSION="2.2.0.0"
-        export CSA_VERSION="1.13.2.0"
-        export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.9.zip"
-        export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.9"
     elif [ "${CLUSTER_TYPE}" = "all-services-pvc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-73X/ansible-cdp-all-services-pvc/hosts"
@@ -848,13 +841,6 @@ then
         export PVC="true"
         export FREE_IPA="true"
         export PVC_TYPE="ECS"
-        export CM_VERSION="7.11.3.26"
-        export CDH_VERSION="7.1.9.1015"
-        export CFM_VERSION="2.1.7.1000"
-        export CEM_VERSION="2.2.0.0"
-        export CSA_VERSION="1.13.2.0"
-        export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.9.zip"
-        export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.9"
     elif [ "${CLUSTER_TYPE}" = "pvc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-73X/ansible-cdp-pvc/hosts"
@@ -863,10 +849,6 @@ then
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-73X/ansible-cdp-pvc/extra_vars.yml"
         export PVC="true"
         export FREE_IPA="true"
-        export CM_VERSION="7.11.3.26"
-        export CDH_VERSION="7.1.9.1015"
-        export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.9.zip"
-        export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.9"
     elif [ "${CLUSTER_TYPE}" = "pvc-oc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-73X/ansible-cdp-pvc-oc/hosts"
@@ -876,10 +858,6 @@ then
         export PVC="true"
         export PVC_TYPE="OC"
         export FREE_IPA="true"
-        export CM_VERSION="7.11.3.26"
-        export CDH_VERSION="7.1.9.1015"
-        export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.9.zip"
-        export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.9"
     elif [ "${CLUSTER_TYPE}" = "observability" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-73X/ansible-cdp-observability/hosts"
@@ -898,6 +876,7 @@ then
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-71X/ansible-cdp-719/extra_vars.yml"
         export CM_VERSION="7.11.3.26"
         export CDH_VERSION="7.1.9.1015"
+        export DATAGEN_VERSION="1.0.0"
         export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.9.zip"
         export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.9"
     elif [ "${CLUSTER_TYPE}" = "cdp-all-services-719" ]
@@ -908,6 +887,7 @@ then
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-71X/ansible-cdp-all-services-719/extra_vars.yml"
         export CM_VERSION="7.11.3.26"
         export CDH_VERSION="7.1.9.1015"
+        export DATAGEN_VERSION="1.0.0"
         export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.9.zip"
         export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.9"
         export USE_CSA="true"
@@ -922,6 +902,7 @@ then
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-71X/ansible-cdp-basic-719/extra_vars.yml"
         export CM_VERSION="7.11.3.26"
         export CDH_VERSION="7.1.9.1015"
+        export DATAGEN_VERSION="1.0.0"
         export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.9.zip"
         export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.9"
     elif [ "${CLUSTER_TYPE}" = "cdp-pvc-719" ]
@@ -935,6 +916,8 @@ then
         export CFM_VERSION="2.1.7.1000"
         export CEM_VERSION="2.2.0.0"
         export CSA_VERSION="1.13.2.0"
+        export PVC_VERSION="1.5.4"
+        export DATAGEN_VERSION="1.0.0"
         export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.9.zip"
         export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.9"
         export PVC="true"
@@ -949,7 +932,8 @@ then
         export CDH_VERSION="7.1.9.1015"
         export CFM_VERSION="2.1.7.1000"
         export CEM_VERSION="2.2.0.0"
-        export CSA_VERSION="1.13.2.0"   
+        export CSA_VERSION="1.13.2.0"
+        export DATAGEN_VERSION="1.0.0" 
         export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.9.zip"
         export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.9"
         export USE_SPARK3="true"
@@ -964,6 +948,7 @@ then
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-71X/ansible-cdp-717/extra_vars.yml"
         export CM_VERSION="7.6.7"
         export CDH_VERSION="7.1.7.2026"
+        export DATAGEN_VERSION="0.5.0"
         export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.7.zip"
         export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.7"
     elif [ "${CLUSTER_TYPE}" = "cdh6" ]

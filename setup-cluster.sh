@@ -911,7 +911,7 @@ then
         export ANSIBLE_ALL_FILE="ansible-cdp-71X/ansible-cdp-pvc-719/all"
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-71X/ansible-cdp-pvc-719/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-71X/ansible-cdp-pvc-719/extra_vars.yml"
-        export CM_VERSION="7.11.3.26"
+        export CM_VERSION="7.11.3.28"
         export CDH_VERSION="7.1.9.1015"
         export CFM_VERSION="2.1.7.1000"
         export CEM_VERSION="2.2.0.0"

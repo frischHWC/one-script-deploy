@@ -46,3 +46,24 @@
     dest: /usr/local/bin/ 
     mode: 0755
     remote_src: yes
+
+# Setup kubeconfig to be able to launch kube commands from Management Node
+- name: Copy the kubeconfig 
+  copy:
+    src: "/tmp/kubeconfig/{{ pvc_ecs_server_host }}/etc/rancher/rke2/rke2.yaml"
+    dest: "/root/kubeconfig"
+    mode: 0400
+
+- name: Replace in kubeconfig the pvc_ecs_server_host
+  replace:
+    path: /root/kubeconfig
+    regexp: "127.0.0.1"
+    replace: "{{ pvc_ecs_server_host }}"
+
+- name: Insert KUBECONFIG vars to bashrc
+  blockinfile:
+    path: ~/.bashrc
+    marker: "# Kubeconfig "
+    block: |
+      export KUBECONFIG=/root/kubeconfig
+      alias kubectl-ecs='kubectl --kubeconfig /root/kubeconfig'

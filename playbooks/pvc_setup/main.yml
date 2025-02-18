@@ -165,7 +165,7 @@
       ignore_errors: yes
       when: setup_yunikorn_queues
 
-- name: Install Yunikorn Ingess
+- name: Install Yunikorn Ingress
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: true
   roles: 

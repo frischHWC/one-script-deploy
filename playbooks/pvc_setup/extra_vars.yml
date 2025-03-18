@@ -282,7 +282,7 @@ yunikorn_child_queues:
     gpu_guaranteed: 0 # Optionnal defautl to 0
     # Advanced
     validity: NEVER EXPIRES # Optionnal defautl to NEVER EXPIRES
-    elasticity: INELASTIC # Optionnal defautl to INELASTIC
+    elasticity: ELASTIC # Optionnal defautl to INELASTIC
     preemption: true # Optionnal defautl to true
     preemption_fencing: false # Optionnal defautl to false
     preemption_delay: 30 # Optionnal defautl to 30
@@ -300,6 +300,7 @@ yunikorn_child_queues:
     mem_guaranteed: 100G
     cpu_guaranteed: 50
     gpu_guaranteed: 0
+    elasticity: ELASTIC
     tags: 
       - "experience:cml"
 
@@ -308,6 +309,7 @@ yunikorn_child_queues:
     cpu_max: 300
     mem_guaranteed: 150G
     cpu_guaranteed: 100 
+    elasticity: ELASTIC
 
 
 #####################   

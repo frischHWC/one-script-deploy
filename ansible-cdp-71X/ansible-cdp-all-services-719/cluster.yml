@@ -168,6 +168,10 @@ clusters:
         OZONE_MANAGER:
           ozone-conf/ozone-site.xml_role_safety_valve: <property><name>ozone.om.snapshot.load.native.lib</name><value>false</value></property>
 
+      QUERY_PROCESSOR:
+        SERVICEWIDE:
+          query_processor_database_schema: hueqp
+
       SPARK_ON_YARN:
         SERVICEWIDE:
           atlas_service: "atlas"

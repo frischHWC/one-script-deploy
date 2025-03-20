@@ -157,6 +157,17 @@ export DEMO_REPO_BRANCH="main"
 export CDH6_KTS_PATH="~/Downloads/keytrustee-server-6.1.0-parcels.tar.gz"
 export CDH6_KTS_KMS_PATH="~/Downloads/keytrustee-kms-6.3.0-parcels.tar.gz"
 
+# K8s Operators
+export CFM_OPERATOR_VERSION="2.9.0"
+export CFM_OPERATOR_DEPLOY="false"
+export CFM_OPERATOR_NIFI_DEPLOY="false"
+export CSA_OPERATOR_VERSION="1.2.0"
+export CSA_OPERATOR_DEPLOY="false"
+export CSA_OPERATOR_FLINK_DEPLOY="false"
+export KAFKA_OPERATOR_VERSION="1.3.0"
+export KAFKA_OPERATOR_DEPLOY="false"
+export KAFKA_OPERATOR_KAFKA_DEPLOY="false"
+
 # INTERNAL USAGE OF THESE VARIABLES, do no touch these
 export KTS_SERVERS=""
 export KTS_SERVERS_GROUP=""
@@ -175,6 +186,8 @@ export CLUSTER_NAME_STREAMING=""
 export USE_ROOT_CA="false"
 export USE_OUTSIDE_PAYWALL_BUILDS="false"
 export FREE_IPA_TRIES=2
+export PVC_POST_INSTALL="false"
+export DEPLOY_CERT_MANAGER="false"
 # To solve any potential issue with UTF-8
 export ENV='en_US.UTF-8'
 export LC_ALL='en_US.UTF-8'
@@ -335,6 +348,18 @@ function usage()
     echo "  --cdh6-kts-kms-path=$CDH6_KTS_KMS_PATH : (Optional) Path to KTS-KMS tar gz for CDH6 (Default) $CDH6_KTS_KMS_PATH "
     echo ""
     echo "  --edge-host=$EDGE_HOST : (Optional) Node where user creation and data loading will be launched (Default) $EDGE_HOST "
+    echo ""
+    echo "  --cfm-operator-version=$CFM_OPERATOR_VERSION : (Optional) CFM k8s operator version (Default) "
+    echo "  --cfm-operator-deploy=$CFM_OPERATOR_DEPLOY : (Optional) Whether to deploy CFM K8s Operator (Default) "
+    echo "  --cfm-operator-nifi-deploy=$CFM_OPERATOR_NIFI_DEPLOY : (Optional) Whether to deploy Nifi (& nifi registry) using CFM k8s Operator (Default) "
+    echo "  --csa-operator-version=$CSA_OPERATOR_VERSION : (Optional) CSA k8s operator version (Default) "
+    echo "  --csa-operator-deploy=$CSA_OPERATOR_DEPLOY : (Optional) Whether to deploy CSA K8s Operator (Default) "
+    echo "  --csa-operator-flink-deploy=$CSA_OPERATOR_FLINK_DEPLOY : (Optional) Whether to deploy Flink (& SSB) using CSA k8s Operator (Default) "
+    echo "  --kafka-operator-version=$KAFKA_OPERATOR_VERSION : (Optional) Kafka k8s operator version (Default) "
+    echo "  --kafka-operator-deploy=$KAFKA_OPERATOR_DEPLOY : (Optional) Whether to deploy Kafka K8s Operator (Default) "
+    echo "  --kafka-operator-kafka-deploy=$KAFKA_OPERATOR_KAFKA_DEPLOY : (Optional) Whether to deploy Kafka (& Strimzi & Cruise Control) using Kafka k8s Operator (Default) "
+    echo ""
+    echo ""
     echo ""
 }
 
@@ -701,6 +726,33 @@ while [ "$1" != "" ]; do
         --edge-host)
             EDGE_HOST=$VALUE                      
             ;;
+        --cfm-operator-version)
+            CFM_OPERATOR_VERSION=$VALUE
+            ;;
+        --cfm-operator-deploy)
+            CFM_OPERATOR_DEPLOY=$VALUE
+            ;;
+        --cfm-operator-nifi-deploy)
+            CFM_OPERATOR_NIFI_DEPLOY=$VALUE
+            ;;
+        --csa-operator-version)
+            CSA_OPERATOR_VERSION=$VALUE
+            ;;
+        --csa-operator-deploy)
+            CSA_OPERATOR_DEPLOY=$VALUE
+            ;;
+        --csa-operator-flink-deploy)
+            CSA_OPERATOR_FLINK_DEPLOY=$VALUE
+            ;;
+        --kafka-operator-version)
+            KAFKA_OPERATOR_VERSION=$VALUE
+            ;;
+        --kafka-operator-deploy)
+            KAFKA_OPERATOR_DEPLOY=$VALUE
+            ;;
+        --kafka-operator-kafka-deploy)
+            KAFKA_OPERATOR_KAFKA_DEPLOY=$VALUE
+            ;;
         *)
             ;;
     esac
@@ -911,12 +963,12 @@ then
         export ANSIBLE_ALL_FILE="ansible-cdp-71X/ansible-cdp-pvc-719/all"
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-71X/ansible-cdp-pvc-719/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-71X/ansible-cdp-pvc-719/extra_vars.yml"
-        export CM_VERSION="7.11.3.28"
-        export CDH_VERSION="7.1.9.1015"
+        export PVC_VERSION="1.5.4-h15"
+        export CM_VERSION="7.13.1.100"
+        export CDH_VERSION="7.1.9.1034"
         export CFM_VERSION="2.1.7.1000"
         export CEM_VERSION="2.2.0.0"
         export CSA_VERSION="1.13.2.0"
-        export PVC_VERSION="1.5.4"
         export DATAGEN_VERSION="1.0.0"
         export INSTALL_REPO_URL="https://github.com/frischHWC/cldr-playbook/archive/refs/tags/CDP-7.1.9.zip"
         export ANSIBLE_REPO_DIR="cldr-playbook-CDP-7.1.9"
@@ -1226,7 +1278,13 @@ fi
 if [ "${DATAGEN_AS_A_SERVICE}" = "false" ] && [ -z "${DATAGEN_REPO_URL}" ]
 then
     export DATAGEN_REPO_URL="https://github.com/frischHWC/random-datagen"
-fi    
+fi
+
+if [ "${CFM_OPERATOR_DEPLOY}" = "true" ] || [ "${CSA_OPERATOR_DEPLOY}" = "true" ] || [ "${KAFKA_OPERATOR_DEPLOY}" = "true" ]
+then
+    export PVC_POST_INSTALL="true"
+    export DEPLOY_CERT_MANAGER="true"
+fi
 
 ###############################
 # Setup of files to interact with the cluster
@@ -1786,6 +1844,17 @@ then
     ./cdp_demo.sh --cluster-name=${CLUSTER_NAME} --cm-host=${NODE_0} --edge-host=${EDGE_HOST} --ipa-server=${NODE_IPA} --ssh-key=${NODE_KEY} --ssh-password=${NODE_PASSWORD} --debug=${DEBUG} --use-ipa=${FREE_IPA} --ipa-password=${DEFAULT_PASSWORD}
     cd $CURRENT_DIR
 fi
+
+if [ "${PVC}" = "true" ] && [ "${PVC_POST_INSTALL}" = "true" ]
+then
+    logger info "############ #bold:Prerequisites for k8s Operator#end_bold ############" 
+    # Little trick because kubernetes packages requires a specific version of python (3.11) with python packages installed
+    #launch_playbook pvc_post_install_prereqs "PvC Post Installation Prereqs Done" "Could not install python and kubernetes packages" 120 480 0 false
+    export ANSIBLE_PYTHON_3_PARAMS="-e ansible_python_interpreter=/usr/bin/python3.11"
+    logger info "############ #bold:Adding k8s Operator to Kubernetes cluster#end_bold ############" 
+    launch_playbook pvc_post_install "PvC Post Installation Done" "Could not add operators and deployments to PVC" 3600 5400 0 false
+fi
+
 
 ###############################
 # Clean up and end

@@ -1,0 +1,3 @@
+delete_previous_ns: true
+namespace: test
+secret_name: docker-registry-secret

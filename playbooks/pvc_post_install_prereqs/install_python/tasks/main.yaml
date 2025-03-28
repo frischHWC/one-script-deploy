@@ -1,0 +1,25 @@
+---
+- name: Install python 3.11
+  package:
+    name: python3.11
+    state: present
+
+- name: Install python 3.11-pip
+  package:
+    name: python3.11-pip
+    state: present
+
+- name: Install kubernetes python package
+  ansible.builtin.pip:
+    name: kubernetes
+    executable: pip3.11
+
+- name: Install pyyaml python package
+  ansible.builtin.pip:
+    name: pyyaml
+    executable: pip3.11
+
+- name: Install jsonpatch python package
+  ansible.builtin.pip:
+    name: jsonpatch
+    executable: pip3.11

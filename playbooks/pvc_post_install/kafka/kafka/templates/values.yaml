@@ -1,0 +1,40 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: "{{ kafka.name }}"
+  namespace: "{{ kafka.namespace }}"
+  annotations:
+    strimzi.io/node-pools: enabled
+    strimzi.io/kraft: enabled
+spec:
+  cruiseControl: {}
+  kafka:
+    version: "{{ kafka.kafka_version | default('3.9.0.1.3') }}"
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+      - name: external
+        port: 9094
+        type: ingress
+        tls: true
+        authentication:
+          type: tls
+        configuration:
+          bootstrap:
+            host: "{{ kafka.name }}.apps.{{ pvc_app_domain }}"
+          brokers:
+{% for i in range(kafka.broker.replicas) %}
+            - broker: {{ i | int }}
+              host: "{{ kafka.name }}-{{ i }}.apps.{{ pvc_app_domain }}"
+{% endfor %}
+          class: nginx
+
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}

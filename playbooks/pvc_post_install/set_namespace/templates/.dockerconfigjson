@@ -1,0 +1,1 @@
+{"auths":{"{{ docker_registry }}":{"username":"{{ docker_registry_user }}","password":"{{ docker_registry_password }}","auth":"{{ docker_registry_creds_based }}"}}}

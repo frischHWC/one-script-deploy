@@ -1,0 +1,69 @@
+
+flink-kubernetes-operator:
+  imagePullSecrets:
+  - name: docker-registry-secret
+  clouderaLicense:
+    fileContent: "{{ license_file_content }}"
+
+  operatorPod:
+    resources:
+      limits:
+        cpu: "{{ csa_operator.op_cpu_lim | default('1') }}"
+        memory: "{{ csa_operator.op_mem_lim | default('1Gi') }}"
+      requests:
+        cpu: "{{ csa_operator.op_cpu_req | default('500m') }}"
+        memory: "{{ csa_operator.op_mem_req | default('1Gi') }}"
+    webhook:
+      resources:
+        limits:
+          cpu: "{{ csa_operator.wh_cpu_lim | default('500m') }}"
+          memory: "{{ csa_operator.wh_mem_lim | default('512Mi') }}"
+        requests:
+          cpu: "{{ csa_operator.wh_cpu_req | default('250m') }}"
+          memory: "{{ csa_operator.wh_mem_req | default('512Mi') }}"
+ssb:
+  sse:
+    image:
+      imagePullSecrets:
+      - name: docker-registry-secret
+    pod:
+      resources:
+        limits:
+          cpu: "{{ csa_ssb.op_cpu_lim | default('1500m') }}"
+          memory: "{{ csa_ssb.mem_lim | default('2Gi') }}"
+        requests:
+          cpu: "{{ csa_ssb.cpu_req | default('1') }}"
+          memory: "{{ csa_ssb.mem_req | default('2Gi') }}"
+    ingress:
+      spec:
+        ingressClassName: nginx
+        tls:
+          - hosts:
+            - "{{ namespace_csa_operator }}.apps.{{ pvc_app_domain }}"
+            secretName: "{{ namespace_csa_operator }}-ingress-cert"
+        rules:
+          - host: "{{ namespace_csa_operator }}.apps.{{ pvc_app_domain }}"
+            http:
+              paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: ssb-sse
+                      port:
+                        number: 18121
+  sqlRunner:
+    image:
+      imagePullSecrets:
+      - name: docker-registry-secret
+  database:
+    pod:
+      securityContext:
+        fsGroup: 999
+    resources:
+      limits:
+        cpu: "{{ csa_db.cpu_lim | default('500m') }}"
+        memory: "{{ csa_db.mem_lim | default('512Mi') }}"
+      requests:
+        cpu: "{{ csa_db.cpu_lim | default('200m') }}"
+        memory: "{{ csa_db.cpu_lim | default('512Mi') }}"

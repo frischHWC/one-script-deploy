@@ -1,0 +1,70 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# General
+cloudera_manager_host: ${NODE_0}
+cloudera_manager_user: admin
+cloudera_manager_password: admin
+cm_version: ${CM_VERSION}
+
+pvc_version: ${PVC_VERSION}
+cluster_name: ${CLUSTER_NAME}
+cluster_name_pvc: ${CLUSTER_NAME_PVC}
+ipa_server: ${NODE_IPA}
+free_ipa: ${FREE_IPA}
+debug: ${DEBUG}
+license_file: ${LICENSE_FILE}
+
+kube_config_path: ${KUBECONFIG_PATH}
+docker_registry: container.repository.cloudera.com
+docker_registry_user: ${PAYWALL_USER}
+docker_registry_password: ${PAYWALL_PASSWORD}  
+paywall_user: ${PAYWALL_USER}
+paywall_password: ${PAYWALL_PASSWORD}  
+
+pvc_type: ${PVC_TYPE}
+pvc_ecs_server_host: ${PVC_ECS_SERVER_HOST}
+auto_tls: ${TLS}
+use_root_ca: ${USE_ROOT_CA}
+root_ca_cert: ${ROOT_CA_CERT}
+root_ca_key: ${ROOT_CA_KEY}
+oc_tar_file_path: ${OC_TAR_FILE_PATH}
+pvc_app_domain: ${PVC_APP_DOMAIN}
+default_admin_user: ${DEFAULT_ADMIN_USER}
+
+
+# K8s operator
+deploy_cert_manager: ${DEPLOY_CERT_MANAGER}
+cfm_operator_version: ${CFM_OPERATOR_VERSION}
+cfm_to_deploy: ${CFM_OPERATOR_DEPLOY}
+cfm_nifi_to_deploy: ${CFM_OPERATOR_NIFI_DEPLOY}
+csa_operator_version: ${CSA_OPERATOR_VERSION}
+csa_to_deploy: ${CSA_OPERATOR_DEPLOY}
+csa_nifi_to_deploy: ${CSA_OPERATOR_FLINK_DEPLOY}
+kafka_operator_version: ${KAFKA_OPERATOR_VERSION}
+kafka_to_deploy: ${KAFKA_OPERATOR_DEPLOY}
+kafka_nifi_to_deploy: ${KAFKA_OPERATOR_KAFKA_DEPLOY}
+
+# default values
+helm_bin_path_ecs: "/opt/cloudera/parcels/ECS/installer/install/bin/linux/helm"
+kubeconfig_ecs: "/etc/rancher/rke2/rke2.yaml"
+namespace_cert_manager: cert-manager
+cert_manager_version: 1.17.0
+
+

@@ -1,0 +1,47 @@
+apiVersion: cfm.cloudera.com/v1alpha1
+kind: Nifi
+metadata:
+  name: "{{ nifi.name }}"
+  namespace: "{{ nifi.namespace }}"
+spec:
+  replicas: {{ nifi.replicas }}
+  resources:
+    nifi:
+      requests:
+        cpu: "{{ nifi.requests_cpu | default('200m') }}"
+        memory: "{{ nifi.requests_mem | default('2G') }}"
+      limits:
+        cpu: "{{ nifi.limits_cpu | default('1') }}"
+        memory: "{{ nifi.limits_mem | default('4G') }}"
+  image:
+    repository: "{{ docker_registry }}/cloudera/cfm-nifi-k8s"
+    tag: "{{ nifi.tag }}"
+  tiniImage:
+    repository: "{{ docker_registry }}/cloudera/cfm-tini"
+    tag: "{{ cfm_operator_version }}"
+  hostName: "{{ nifi.name }}.apps.{{ pvc_app_domain }}"
+  uiConnection:
+    serviceConfig:
+      sessionAffinity: ClientIP
+    type: Ingress
+    ingressConfig:
+      ingressTLS:
+      - hosts:
+        - "{{ nifi.name }}.apps.{{ pvc_app_domain }}"
+        secretName: "{{ nifi.name }}-ingress-cert"
+      paths:
+      - port: 8080
+        path: "/"
+    annotations:
+      nginx.ingress.kubernetes.io/affinity: cookie
+      nginx.ingress.kubernetes.io/affinity-mode: persistent
+  
+  configOverride:
+    nifiProperties:
+      upsert:
+        nifi.sensitive.props.algorithm: "NIFI_PBKDF2_AES_GCM_256"
+    bootstrapConf:
+      upsert:
+        java.arg.2: -Xms2g
+        java.arg.3: -Xmx4g
+  

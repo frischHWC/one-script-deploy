@@ -1,0 +1,132 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# General
+cloudera_manager_host: ${NODE_0}
+cloudera_manager_user: admin
+cloudera_manager_password: admin
+cm_version: ${CM_VERSION}
+
+pvc_version: ${PVC_VERSION}
+cluster_name: ${CLUSTER_NAME}
+cluster_name_pvc: ${CLUSTER_NAME_PVC}
+ipa_server: ${NODE_IPA}
+free_ipa: ${FREE_IPA}
+debug: ${DEBUG}
+
+kube_config_path: ${KUBECONFIG_PATH}
+docker_registry: container.repository.cloudera.com
+docker_registry_user: ${PAYWALL_USER}
+docker_registry_password: ${PAYWALL_PASSWORD}  
+paywall_user: ${PAYWALL_USER}
+paywall_password: ${PAYWALL_PASSWORD}  
+license_file: ${LICENSE_FILE}
+
+pvc_type: ${PVC_TYPE}
+pvc_ecs_server_host: ${PVC_ECS_SERVER_HOST}
+auto_tls: ${TLS}
+use_root_ca: ${USE_ROOT_CA}
+root_ca_cert: ${ROOT_CA_CERT}
+root_ca_key: ${ROOT_CA_KEY}
+oc_tar_file_path: ${OC_TAR_FILE_PATH}
+pvc_app_domain: ${PVC_APP_DOMAIN}
+default_admin_user: ${DEFAULT_ADMIN_USER}
+
+
+# K8s operator
+deploy_cert_manager: ${DEPLOY_CERT_MANAGER}
+
+## CFM
+namespace_cfm_operator: "cfm-operator"
+cfm_operator_version: ${CFM_OPERATOR_VERSION}
+cfm_to_deploy: ${CFM_OPERATOR_DEPLOY}
+cfm_nifi_to_deploy: ${CFM_OPERATOR_NIFI_DEPLOY}
+nifis:
+  - name: "nifi"
+    namespace: "nifi"
+    replicas: 1
+    tag: 2.9.0-b96-nifi_2.0.0.4.3.1.0-56 # Or: 2.9.0-b96-nifi_1.27.0.2.3.14.0-14
+    requests_cpu: 500m # default is 200m
+    requests_mem: 2G # defaults is 2G
+    limits_cpu: 2 # default is 1
+    limits_mem: 8G # Default is 4G
+nifiregistries:
+  - name: "nifi-registry"
+    namespace: "nifi-registry"
+    tag: 2.9.0-b96-nifi_1.27.0.2.3.14.0-14 # Or: 2.9.0-b96-nifi_1.27.0.2.3.14.0-14
+    requests_cpu: 100m # default is 200m
+    requests_mem: 512M # defaults is 1G
+    limits_cpu: 500m # default is 500m
+    limits_mem: 2G # Default is 2G
+
+## CSA
+namespace_csa_operator: "csa-operator"
+csa_operator_version: ${CSA_OPERATOR_VERSION}
+csa_to_deploy: ${CSA_OPERATOR_DEPLOY}
+csa_nifi_to_deploy: ${CSA_OPERATOR_FLINK_DEPLOY}
+csa_operator:
+  op_mem_req: "512Mi"
+  op_mem_cpu: "100m"
+  op_mem_lim: "1Gi"
+  op_cpu_lim: "500m"
+  wh_mem_req: "256Mi"
+  wh_mem_cpu: "100m"
+  wh_mem_lim: "512Mi"
+  wh_cpu_lim: "250m"
+csa_ssb:
+  mem_req: "1Gi"
+  cpu_req: "250m"
+  mem_lim: "2Gi"
+  cpu_lim: "1"
+csa_db:
+  mem_req: "256Mi"
+  cpu_req: "150m"
+  mem_lim: "1Gi"
+  cpu_lim: "250m"
+
+
+## Kafka
+namespace_kafka_operator: "kafka-operator"
+kafka_operator_version: ${KAFKA_OPERATOR_VERSION}
+kafka_to_deploy: ${KAFKA_OPERATOR_DEPLOY}
+kafka_kafka_to_deploy: ${KAFKA_OPERATOR_KAFKA_DEPLOY}
+kafka_operator:
+  mem_req: "1Gi"
+  cpu_req: "250m"
+  mem_lim: "2Gi"
+  cpu_lim: "1"
+kafkas:
+  - name: "my-kafka-cluster"
+    namespace: "kafka-cluster"
+    kafka_version: 3.9.0.1.3
+    controller:
+      replicas: 3
+      pvc_size: 10Gi
+    broker:
+      replicas: 3
+      pvc_size: 10Gi
+
+
+# default values
+helm_bin_path_ecs: "/opt/cloudera/parcels/ECS/installer/install/bin/linux/helm"
+kubeconfig_ecs: "/etc/rancher/rke2/rke2.yaml"
+namespace_cert_manager: cert-manager
+cert_manager_version: 1.17.0
+
+

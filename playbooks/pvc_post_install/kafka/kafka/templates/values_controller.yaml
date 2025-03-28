@@ -1,0 +1,19 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: "{{ kafka.name }}-controller"
+  namespace: "{{ kafka.namespace }}"
+  labels:
+    strimzi.io/cluster: "{{ kafka.name }}"
+spec:
+  replicas: {{ kafka.controller.replicas }}
+  roles:
+    - controller
+  storage:
+    type: jbod
+    volumes:
+      - id: 0
+        type: persistent-claim
+        size: "{{ kafka.controller.pvc_size | default('10Gi') }}"
+        kraftMetadata: shared
+        deleteClaim: false

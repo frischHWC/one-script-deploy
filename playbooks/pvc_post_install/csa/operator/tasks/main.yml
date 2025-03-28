@@ -1,0 +1,61 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+- name: Set up namespace
+  include_role:
+    name: ../set_namespace
+  vars: 
+    namespace: "{{ namespace_csa_operator }}"
+
+- name: Get license File Content
+  set_fact:
+    license_file_content: "{{ lookup('file', license_file) | replace('\n', '\\n') | replace('\"', '\\\"' ) }}"
+
+- name: Helm registry login
+  shell: |
+    {{ helm_bin_path_ecs }} registry login https://{{ docker_registry }} \
+    -u {{ docker_registry_user }} \
+    -p {{ docker_registry_password }}
+
+# - name: Add CLDR repository
+#   kubernetes.core.helm_repository:
+#     binary_path: "{{ helm_bin_path_ecs }}"
+#     name: cldr-repo
+#     repo_url: "https://{{ docker_registry }}/cloudera-helm"
+#     username: "{{ docker_registry_user }}"
+#     password: "{{ docker_registry_password }}"
+
+- name: DEBUG - values.yaml
+  debug:
+    msg: "{{ lookup('template', 'values.yaml') | from_yaml }}"
+  when: debug | default(false)
+
+- name: Install CSA Operator
+  kubernetes.core.helm:
+    binary_path: "{{ helm_bin_path_ecs }}"
+    name: csa-operator
+    state: present
+    chart_ref: "oci://{{ docker_registry }}/cloudera-helm/csa-operator/csa-operator"
+    chart_version: "{{ csa_operator_version }}"
+    release_namespace: "{{ namespace_csa_operator }}"
+    values: "{{ lookup('template', 'values.yaml') | from_yaml }}"
+
+
+
+

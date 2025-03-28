@@ -1,0 +1,39 @@
+apiVersion: cfm.cloudera.com/v1alpha1
+kind: NifiRegistry
+metadata:
+  name: "{{ nifireg.name }}"
+  namespace: "{{ nifireg.namespace }}"
+spec:
+  resources:
+    nifiRegistry:
+      requests:
+        cpu: "{{ nifireg.requests_cpu | default('200m') }}"
+        memory: "{{ nifireg.requests_mem | default('1G') }}"
+      limits:
+        cpu: "{{ nifireg.limits_cpu | default('500m') }}"
+        memory: "{{ nifireg.limits_mem | default('2G') }}"
+
+  image:
+    repository: "{{ docker_registry }}/cloudera/cfm-nifiregistry-k8s"
+    tag: "{{ nifireg.tag }}"
+  tiniImage:
+    repository: "{{ docker_registry }}/cloudera/cfm-tini"
+    tag: "{{ cfm_operator_version }}"
+
+  hostName: "{{ nifireg.name }}.apps.{{ pvc_app_domain }}"
+  uiConnection:
+    serviceConfig:
+      sessionAffinity: ClientIP
+    type: Ingress
+    ingressConfig:
+      ingressTLS:
+      - hosts:
+        - "{{ nifireg.name }}.apps.{{ pvc_app_domain }}"
+        secretName: "{{ nifireg.name }}-ingress-cert"
+      paths:
+      - port: 18080
+        path: "/"
+    annotations:
+      nginx.ingress.kubernetes.io/affinity: cookie
+      nginx.ingress.kubernetes.io/affinity-mode: persistent
+  

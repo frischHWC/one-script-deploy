@@ -1,0 +1,12 @@
+watchAnyNamespace: true
+imagePullSecrets:
+- name: docker-registry-secret
+clouderaLicense:
+  fileContent: "{{ license_file_content }}"
+resources:
+  requests:
+    cpu: "{{ kafka_operator.cpu_req | default('100m') }}"
+    memory: "{{ kafka_operator.mem_req | default('256Mi') }}"
+  limits:
+    cpu: "{{ kafka_operator.cpu_lim | default('500m') }}"
+    memory: "{{ kafka_operator.mem_lim | default('1Gi') }}"

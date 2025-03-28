@@ -1,0 +1,77 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+- name: Set up namespace
+  include_role:
+    name: ../set_namespace
+  vars: 
+    namespace: "{{ namespace_cfm_operator }}"
+
+- name: Download cfmctl
+  get_url:
+    url: https://archive.cloudera.com/p/cfm-operator/cfmctl-linux-amd64
+    dest: /root/
+    mode: 0755
+    username: "{{ paywall_user }}"
+    password: "{{ paywall_password }}"
+
+- name: Download Helm charts
+  get_url:
+    url: "https://archive.cloudera.com/p/cfm-operator/cfm-operator-{{ cfm_operator_version }}.tgz"
+    dest: /root/
+    username: "{{ paywall_user }}"
+    password: "{{ paywall_password }}"
+
+- name: Read license file
+  set_fact:
+    license_file_content: "{{ lookup('file', license_file ) }}"
+
+- name: DEBUG - license_file_content
+  debug:
+    msg: "{{ license_file_content }}"
+  when: debug | default(false)
+
+- name: Create License secret
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      api_version: v1
+      kind: Secret
+      type: Opaque
+      metadata:
+        name: cfm-operator-license
+        namespace: "{{ namespace_cfm_operator }}"
+      data:
+        license.txt: "{{ license_file_content | b64encode }}"
+
+
+- name: DEBUG - values.yaml
+  debug:
+    msg: "{{ lookup('template', 'values.yaml') | from_yaml }}"
+  when: debug | default(false)
+
+- name: Install CFM Operator
+  kubernetes.core.helm:
+    binary_path: "{{ helm_bin_path_ecs }}"
+    name: cfm-operator
+    state: present
+    wait: true
+    chart_ref: "/root/cfm-operator-{{ cfm_operator_version }}.tgz"
+    release_namespace: "{{ namespace_cfm_operator }}"
+    values: "{{ lookup('template', 'values.yaml') | from_yaml }}"

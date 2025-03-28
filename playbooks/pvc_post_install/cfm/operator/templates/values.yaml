@@ -1,0 +1,5 @@
+installCRDs: true
+image:
+  repository: "{{ docker_registry }}/cloudera/cfm-operator"
+  tag: "{{ cfm_operator_version }}"
+licenseSecret: cfm-operator-license

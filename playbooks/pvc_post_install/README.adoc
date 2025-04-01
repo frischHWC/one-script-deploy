@@ -1,0 +1,126 @@
+# CDP K8s Operators Installation
+
+
+## Requirements
+
+Have ansible installed locally.
+
+Have Pyhon 3.11 installed on remote controller.
+
+Have a valid license file.
+
+Have KUBECONFIG variable set on remote controller, and kubernetes and helm deployed (it is already the case if using ECS).
+
+
+## Files
+
+Hosts file:
+
+```
+<Ansible_Host> ansible_connection=ssh        ansible_user=root
+```
+
+Extra-vars.yml file:
+(Replace with your values)
+
+```
+docker_registry: <DOCKER_REGISTRY_DEFAULT_TO__container.repository.cloudera.com>
+docker_registry_user: <DOCKER_REGISTRY_USER>
+docker_registry_password: <DOCKER_REGISTRY_PASSWORD>
+paywall_user: <CLOUDERA_PAYWALL_USER>
+paywall_password: <CLOUDERA_PAYWALL_PASSWORD>
+license_file: <LOCAL_PATH_TO_LICENSE_FILE>
+
+pvc_ecs_server_host: <REMOTE_ANSIBLE_CONTROLLER>
+pvc_app_domain: <APP_DOMAIN_USUALLY_K8S_FIRST_NODE>
+
+# K8s
+helm_bin_path_ecs: "/opt/cloudera/parcels/ECS/installer/install/bin/linux/helm"
+kubeconfig_ecs: "/etc/rancher/rke2/rke2.yaml"
+
+# K8s operator
+deploy_cert_manager: true
+namespace_cert_manager: cert-manager
+cert_manager_version: 1.17.0
+
+## CFM
+namespace_cfm_operator: "cfm-operator"
+cfm_operator_version: 2.9.0-b96
+cfm_to_deploy: true
+cfm_nifi_to_deploy: true
+nifis:
+  - name: "nifi"
+    namespace: "nifi"
+    replicas: 1
+    tag: 2.9.0-b96-nifi_2.0.0.4.3.1.0-56 # Or: 2.9.0-b96-nifi_1.27.0.2.3.14.0-14
+    requests_cpu: 500m # default is 200m
+    requests_mem: 2G # defaults is 2G
+    limits_cpu: 2 # default is 1
+    limits_mem: 8G # Default is 4G
+nifiregistries:
+  - name: "nifi-registry"
+    namespace: "nifi-registry"
+    tag: 2.9.0-b96-nifi_1.27.0.2.3.14.0-14 # Or: 2.9.0-b96-nifi_1.27.0.2.3.14.0-14
+    requests_cpu: 100m # default is 200m
+    requests_mem: 512M # defaults is 1G
+    limits_cpu: 500m # default is 500m
+    limits_mem: 2G # Default is 2G
+
+## CSA
+namespace_csa_operator: "csa-operator"
+csa_operator_version: 1.2.0-b27
+csa_to_deploy: true
+csa_nifi_to_deploy: true
+csa_operator:
+  op_mem_req: "512Mi"
+  op_mem_cpu: "100m"
+  op_mem_lim: "1Gi"
+  op_cpu_lim: "500m"
+  wh_mem_req: "256Mi"
+  wh_mem_cpu: "100m"
+  wh_mem_lim: "512Mi"
+  wh_cpu_lim: "250m"
+csa_ssb:
+  mem_req: "1Gi"
+  cpu_req: "250m"
+  mem_lim: "2Gi"
+  cpu_lim: "1"
+csa_db:
+  mem_req: "256Mi"
+  cpu_req: "150m"
+  mem_lim: "1Gi"
+  cpu_lim: "250m"
+
+
+## Kafka
+namespace_kafka_operator: "kafka-operator"
+kafka_operator_version: 1.3.0-b52
+kafka_to_deploy: true
+kafka_kafka_to_deploy: true
+kafka_operator:
+  mem_req: "1Gi"
+  cpu_req: "250m"
+  mem_lim: "2Gi"
+  cpu_lim: "1"
+kafkas:
+  - name: "my-kafka-cluster"
+    namespace: "kafka-cluster"
+    kafka_version: 3.9.0.1.3
+    controller:
+      replicas: 3
+      pvc_size: 10Gi
+    broker:
+      replicas: 3
+      pvc_size: 10Gi
+
+
+```
+
+
+## Launch
+
+Command:
+
+    ansible-playbook -i hosts main.yml --extra-vars extra_vars_test.yml -e ansible_python_interpreter=$PATH_TO_PYTHON_3_11
+
+

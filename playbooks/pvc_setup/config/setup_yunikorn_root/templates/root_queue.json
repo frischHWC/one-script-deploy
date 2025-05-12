@@ -1,6 +1,6 @@
 {
   "pool": {
-    "path": "root.default",
+    "path": "{{ yunikorn_root_queue.name }}",
     "quota": {
       "memory": "{{ yunikorn_root_queue.mem }}",
       "cpu": "{{ yunikorn_root_queue.cpu }}",

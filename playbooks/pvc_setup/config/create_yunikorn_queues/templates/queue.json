@@ -1,6 +1,6 @@
 {
   "pool": {
-    "path": "root.default.{{ queue.name }}",
+    "path": "{{ queue.name }}",
     "quota": {
       "memory": "{{ queue.mem_max | default('100G') }}",
       "cpu": "{{ queue.cpu_max | default('25') }}",

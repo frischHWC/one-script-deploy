@@ -267,12 +267,13 @@ user_rights:
 #####################  
 setup_yunikorn_queues: true
 yunikorn_root_queue:
+  name: "root.{{ cluster_name_pvc }}-env"
   mem: 1T
   cpu: 1000
   gpu: 2
 
 yunikorn_child_queues:
-  - name: finance # Required
+  - name: "root.{{ cluster_name_pvc }}-env.finance" # Required
     # Optional
     mem_max: 500G # Optionnal default to 100G
     cpu_max: 250 # Optionnal defautl to 25
@@ -293,7 +294,7 @@ yunikorn_child_queues:
     tags: 
       - "experience:cml"
 
-  - name: customer
+  - name: "root.{{ cluster_name_pvc }}-env.customer"
     mem_max: 250G
     cpu_max: 150
     gpu_max: 2
@@ -304,7 +305,7 @@ yunikorn_child_queues:
     tags: 
       - "experience:cml"
 
-  - name: industry
+  - name: "root.{{ cluster_name_pvc }}-env.industry"
     mem_max: 350G
     cpu_max: 300
     mem_guaranteed: 150G

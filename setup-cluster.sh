@@ -66,6 +66,7 @@ export CEM_VERSION="2.2.0.0"
 export SPARK3_VERSION="3.3.7191000.3"
 export OBSERVABILITY_VERSION="3.5.3-h1"
 export PVC_VERSION="1.5.4-h15"
+export DATAVIZ_VERSION="8.0.3"
 
 export AMBARI_VERSION="2.7.5.0"
 export HDP_VERSION="3.1.5.6091"
@@ -80,6 +81,7 @@ export CFM_BASE_REPO=
 export CEM_BASE_REPO=
 export SPARK3_BASE_REPO=
 export OBSERVABILITY_BASE_REPO=
+export DATAVIZ_BASE_REPO=
 export AMBARI_REPO=
 export HDP_REPO=
 export HDF_REPO=
@@ -123,6 +125,7 @@ export USE_CFM="false"
 export USE_CEM="false"
 export USE_SPARK3="false"
 export USE_OBSERVABILITY="false"
+export USE_DATAVIZ="false"
 
 # OBSERVABILITY Related
 export ALTUS_KEY_ID=
@@ -267,6 +270,7 @@ function usage()
     echo "  --hdf-version=$HDF_VERSION : (Optional) Version of HDP (Default) $HDF_VERSION "
     echo "  --spark3-version=$SPARK3_VERSION : (Optional) Version of SPARK3 (Default) $SPARK3_VERSION"
     echo "  --observability-version=$OBSERVABILITY_VERSION : (Optional) Version of OBSERVABILITY (Default) $OBSERVABILITY_VERSION"
+    echo "  --dataviz-version=$DATAVIZ_VERSION : (Optional) Version of Dataviz (Default) $DATAVIZ_VERSION"
     echo "  --pvc-version=$PVC_VERSION : (Optional) Version of PVC for CDP deployment (Default) $PVC_VERSION "
     echo "  --jdk-version=$JDK_VERSION : (Optional) Version of JDK (Default) $JDK_VERSION "
     echo ""
@@ -277,6 +281,7 @@ function usage()
     echo "  --cem-repo=$CEM_BASE_REPO : (Optional) repo of CEM (Default) $CEM_BASE_REPO "
     echo "  --spark3-repo=$SPARK3_BASE_REPO : (Optional) repo of SPARK3 (Default) $SPARK3_BASE_REPO "
     echo "  --observability-repo=$OBSERVABILITY_BASE_REPO : (Optional) repo of OBSERVABILITY (Default) $OBSERVABILITY_BASE_REPO "
+    echo "  --dataviz-repo=$DATAVIZ_BASE_REPO : (Optional) repo of Dataviz (Default) $DATAVIZ_REPO "
     echo "  --ambari-repo=$AMBARI_REPO : (Optional) repo of Ambari (Default) $AMBARI_REPO "
     echo "  --hdp-repo=$HDP_REPO : (Optional) repo of HDP (Default) $HDP_REPO "
     echo "  --hdf-repo=$HDF_REPO : (Optional) repo of HDP (Default) $HDF_REPO "
@@ -336,6 +341,7 @@ function usage()
     echo "  --use-cem=$USE_CEM : (Optional) Use of CEM (Default) $USE_CEM "
     echo "  --use-spark3=$USE_SPARK3 : (Optional) Use of Spark 3 (Default) $USE_SPARK3 "
     echo "  --use-observability=$USE_OBSERVABILITY : (Optional) Use of OBSERVABILITY (Default) $USE_OBSERVABILITY "
+    echo "  --use-dataviz=$USE_DATAVIZ: (Optional) Use of Dataviz (Default) $USE_DATAVIZ "
     echo ""
     echo "  --altus-key-id=$ALTUS_KEY_ID : (Optional) Altus key ID needed for OBSERVABILITY (Default) $ALTUS_KEY_ID "
     echo "  --altus-private-key=$ALTUS_PRIVATE_KEY : (Optional) Path to th Altus Private Key file needed for OBSERVABILITY (Default) $ALTUS_PRIVATE_KEY "
@@ -510,6 +516,9 @@ while [ "$1" != "" ]; do
         --observability-version)
             OBSERVABILITY_VERSION=$VALUE
             ;;
+        --dataviz-version)
+            DATAVIZ_VERSION=$VALUE
+            ;;
         --pvc-version)
             PVC_VERSION=$VALUE
             ;;
@@ -545,6 +554,9 @@ while [ "$1" != "" ]; do
             ;;
         --observability-repo)
             OBSERVABILITY_BASE_REPO=$VALUE
+            ;;
+        --dataviz-repo)
+            DATAVIZ_BASE_REPO=$VALUE
             ;;
         --pvc-repo)
             PVC_REPO=$VALUE
@@ -698,6 +710,9 @@ while [ "$1" != "" ]; do
             ;;    
         --use-observability)
             USE_OBSERVABILITY=$VALUE
+            ;;
+        --use-dataviz)
+            USE_DATAVIZ=$VALUE
             ;;
         --altus-key-id)
             ALTUS_KEY_ID=$VALUE
@@ -871,6 +886,7 @@ then
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-73X/ansible-cdp-all-services/extra_vars.yml"
         export USE_CSA="true"
         export USE_CFM="true"
+        export USE_DATAVIZ="true"
     elif [ "${CLUSTER_TYPE}" = "all-services-pvc-oc" ]
     then
         export ANSIBLE_HOST_FILE="ansible-cdp-73X/ansible-cdp-all-services-pvc-oc/hosts"
@@ -1237,10 +1253,27 @@ then
         export OBSERVABILITY_CSD="https://archive.cloudera.com/p/observability/${OBSERVABILITY_VERSION}/csd/${OBSERVABILITY_CSD_JAR}"
     else
         export OBSERVABILITY_REPO="${OBSERVABILITY_BASE_REPO}/parcels/"
-        export OBSERVABILITY_CSD_JAR=$(curl -s -X GET ${OBSERVABILITY_BASE_REPO}/csd/ | grep .jar | grep NIFI- | cut -d '>' -f 3 | cut -d '<' -f 1)
+        export OBSERVABILITY_CSD_JAR=$(curl -s -X GET ${OBSERVABILITY_BASE_REPO}/csd/ | grep .jar | grep OBSERVABILITY | cut -d '>' -f 3 | cut -d '<' -f 1)
         export OBSERVABILITY_CSD="${OBSERVABILITY_BASE_REPO}/csd/${OBSERVABILITY_CSD_JAR}"
     fi
 fi
+
+if [ "${USE_DATAVIZ}" = "true" ]
+then
+    if [ -z "${DATAVIZ_BASE_REPO}" ] 
+    then
+        # TODO: Change it once Dataviz is out 
+        export DATAVIZ_REPO="https://archive.cloudera.com/p/viz/${DATAVIZ_VERSION}/parcels/"
+        export DATAVIZ_CSD_JAR=$(curl -s -X GET -u ${PAYWALL_USER}:${PAYWALL_PASSWORD} https://archive.cloudera.com/p/viz/${DATAVIZ_VERSION}/8.x/${OS_BY_CLDR}${OS_VERSION:0:1}/yum/ | grep .jar | grep DATAVIZ | cut -d '>' -f 3 | cut -d '<' -f 1)
+        export DATAVIZ_CSD="https://archive.cloudera.com/p/viz/${DATAVIZ_VERSION}/8.x/${OS_BY_CLDR}${OS_VERSION:0:1}/yum/${DATAVIZ_CSD_JAR}"
+    else
+        export DATAVIZ_REPO="${DATAVIZ_BASE_REPO}/parcels/"
+        export DATAVIZ_CSD_JAR=$(curl -s -X GET ${DATAVIZ_BASE_REPO}/${OS_BY_CLDR}${OS_VERSION:0:1}/yum/ | grep .jar | grep DATAVIZ | cut -d '>' -f 2 | cut -d '<' -f 1)
+        export DATAVIZ_CSD="${DATAVIZ_BASE_REPO}/${OS_BY_CLDR}${OS_VERSION:0:1}/yum/${DATAVIZ_CSD_JAR}"
+    fi
+fi
+
+
 
 if [ "${DISTRIBUTION_TO_DEPLOY}" = "CDP" ] && [ -z ${DATAGEN_CSD_URL} ] && [ -z ${DATAGEN_REPO_PARCEL} ]
 then

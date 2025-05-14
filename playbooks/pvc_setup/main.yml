@@ -143,6 +143,13 @@
     - role: tools/setup_k9s
       when: setup_pvc_tools and not skip_pvc_prereqs
 
+- name: Install k8s compute resource usage 
+  hosts: "{{ pvc_ecs_server_host }}"
+  gather_facts: false
+  roles: 
+    - role: tools/setup_k8s_usage
+      when: setup_pvc_tools and not skip_pvc_prereqs
+
 
 ## Yunikorn Queues ###
 - name: Set Root Queue Size 
@@ -163,7 +170,7 @@
       vars: 
         queue: "{{ item }}"
       ignore_errors: yes
-      when: setup_yunikorn_queues
+      when: setup_yunikorn_queues and pvc_version is version('1.5.5', '<')
 
 - name: Install Yunikorn Ingress
   hosts: "{{ cloudera_manager_host }}"
@@ -173,6 +180,14 @@
       when: setup_pvc_tools | default(false)
 
 ## ENV ###
+- name: Delete Default environment
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: false
+  roles: 
+    - name: common/delete_env
+      when: pvc_version is version('1.5.4', '>=') and pvc_eco_resources
+      ignore_errors: yes
+
 - name: Create environments
   hosts: "{{ cloudera_manager_host }}"
   gather_facts: false
@@ -310,6 +325,18 @@
       when: cmlr | default(false)
       ignore_errors: yes
 
+- name: Create Cloudera Machine Learning Inference Services
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: true
+  tasks: 
+    - name: create CML Inf Services
+      include_role:
+        name: cml/create_cml_inf
+      with_items: "{{ ml_inf_services }}"
+      vars: 
+        ml_inf: "{{ item }}"
+      when: cmlinf and pvc_version is version('1.5.5', '>=') | default(false)
+      ignore_errors: yes
 
 - name: Create Cloudera Machine Learning
   hosts: "{{ cloudera_manager_host }}"

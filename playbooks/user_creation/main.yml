@@ -77,6 +77,13 @@
       vars:
         user: "{{ item }}"
 
+- name: Set automatic user's kinit
+  hosts: cluster
+  gather_facts: false
+  roles: 
+    - role: setup_user_auto_kinit
+      when: kerberos
+
 - name: Create users environment
   hosts: edge
   gather_facts: false

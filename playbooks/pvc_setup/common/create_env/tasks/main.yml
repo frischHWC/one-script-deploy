@@ -105,6 +105,13 @@
     timeout: 15
   when: is_env_existing and env.to_delete
 
+- set_fact:
+    create_env_template: 'create_environment.json'
+
+- set_fact:
+    create_env_template: 'create_environment_1_5_5.json'
+  when: pvc_version is version('1.5.5', '>=')
+
 - name: Create environment
   uri:
     url: "{{ pvc_api_call }}/environments2/createPrivateEnvironment"
@@ -114,7 +121,7 @@
       Accept: application/json
       Cookie: "{{ all_cookies }}"
     body_format: json
-    body: "{{ lookup('template', 'create_environment.json') }}"
+    body: "{{ lookup('template', '{{ create_env_template }}') }}"
     status_code: 200
     return_content: yes
     validate_certs: no

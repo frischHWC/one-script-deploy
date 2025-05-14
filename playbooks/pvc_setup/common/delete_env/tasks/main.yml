@@ -17,20 +17,21 @@
 # under the License.
 #
 ---
-# Get CML endpoint
+# Set default env
 - set_fact:
-    cml_endpoint_api: "{{ cdp_endpoint_url }}/api/v1/ml"
+    default_env: "{{ pvc_app_domain.split('.')[0]  }}-env"
 
-- name: DEBUG - cml_endpoint_api
+- name: DEBUG - default_env
   debug:
-    msg: "{{ cml_endpoint_api }}"
+    msg: "{{ default_env }}"
+  when: debug | default(false)
 
-# Get env CRN
+# List environments
 - name: List Environments and get its crn
   uri:
     url: "{{ pvc_api_call }}/environments2/listEnvironments"
     method: POST
-    headers:
+    headers: 
       Content-Type: application/json
       Accept: application/json
       Cookie: "{{ all_cookies }}"
@@ -41,85 +42,59 @@
     validate_certs: no
   register: env_details
 
-- name: DEBUG - env_details
-  debug:
-    msg: "{{ env_details }}"
-  when: debug | default(false)
-
 - set_fact:
     env_crn: "{{ env_details.json | community.general.json_query(query) }}"
   vars:
-    query: "environments[?environmentName == '{{ ml_registry.env_name }}' ].crn | [0]"
-    
+    query: "environments[?environmentName == '{{ default_env }}' ].crn | [0]"
+
 - name: DEBUG - env_crn
   debug:
     msg: "{{ env_crn }}"
-
-# List and delete old CML Registry 
-- name: List ML Registries
-  uri:
-    url: "{{ cml_endpoint_api }}/listModelRegistries"
-    method: POST
-    headers: 
-      Accept: "*/*"
-      Accept-Encoding: gzip, deflate, br
-      Content-Type: application/json
-      Cookie: "{{ all_cookies }}"
-    body_format: json
-    body: "{}"
-    status_code: [200, 202]
-    return_content: yes
-    validate_certs: no
-  register: ml_registries_answer
-
-- name: DEBUG - ml_registries_answer
-  debug:
-    msg: "{{ ml_registries_answer }}"
   when: debug | default(false)
 
 - set_fact:
-    mlr_crn: "{{ ml_registries_answer.json | community.general.json_query(query) }}"
-  vars:
-    query: "modelRegistries[?environmentName == '{{ ml_registry.env_name }}' ].crn | [0]"
-    
-- name: DEBUG - mlr_crn
-  debug:
-    msg: "{{ mlr_crn }}"
+    is_env_existing: "{{ false if env_crn == '' else true }}"
 
-- name: Delete Model Registry
+- name: De-register environment
   uri:
-    url: "{{ cml_endpoint_api }}/deleteModelRegistry"
+    url: "{{ pvc_api_call }}/compute/deregisterClusters"
     method: POST
     headers: 
       Content-Type: application/json
       Accept: application/json
       Cookie: "{{ all_cookies }}"
     body_format: json
-    body: "{{ lookup('template', 'delete_cml_registry.json') }}"
-    status_code: [200, 202]
+    body: "{{ lookup('template', 'deregister_cluster.json') }}"
+    status_code: 200
     return_content: yes
     validate_certs: no
-  register: mlr_delete_answer
-  when: mlr_crn != '' 
+  register: env_deregister
 
-- name: DEBUG - mlr_delete_answer
+- name: DEBUG - env_deregister
   debug:
-    msg: "{{ mlr_delete_answer }}"
-  when: mlr_crn != '' 
+    msg: "{{ env_deregister }}"
+  when:  (debug | default(false))
 
+- name: Sleep for 5 seconds before deleting environment
+  wait_for:
+    timeout: 5
 
-# Create ML Registry
-- name: Create CML Registry
+- name: Delete environment
   uri:
-    url: "{{ cml_endpoint_api }}/createModelRegistry"
+    url: "{{ pvc_api_call }}/environments2/deleteEnvironment"
     method: POST
     headers: 
       Content-Type: application/json
       Accept: application/json
       Cookie: "{{ all_cookies }}"
     body_format: json
-    body: "{{ lookup('template', 'create_cml_registry.json') }}"
-    status_code: [200, 202]
+    body: "{{ lookup('template', 'delete_environment.json') }}"
+    status_code: 200
     return_content: yes
     validate_certs: no
+  register: env_delete
 
+- name: DEBUG - env_delete
+  debug:
+    msg: "{{ env_delete }}"
+  when: (debug | default(false))

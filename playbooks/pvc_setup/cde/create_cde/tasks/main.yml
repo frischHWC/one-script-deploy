@@ -113,6 +113,10 @@
   when: pvc_version is version('1.5.2', '>=')
 
 - set_fact:
+    activate_cde_template: 'activate_cde_v1.5.5.json'
+  when: pvc_version is version('1.5.5', '>=')
+
+- set_fact:
     create_vc_template: 'create_vc.json'
 
 - set_fact:
@@ -126,6 +130,10 @@
 - set_fact:
     create_vc_template: 'create_vc_v1.5.2.json'
   when: pvc_version is version('1.5.2', '>=')
+
+- set_fact:
+    create_vc_template: 'create_vc_v1.5.5.json'
+  when: pvc_version is version('1.5.5', '>=')
 
 - name: Create CDE Service
   uri:

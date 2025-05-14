@@ -1,0 +1,16 @@
+{
+  "items": [
+    {
+      "name": "cm_yarn_enable_container_usage_aggregation",
+      "value": "true"
+    },
+    {
+      "name": "cm_yarn_container_usage_job_user",
+      "value": "{{ default_admin_user }}"
+    },
+     {
+      "name": "cm_yarn_container_usage_job_pool",
+      "value": "root.default"
+    }
+  ]
+}

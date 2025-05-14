@@ -156,3 +156,27 @@
   gather_facts: false
   roles: 
     - { role: ranger_extra_policies, when: ranger_service_exists }
+
+
+# Spark Atlas Fixes
+- name: Spark Atlas TLS fixes
+  hosts: cluster
+  gather_facts: false
+  roles: 
+    - { role: setup_spark_atlas_tls, when: atlas_service_exists and spark3_service_exists and auto_tls }
+
+
+# Kafka Fixes
+- name: Kafka CLI Setup
+  hosts: cluster
+  gather_facts: false
+  roles: 
+    - { role: setup_kafka_cli, when: kafka_service_exists and auto_tls }
+
+
+# YARN Container Metrics
+- name: YARN Container Metrics
+  hosts: main
+  gather_facts: false
+  roles: 
+    - { role: setup_yarn_container_metrics, when: distribution == 'CDP' }

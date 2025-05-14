@@ -86,6 +86,13 @@
     seconds: 60
   when: is_workspace_existing
 
+- set_fact:
+    create_cml_template: 'create_cml.json'
+
+- set_fact:
+    create_cml_template: 'create_cml_1_5_5.json'
+  when: pvc_version is version('1.5.5', '>=')
+
 # Create Workspace
 - name: Create CML Workspace
   uri:
@@ -96,7 +103,7 @@
       Accept: application/json
       Cookie: "{{ all_cookies }}"
     body_format: json
-    body: "{{ lookup('template', 'create_cml.json') }}"
+    body: "{{ lookup('template', '{{ create_cml_template }}') }}"
     status_code: [200, 202]
     return_content: yes
     validate_certs: no

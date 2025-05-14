@@ -33,6 +33,10 @@
   when: pvc_version is version('1.5.2', '>=')
 
 - set_fact:
+    activate_env_template: 'activate_env_v1.5.5.json'
+  when: pvc_version is version('1.5.5', '>=')
+
+- set_fact:
     create_hive_vw_template: 'create_hive_vw.json'
 
 - set_fact:
@@ -44,6 +48,10 @@
   when: pvc_version is version('1.5.4', '>=')
 
 - set_fact:
+    create_hive_vw_template: 'create_hive_vw_v1.5.5.json'
+  when: pvc_version is version('1.5.5', '>=')
+
+- set_fact:
     create_impala_vw_template: 'create_impala_vw.json'
 
 - set_fact:
@@ -53,6 +61,10 @@
 - set_fact:
     create_impala_vw_template: 'create_impala_vw_v1.5.4.json'
   when: pvc_version is version('1.5.4', '>=')
+
+- set_fact:
+    create_impala_vw_template: 'create_impala_vw_v1.5.5.json'
+  when: pvc_version is version('1.5.5', '>=')
 
 
 - name: Get Environment CRN

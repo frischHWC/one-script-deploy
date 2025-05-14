@@ -1,0 +1,53 @@
+{
+   "appName":"{{ ml_inf.name }}",
+   "namespace":"{{ ml_inf.name }}",
+   "skipValidation":true,
+   "environmentCrn":"{{ env_crn }}",
+   "clusterCrn":"{{ env_crn }}",
+   "provisionK8sRequest":{
+      "instanceGroups":[
+         {
+            "instanceType":"c6a.16xlarge",
+            "instanceTier":"",
+            "instanceCount":10,
+            "name":"",
+            "ingressRules":[
+               
+            ],
+            "autoscaling":{
+               "minInstances":10,
+               "maxInstances":10,
+               "enabled":true
+            }
+         }
+      ],
+      "environmentCrn":"{{ env_crn }}",
+      "network":{
+         "plugin":"",
+         "options":{
+            "encryption":""
+         },
+         "topology":{
+            "subnets":[
+               ""
+            ]
+         },
+         "serviceCidr":"",
+         "inboundProxyCidrs":[
+            ""
+         ],
+         "podCidr":""
+      },
+      "xEntitlements":[
+         ""
+      ]
+   },
+   "usePublicLoadBalancer":false,
+   "isPrivateCluster":true,
+   "mlservingVersion":"",
+   "ozoneS3Creds":{
+      "s3AccessID":"{{ ozone_aws_access_key }}",
+      "s3SecretAccessKey":"{{ ozone_aws_secret_access_key }}",
+      "s3EndPointUrl":"{{ ozone_s3_full_endpoint }}"
+   }
+}

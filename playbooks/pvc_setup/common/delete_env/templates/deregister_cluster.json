@@ -1,0 +1,3 @@
+{
+    "envNameOrCrn":"{{ default_env }}"
+}

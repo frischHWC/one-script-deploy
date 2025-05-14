@@ -108,6 +108,7 @@ export CREATE_CDW="true"
 export CREATE_CDE="true"
 export CREATE_CML="true"
 export CREATE_CML_REGISTRY="true"
+export CREATE_CML_INF="true"
 export CREATE_VIZ="true"
 export OC_TAR_FILE_PATH=""
 export CONFIGURE_OC="true"
@@ -318,6 +319,7 @@ function usage()
     echo "  --create-cde=$CREATE_CDE Optional, used to auto setup a CDE if PVC is deployed (Default) $CREATE_CDE"
     echo "  --create-cml=$CREATE_CML Optional, used to auto setup a CML if PVC is deployed (Default) $CREATE_CML"
     echo "  --create-cml-registry=$CREATE_CML_REGISTRY Optional, used to auto setup a CML Registry if PVC is deployed (Default) $CREATE_CML_REGISTRY"
+    echo "  --create-cml-inf=$CREATE_CML_INF (Optional) To setup a CML Registry (Default) $CREATE_CML_INF"
     echo "  --create-viz=$CREATE_VIZ Optional, used to auto setup a Data Viz if PVC is deployed (Default) $CREATE_VIZ"
     echo "  --pvc-eco-resources=$PVC_ECO_RESOURCES : (Optional) To reduce footprint of pvc deployment by making a mini-small cluster (Default) $PVC_ECO_RESOURCES"
     echo "  --ecs-gpu-dedicated-nodes=$ECS_GPU_DEDICATED_NODES : (Optional) To specify an ECS node that will be tainted for only GPU Use (assuming it has GPU) (Default) $ECS_GPU_DEDICATED_NODES"
@@ -641,6 +643,9 @@ while [ "$1" != "" ]; do
             ;;
         --create-cml-registry)
             CREATE_CML_REGISTRY=$VALUE
+            ;;
+        --create-cml-inf)
+            CREATE_CML_INF=$VALUE
             ;;
         --create-viz)
             CREATE_VIZ=$VALUE

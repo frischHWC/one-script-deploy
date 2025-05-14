@@ -1,0 +1,21 @@
+{
+  "environmentName": "{{ workspace.env_name }}",
+  "workspaceName": "{{ workspace.name }}" ,
+  "disableTLS": "{{ workspace.disable_tls | default(false) }}",
+  "enableMonitoring": "{{ workspace.enable_monitoring | default(true) }}",
+  "enableGovernance": "{{ workspace.enable_governance | default(false) }}",
+  "enableModelMetrics": "{{ workspace.enable_model_metrics | default(false) }}",
+  "existingDatabaseConfig": {},
+  "namespace": "{{ workspace.name }}",
+  "resourcePoolConfig": {
+    "workspaceQuota": {
+      "cpuQuota": "{{ workspace.cpu_quota | default('50') }}",
+      "memoryQuota": "{{ workspace.mem_quota | default('100') }} G"
+    }
+  },
+  "performCdswMigration": false,
+  "mlGovernancePrincipal": "{{ workspace.ml_gov_principal | default('mlgov') }}",
+  "nfsStorageClass": "{{ nfs_storage_class_to_use | default('longhorn') }}",
+  "nfsDiskSize": "{{ workspace.nfs_disk_size | default('1000') }}",
+  "staticSubdomain": "{{ workspace.static_sub_domain | default('') }}"
+}

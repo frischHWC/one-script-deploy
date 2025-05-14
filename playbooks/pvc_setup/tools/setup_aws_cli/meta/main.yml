@@ -19,3 +19,4 @@
 ---
 dependencies:
   - role: common/cm_config
+  - role: common/get_ozone_creds

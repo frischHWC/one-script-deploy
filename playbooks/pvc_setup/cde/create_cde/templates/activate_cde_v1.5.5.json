@@ -1,0 +1,38 @@
+{
+    "name": "{{ virtual_cluster.cde_service_name }}",
+    "env": "{{ virtual_cluster.env_name }}",
+    "config": {
+      "properties": {
+        "loadbalancer.internal": "true",
+        "dbus-wxm-client.enabled": "false",
+        "kubernetes.api.allowList": "",
+        "mount.SSD": "false",
+        "loadbalancer.allowList": "",
+        "kubernetes.api.proxyCIDRList": "",
+        "subnets": "",
+        "tls.enabled": "false", 
+        "yunikorn.disabled": "false",
+        "shared.cluster.enabled":"true",
+        "default-vc.create":"false",
+        "wildcard.certificates.enabled":"false",
+        "cde.deployPreviousVersion": "false",
+        "cluster.nfs.storageClass":"{{ virtual_cluster.storage_class | default('') }}"
+      },
+      "resources": {
+        "cluster_resource_pool_quota": {
+          "cpu_requests": "{{ virtual_cluster.service_pool_quota_cpu | default('32') }}",
+          "mem_requests": "{{ virtual_cluster.service_pool_quota_mem | default('72Gi') }}",
+          "gpu_requests": "{{ virtual_cluster.service_pool_quota_gpu | default('0') }}"
+        },
+        "base_resource_pool_quota": {
+          "cpu_requests": "{{ virtual_cluster.service_base_quota_cpu | default('20') }}",
+          "mem_requests": "{{ virtual_cluster.service_base_quota_mem | default('40Gi') }}",
+          "gpu_requests": "{{ virtual_cluster.service_base_quota_gpu | default('0') }}"
+        },
+        "resource_pool": "{{ virtual_cluster.queue | default('root.default') }}"
+      },
+  
+      "tags": {}
+    },
+    "skipValidation": true
+}

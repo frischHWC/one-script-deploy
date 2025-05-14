@@ -1,0 +1,8 @@
+{
+    "vizName":"{{ viz.name }}",
+    "template":"{{ viz.size }}-viz",
+    "resourceTemplate": "{{ viz_template_id | default('viz-default') }}",
+    "userGroups":["{{ viz.user_group | default('admin_group') }}"],
+    "adminGroups":["{{ viz.admin_group | default('admin_group') }}"],
+    "tags":[]
+}

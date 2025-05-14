@@ -25,6 +25,7 @@
   debug:
     msg: "{{ cml_endpoint_api }}"
 
+
 # Get env CRN
 - name: List Environments and get its crn
   uri:
@@ -49,16 +50,16 @@
 - set_fact:
     env_crn: "{{ env_details.json | community.general.json_query(query) }}"
   vars:
-    query: "environments[?environmentName == '{{ ml_registry.env_name }}' ].crn | [0]"
+    query: "environments[?environmentName == '{{ ml_inf.env_name }}' ].crn | [0]"
     
 - name: DEBUG - env_crn
   debug:
     msg: "{{ env_crn }}"
 
-# List and delete old CML Registry 
-- name: List ML Registries
+# List and delete old CML Inference Services 
+- name: List ML Inference Service
   uri:
-    url: "{{ cml_endpoint_api }}/listModelRegistries"
+    url: "{{ cml_endpoint_api }}/listMlServingApps"
     method: POST
     headers: 
       Accept: "*/*"
@@ -70,32 +71,32 @@
     status_code: [200, 202]
     return_content: yes
     validate_certs: no
-  register: ml_registries_answer
+  register: ml_inf_services_answer
 
-- name: DEBUG - ml_registries_answer
+- name: DEBUG - ml_inf_services_answer
   debug:
-    msg: "{{ ml_registries_answer }}"
+    msg: "{{ ml_inf_services_answer }}"
   when: debug | default(false)
 
 - set_fact:
-    mlr_crn: "{{ ml_registries_answer.json | community.general.json_query(query) }}"
+    mlr_crn: "{{ ml_inf_services_answer.json | community.general.json_query(query) }}"
   vars:
-    query: "modelRegistries[?environmentName == '{{ ml_registry.env_name }}' ].crn | [0]"
+    query: "apps[?appName == '{{ ml_inf.env_name }}' ].crn | [0]"
     
 - name: DEBUG - mlr_crn
   debug:
     msg: "{{ mlr_crn }}"
 
-- name: Delete Model Registry
+- name: Delete Inference Service
   uri:
-    url: "{{ cml_endpoint_api }}/deleteModelRegistry"
+    url: "{{ cml_endpoint_api }}/deleteMlServingApp"
     method: POST
     headers: 
       Content-Type: application/json
       Accept: application/json
       Cookie: "{{ all_cookies }}"
     body_format: json
-    body: "{{ lookup('template', 'delete_cml_registry.json') }}"
+    body: "{{ lookup('template', 'delete_cml_inf.json') }}"
     status_code: [200, 202]
     return_content: yes
     validate_certs: no
@@ -108,17 +109,17 @@
   when: mlr_crn != '' 
 
 
-# Create ML Registry
-- name: Create CML Registry
+# Create ML Inference Service
+- name: Create CML Inference Service
   uri:
-    url: "{{ cml_endpoint_api }}/createModelRegistry"
+    url: "{{ cml_endpoint_api }}/createMlServingApp"
     method: POST
     headers: 
       Content-Type: application/json
       Accept: application/json
       Cookie: "{{ all_cookies }}"
     body_format: json
-    body: "{{ lookup('template', 'create_cml_registry.json') }}"
+    body: "{{ lookup('template', 'create_cml_inf.json') }}"
     status_code: [200, 202]
     return_content: yes
     validate_certs: no

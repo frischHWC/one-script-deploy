@@ -1,0 +1,10 @@
+{
+  "clusterName": "{{ warehouse.env_name }}",
+  {% if pvc_type == 'OC' %}"storageClassName": "{{ local_block_storage_class }}",{% endif %}
+  "enableLowResourceMode": {{ warehouse.low_resource_mode | default('true') }},
+  "delegationUserName": "{{ delegation_username }}",
+  "delegationUserPassword": "{{ delegation_password }}",
+  "dedicatedExecutorNodes":  {{ warehouse.use_dedicated_nodes | default('false') }},
+  "skipValidation":true,
+  "envBootstrap":{"awsInfo":{},"azureInfo":{}}
+}

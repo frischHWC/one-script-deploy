@@ -43,6 +43,7 @@ cdw: ${CREATE_CDW}
 cde: ${CREATE_CDE}
 cml: ${CREATE_CML}
 cmlr: ${CREATE_CML_REGISTRY}
+cmlinf: ${CREATE_CML_INF}
 dataviz: ${CREATE_VIZ}
 pvc_type: ${PVC_TYPE}
 pvc_ecs_server_host: ${PVC_ECS_SERVER_HOST}
@@ -72,6 +73,11 @@ environments:
     cm_password: "{{ cloudera_manager_password }}"
     cluster_names: "{{ cluster_name }}"
     to_delete: false
+    # Starting from 1.5.5, quotas can be set at env creation
+    cpu_quota: 200 # default 100
+    mem_quota: 1000 # default 500 GB
+    gpu_quota: 2 # default 10
+
 
 ##################### 
 # CDW
@@ -89,8 +95,8 @@ warehouses:
     type: "hive" 
     # Optional
     size: "xsmall" # default = xsmall
-    dbc_queue: root.default.finance # default = root.default
-    vw_queue: root.default.finance # default = root.default
+    dbc_queue: "{% if pvc_version is version('1.5.5','<') %}root.default.finance{% else %}root.{{ cluster_name_pvc }}-env.cdw{% endif %}" # default = root.default
+    vw_queue: "{% if pvc_version is version('1.5.5','<') %}root.default.finance{% else %}root.{{ cluster_name_pvc }}-env.cdw{% endif %}" # default = root.default
     min_nodes: 1 # default = 1
     max_nodes: 5 # default = 5
     # Advanced
@@ -107,35 +113,35 @@ warehouses:
     query_isolation_max_nodes_per_query: 0 # default = 0
     allowed_group: "admin_group" # default = ''
 
-  # - name: "impala-1-{{ cluster_name }}"
-  #   database_catalog_name: "{{ cluster_name_pvc }}-env" # Since 1.5.1, DBC name should be the same than Env name
-  #   env_name: "{{ cluster_name_pvc }}-env"
-  #   low_resource_mode: true
-  #   type: "impala"
-  #   # Optional
-  #   size: "xsmall" # default = xsmall
-  #   dbc_queue: root.default.finance # default = root.default
-  #   vw_queue: root.default.finance # default = root.default
-  #   min_nodes: 1 # default = 1
-  #   max_nodes: 5 # default = 5
-  #   # Advanced
-  #   auto_suspend_timeout: 300 # default = 300
-  #   enable_ha: true # default = true
-  #   scale_up_delay: 20 # default = 20
-  #   scale_down_delay: 20 # default = 20
-  #   wait_time: 60 # default = 60
-  #   disable_auto_suspend: false # default = false
-  #   legacy_multithreading: false # default = false
-  #   query_isolation_max_queries: 0 # default = 0
-  #   query_isolation_max_nodes_per_query: 0 # default = 0
-  #   allowed_group: "admin_group" # default = ''
-  #   ha_type: "activepassive" # default = activepassive
-  #   enable_catalog_ha: true # default = true
-  #   enable_proxy: false # default = false
-  #   enable_shutdown: false # default = false
-  #   shutdown_delay: 300 # default = 300
-  #   all_coordinators_active: false # default = false
-  #   num_active_coordinators: 2 # default = 2
+  - name: "impala-1-{{ cluster_name }}"
+    database_catalog_name: "{{ cluster_name_pvc }}-env" # Since 1.5.1, DBC name should be the same than Env name
+    env_name: "{{ cluster_name_pvc }}-env"
+    low_resource_mode: true
+    type: "impala"
+    # Optional
+    size: "xsmall" # default = xsmall
+    dbc_queue: "{% if pvc_version is version('1.5.5','<') %}root.default.finance{% else %}root.{{ cluster_name_pvc }}-env.cdw{% endif %}" # default = root.default
+    vw_queue: "{% if pvc_version is version('1.5.5','<') %}root.default.finance{% else %}root.{{ cluster_name_pvc }}-env.cdw{% endif %}" # default = root.default
+    min_nodes: 1 # default = 1
+    max_nodes: 5 # default = 5
+    # Advanced
+    auto_suspend_timeout: 300 # default = 300
+    enable_ha: true # default = true
+    scale_up_delay: 20 # default = 20
+    scale_down_delay: 20 # default = 20
+    wait_time: 60 # default = 60
+    disable_auto_suspend: false # default = false
+    legacy_multithreading: false # default = false
+    query_isolation_max_queries: 0 # default = 0
+    query_isolation_max_nodes_per_query: 0 # default = 0
+    allowed_group: "admin_group" # default = ''
+    ha_type: "activepassive" # default = activepassive
+    enable_catalog_ha: true # default = true
+    enable_proxy: false # default = false
+    enable_shutdown: false # default = false
+    shutdown_delay: 300 # default = 300
+    all_coordinators_active: false # default = false
+    num_active_coordinators: 2 # default = 2
 
 
 ##################### 
@@ -145,7 +151,7 @@ vizs:
   - name: "viz-1-{{ cluster_name }}"
     env_name: "{{ cluster_name_pvc }}-env"
     size: "small" # default = small 
-    queue: root.default.finance # default = root.default
+    queue: "{% if pvc_version is version('1.5.5','<') %}root.default.finance{% else %}root.{{ cluster_name_pvc }}-env.cdw{% endif %}" # default = root.default
     admin_group: "admin_group" # (WARNING: It must exists in Control Plane) Group that will be added to be admin and access data viz
     user_group: "admin_group" # (WARNING: It must exists in Control Plane) Group that will be added to access data viz
 
@@ -165,14 +171,17 @@ workspaces:
     nfs_disk_size: 100 # default = 1000 (It is in GiB, so 1000 = 1 TiB)
     nfs_storage_class: longhorn # default = longhorn (change it if running on OC)
     ml_gov_principal: mlgov # default = mlgov
-    queue: root.default.customer # default = root.default
-    mem_quota: 100 # default = 50
-    cpu_quota: 40 # default = 20
+    queue: "{% if pvc_version is version('1.5.5','<') %}root.default.customer{% else %}root.{{ cluster_name_pvc }}-env.cml{% endif %}" # default = root.default
+    mem_quota: 200 # default = 100
+    cpu_quota: 50 # default = 50
 
 ml_registries:
   - name: "mlr"
     env_name: "{{ cluster_name_pvc }}-env"
 
+ml_inf_services:
+  - name: "cai-inf"
+    env_name: "{{ cluster_name_pvc }}-env"
 
 ##################### 
 # CDE
@@ -186,15 +195,15 @@ virtual_clusters:
     tier: tier-2 # default = tier-2
     session_timeout: 8h # default = 8h
     iceberg_enabled: true # default = false
-    queue: root.default.industry # default = root.default
-    service_pool_quota_cpu: 32 # default = 32
-    service_pool_quota_mem: 100Gi # default = 100Gi
+    queue: "{% if pvc_version is version('1.5.5','<') %}root.default.industry{% else %}root.{{ cluster_name_pvc }}-env.cde{% endif %}" # default = root.default
+    service_pool_quota_cpu: 44 # default = 32
+    service_pool_quota_mem: 104Gi # default = 72Gi
     service_pool_quota_gpu: 0 # default = 0
-    service_base_quota_cpu: 8 # default = 8
-    service_base_quota_mem: 20Gi # default = 20Gi
+    service_base_quota_cpu: 20 # default = 20
+    service_base_quota_mem: 40Gi # default = 40Gi
     service_base_quota_gpu: 0 # default = 0
     vc_quota_cpu: 24 # default = 12
-    vc_quota_mem: 96Gi # default = 32Gi
+    vc_quota_mem: 64Gi # default = 32Gi
     vc_quota_gpu: 0 # default = 0
     vc_quota_min_cpu: 16 # default = 8
     vc_quota_min_mem: 48Gi # default = 24Gi
@@ -267,13 +276,13 @@ user_rights:
 #####################  
 setup_yunikorn_queues: true
 yunikorn_root_queue:
-  name: "root.{{ cluster_name_pvc }}-env"
+  name: "{% if pvc_version is version('1.5.5','<') %}root.default{% else %}root.{{ cluster_name_pvc }}-env{% endif %}"
   mem: 1T
   cpu: 1000
   gpu: 2
 
 yunikorn_child_queues:
-  - name: "root.{{ cluster_name_pvc }}-env.finance" # Required
+  - name: "{% if pvc_version is version('1.5.5','<') %}root.default.finance{% else %}root.{{ cluster_name_pvc }}-env.finance{% endif %}" # Required
     # Optional
     mem_max: 500G # Optionnal default to 100G
     cpu_max: 250 # Optionnal defautl to 25
@@ -294,7 +303,7 @@ yunikorn_child_queues:
     tags: 
       - "experience:cml"
 
-  - name: "root.{{ cluster_name_pvc }}-env.customer"
+  - name: "{% if pvc_version is version('1.5.5','<') %}root.default.customer{% else %}root.{{ cluster_name_pvc }}-env.customer{% endif %}"
     mem_max: 250G
     cpu_max: 150
     gpu_max: 2
@@ -305,7 +314,7 @@ yunikorn_child_queues:
     tags: 
       - "experience:cml"
 
-  - name: "root.{{ cluster_name_pvc }}-env.industry"
+  - name: "{% if pvc_version is version('1.5.5','<') %}root.default.industry{% else %}root.{{ cluster_name_pvc }}-env.industry{% endif %}"
     mem_max: 350G
     cpu_max: 300
     mem_guaranteed: 150G
@@ -321,5 +330,5 @@ setup_classic_clusters: true
 classic_clusters:
  - cm_url: "https://${NODE_0}:7183"
    cm_user: admin
-   cm_password: admin
+   cm_password: ${DEFAULT_PASSWORD}
    user_to_register: admin 

@@ -200,6 +200,83 @@
   when: debug | default(false)
 
 
+- set_fact:
+    kafka_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'KAFKA'].name | [0]"
+
+- name: DEBUG - kafka_service_name
+  debug:
+    msg: "{{ kafka_service_name }}"
+  when: debug | default(false)
+
+- set_fact: 
+    kafka_service_exists: "{{ true if kafka_service_name != '' else false }}"
+
+- name: DEBUG - kafka_service_exists
+  debug:
+    msg: "{{ kafka_service_exists }}"
+  when: debug | default(false)
+
+
+- set_fact:
+    spark3_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'SPARK3_ON_YARN'].name | [0]"
+
+- name: DEBUG - spark3_service_name
+  debug:
+    msg: "{{ spark3_service_name }}"
+  when: debug | default(false)
+
+- set_fact: 
+    spark3_service_exists: "{{ true if spark3_service_name != '' else false }}"
+
+- name: DEBUG - spark3_service_exists
+  debug:
+    msg: "{{ spark3_service_exists }}"
+  when: debug | default(false)
+
+
+
+- set_fact:
+    spark_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'SPARK_ON_YARN'].name | [0]"
+
+- name: DEBUG - spark_service_name
+  debug:
+    msg: "{{ spark_service_name }}"
+  when: debug | default(false)
+
+- set_fact: 
+    spark_service_exists: "{{ true if spark_service_name != '' else false }}"
+
+- name: DEBUG - spark_service_exists
+  debug:
+    msg: "{{ spark_service_exists }}"
+  when: debug | default(false)
+
+
+
+- set_fact:
+    atlas_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"
+  vars:
+    query: "items[?type == 'ATLAS'].name | [0]"
+
+- name: DEBUG - atlas_service_name
+  debug:
+    msg: "{{ atlas_service_name }}"
+  when: debug | default(false)
+
+- set_fact: 
+    atlas_service_exists: "{{ true if atlas_service_name != '' else false }}"
+
+- name: DEBUG - atlas_service_exists
+  debug:
+    msg: "{{ atlas_service_exists }}"
+  when: debug | default(false)
+
 
 - set_fact:
     sr_service_name: "{{ cloudera_manager_all_services.json | community.general.json_query(query) }}"

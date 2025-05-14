@@ -1,0 +1,210 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+clusters:
+  - name: "{{ cluster_name }}"
+    # Remove undesired services below
+    services: [ATLAS, HBASE, HDFS, HIVE, HIVE_ON_TEZ, HUE, INFRA_SOLR, KAFKA, KNOX, OZONE, QUEUEMANAGER, RANGER, SPARK_ON_YARN, TEZ, YARN, ZOOKEEPER]
+    security:
+      kerberos: "{{ kerberos_activated }}"
+    repositories:
+      - "{{ cdh_repo }}"  
+    configs: 
+      ATLAS:
+        ATLAS_SERVER:
+          atlas_admin_password: "{{ default_password }}"
+          atlas_authentication_method_file: true
+          conf/atlas-application.properties_role_safety_valve: "atlas.proxyuser.dpprofiler.hosts=*\natlas.proxyuser.dpprofiler.users=*\natlas.proxyuser.dpprofiler.groups=*"
+      HBASE:
+        SERVICEWIDE:
+          hbase_restserver_security_authentication: "{{ hbase_auth }}"
+          hadoop_secure_web_ui: "{{ kerberos_activated }}"
+          hbase_superuser: "{{ default_admin_user }}"
+        REGIONSERVER:  
+          hbase_regionserver_wal_codec: org.apache.hadoop.hbase.regionserver.wal.IndexedWALEditCodec
+      HDFS:
+        SERVICEWIDE:
+          dfs_ha_fencing_methods: 'shell(true)'
+          dfs_namenode_acls_enabled: true
+          hdfs_verify_ec_with_topology_enabled: false
+          dfs_permissions_supergroup: admin_group
+          core_site_safety_valve: <property><name>hadoop.proxyuser.zeppelin.hosts</name><value>*</value></property><property><name>hadoop.proxyuser.zeppelin.groups</name><value>*</value></property><property><name>dfs.namenode.kerberos.principal.pattern</name><value>*</value></property>
+        DATANODE:
+          dfs_data_dir_list: /dfs/dn
+          dfs_datanode_failed_volumes_tolerated: 0
+        NAMENODE:
+          dfs_name_dir_list: /dfs/nn
+          dfs_federation_namenode_nameservice: "{{ cluster_name }}"
+          autofailover_enabled: true
+          dfs_namenode_quorum_journal_name: "{{ cluster_name }}"
+        JOURNALNODE:
+          dfs_journalnode_edits_dir: /dfs/jn  
+        SECONDARYNAMENODE:
+          fs_checkpoint_dir_list: /dfs/snn
+      HIVE:
+        HIVEMETASTORE:
+          hive_enable_db_notification: true
+          hive_metastore_delegation_token_store: org.apache.hadoop.hive.thrift.DBTokenStore 
+        SERVICEWIDE:
+          ranger_security_safety_valve: "<property><name>xasecure.hive.uri.permission.coarse.check</name><value>true</value></property>"
+      HIVE_ON_TEZ:
+        HIVESERVER2:
+          hive_server2_transport_mode: "all"
+      HUE:
+        SERVICEWIDE:
+          auth_backend: desktop.auth.backend.KnoxSpnegoDjangoBackend
+      INFRA_SOLR:
+        SERVICEWIDE:
+          enable_ranger_authorization: true
+      KNOX:
+        SERVICEWIDE:
+          knox_encryptquerystring_secret: "{{ default_password }}"
+          knox_hadoop_auth_config_signature_secret: "{{ default_password }}"
+          conf/gateway-site.xml_service_safety_valve: <property><name>knox.homepage.logout.enabled</name><value>true</value></property>
+          knox_homepage_hidden_topologies: "manager,knoxsso,homepage"
+        KNOX_GATEWAY:
+          gateway_knox_admin_groups: admin_group
+          gateway_master_secret: "{{ default_password }}"
+          gateway_sso_authentication_provider: "{% if free_ipa == true %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.urls./**=authcBasic#authentication.param.main.ldapRealm=org.apache.knox.gateway.shirorealm.KnoxLdapRealm#authentication.param.main.ldapContextFactory=org.apache.knox.gateway.shirorealm.KnoxLdapContextFactory#authentication.param.main.ldapRealm.contextFactory=$ldapContextFactory#authentication.param.main.ldapRealm.contextFactory.authenticationMechanism=simple#authentication.param.main.ldapRealm.contextFactory.url={{ ipa_ldap_url }}#authentication.param.main.ldapRealm.contextFactory.systemUsername={{ ipa_ldap_user_bind_dn }}#authentication.param.main.ldapRealm.contextFactory.systemPassword={{ ipa_ldap_user_bind_password }}#authentication.param.main.ldapRealm.userDnTemplate=uid={0},{{ ipa_ldap_user_search_base }}#authentication.param.remove=main.pamRealm#authentication.param.remove=main.pamRealm.service{% else %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.main.pamRealm=org.apache.knox.gateway.shirorealm.KnoxPamRealm#authentication.param.main.pamRealm.service=login#authentication.param.urls./**=authcBasic{% endif %}"
+          gateway_api_authentication_provider: "{% if free_ipa == true %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.urls./**=authcBasic#authentication.param.main.ldapRealm=org.apache.knox.gateway.shirorealm.KnoxLdapRealm#authentication.param.main.ldapContextFactory=org.apache.knox.gateway.shirorealm.KnoxLdapContextFactory#authentication.param.main.ldapRealm.contextFactory=$ldapContextFactory#authentication.param.main.ldapRealm.contextFactory.authenticationMechanism=simple#authentication.param.main.ldapRealm.contextFactory.url={{ ipa_ldap_url }}#authentication.param.main.ldapRealm.contextFactory.systemUsername={{ ipa_ldap_user_bind_dn }}#authentication.param.main.ldapRealm.contextFactory.systemPassword={{ ipa_ldap_user_bind_password }}#authentication.param.main.ldapRealm.userDnTemplate=uid={0},{{ ipa_ldap_user_search_base }}#authentication.param.remove=main.pamRealm#authentication.param.remove=main.pamRealm.service{% else %}role=authentication#authentication.name=ShiroProvider#authentication.param.sessionTimeout=30#authentication.param.redirectToUrl=/${GATEWAY_PATH}/knoxsso/knoxauth/login.html#authentication.param.restrictedCookies=rememberme,WWW-Authenticate#authentication.param.main.pamRealm=org.apache.knox.gateway.shirorealm.KnoxPamRealm#authentication.param.main.pamRealm.service=login#authentication.param.urls./**=authcBasic{% endif %}"
+      OZONE:
+        SERVICEWIDE:
+          ozone.service.id: "{{ cluster_name }}"
+          ozone.scm.primordial.node.id: "{{  groups.cluster_master_nodes | first | default(omit) }}"
+          ozone.administrators: "{{ default_admin_user }}"
+        S3_GATEWAY:
+          ssl_enabled: true
+        OZONE_MANAGER:
+          ozone-conf/ozone-site.xml_role_safety_valve: <property><name>ozone.om.snapshot.load.native.lib</name><value>false</value></property>
+      SPARK_ON_YARN:
+        SERVICEWIDE:
+          atlas_service: "atlas"
+      RANGER:
+        SERVICEWIDE:
+          keyadmin_user_password: "{{ default_password }}"
+          rangeradmin_user_password: "{{ default_password }}"
+          rangertagsync_user_password: "{{ default_password }}"
+          rangerusersync_user_password: "{{ default_password }}" 
+        RANGER_USERSYNC:
+          ranger.usersync.source.impl.class: "{% if free_ipa == true %}org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder{% else %}org.apache.ranger.unixusersync.process.UnixUserGroupBuilder{% endif %}"
+          ranger.usersync.ldap.url: "{{ ipa_ldap_url }}"
+          ranger.usersync.ldap.binddn: "{{ ipa_ldap_user_bind_dn }}"
+          ranger_usersync_ldap_ldapbindpassword: "{{ ipa_ldap_user_bind_password }}"
+          ranger.usersync.ldap.user.searchbase: "{{ ipa_ldap_user_search_base }}"
+          ranger.usersync.ldap.user.objectclass: "person"
+          ranger.usersync.ldap.user.searchfilter: "uid=*"
+          ranger.usersync.ldap.user.nameattribute: "uid"
+          ranger.usersync.ldap.referral: "follow"
+          ranger.usersync.group.searchbase: "{{ ipa_ldap_group_search_base }}"
+          ranger.usersync.group.objectclass: "groupofnames"
+          ranger.usersync.group.nameattribute: "cn"
+          ranger.usersync.group.memberattributename: "member"
+          ranger.usersync.group.based.role.assignment.rules: "&ROLE_KEY_ADMIN:g:admin_group&ROLE_SYS_ADMIN:u:{{ default_admin_user }}"
+        RANGER_ADMIN:
+          conf/ranger-admin-site.xml_role_safety_valve: "<property><name>ranger.proxyuser.dpprofiler.hosts</name><value>*</value></property><property><name>ranger.proxyuser.dpprofiler.users</name><value>*</value></property><property><name>ranger.proxyuser.dpprofiler.groups</name><value>*</value></property>"
+      YARN:
+        SERVICEWIDE:
+          yarn_admin_acl: "${yarn_user},{{ default_admin_user }}"
+        RESOURCEMANAGER:
+          yarn_scheduler_maximum_allocation_mb: 24576
+          yarn_scheduler_maximum_allocation_vcores: 12
+          resourcemanager_config_safety_valve: <property><name>yarn.resourcemanager.application-tag-based-placement.enable</name><value>true</value></property><property><name>yarn.resourcemanager.application-tag-based-placement.username.whitelist</name><value>hive</value></property>
+        NODEMANAGER:
+          yarn_nodemanager_resource_memory_mb: 24576
+          yarn_nodemanager_resource_cpu_vcores: 12
+          yarn_nodemanager_local_dirs:  /data/nm
+          yarn_nodemanager_log_dirs: /var/log/nm
+        GATEWAY:
+          mapred_submit_replication: 3
+          mapred_reduce_tasks: 6    
+      ZOOKEEPER:
+        SERVICEWIDE:
+          zookeeper_datadir_autocreate: true
+    host_templates:
+      Edge:
+        HBASE: [GATEWAY]
+        HDFS: [JOURNALNODE, GATEWAY, HTTPFS]
+        HIVE: [GATEWAY]
+        HIVE_ON_TEZ: [GATEWAY]
+        KAFKA: [KAFKA_BROKER, GATEWAY]
+        KNOX: [KNOX_GATEWAY]
+        OZONE: [OZONE_RECON, OZONE_MANAGER, STORAGE_CONTAINER_MANAGER, GATEWAY]
+        TEZ: [GATEWAY]
+        SPARK_ON_YARN: [GATEWAY]
+        YARN: [GATEWAY]
+        ZOOKEEPER: [SERVER]
+      Master1:
+        ATLAS: [ATLAS_SERVER]
+        INFRA_SOLR: [SOLR_SERVER]
+        HBASE: [MASTER, GATEWAY]
+        HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
+        HIVE: [HIVEMETASTORE, GATEWAY]
+        HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
+        KAFKA: [KAFKA_BROKER, GATEWAY]
+        RANGER: [RANGER_TAGSYNC, RANGER_USERSYNC]
+        OZONE: [OZONE_MANAGER, STORAGE_CONTAINER_MANAGER, GATEWAY]
+        SPARK_ON_YARN: [GATEWAY]
+        TEZ: [GATEWAY]
+        YARN: [RESOURCEMANAGER, GATEWAY]
+        QUEUEMANAGER: [QUEUEMANAGER_STORE, QUEUEMANAGER_WEBAPP]
+        ZOOKEEPER: [SERVER]         
+      Master2:
+        ATLAS: [ATLAS_SERVER]
+        INFRA_SOLR: [SOLR_SERVER]
+        HBASE: [MASTER, HBASERESTSERVER, HBASETHRIFTSERVER, GATEWAY]
+        HDFS: [NAMENODE, JOURNALNODE, FAILOVERCONTROLLER, GATEWAY]
+        HIVE: [HIVEMETASTORE, GATEWAY]
+        HIVE_ON_TEZ: [HIVESERVER2, GATEWAY]
+        HUE: [HUE_SERVER, HUE_LOAD_BALANCER]
+        KAFKA: [KAFKA_BROKER, GATEWAY]
+        OZONE: [OZONE_MANAGER, STORAGE_CONTAINER_MANAGER, S3_GATEWAY, GATEWAY]
+        RANGER: [RANGER_ADMIN]
+        SPARK_ON_YARN: [SPARK_YARN_HISTORY_SERVER, GATEWAY]
+        TEZ: [GATEWAY]
+        YARN: [RESOURCEMANAGER, JOBHISTORY, GATEWAY]
+        ZOOKEEPER: [SERVER]  
+      Workers:
+        HBASE: [REGIONSERVER, GATEWAY]
+        HDFS: [DATANODE, GATEWAY]
+        HIVE: [GATEWAY]
+        HIVE_ON_TEZ: [GATEWAY]
+        OZONE: [OZONE_DATANODE, GATEWAY]
+        TEZ: [GATEWAY]
+        SPARK_ON_YARN: [GATEWAY]
+        YARN: [NODEMANAGER, GATEWAY]  
+
+mgmt:
+  name: Cloudera Management Service
+  services: [ALERTPUBLISHER, EVENTSERVER, HOSTMONITOR, REPORTSMANAGER, SERVICEMONITOR]
+  configs:
+    SERVICEMONITOR:
+      firehose_heapsize: 2147483648
+
+hosts:
+  configs:
+    host_default_proc_memswap_thresholds:
+      warning: never
+      critical: never
+    host_memswap_thresholds:
+      warning: never
+      critical: never
+    host_config_suppression_agent_system_user_group_validator: true
+    host_clock_offset_thresholds:
+      warning: never
+      critical: never

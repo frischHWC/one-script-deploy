@@ -1,0 +1,21 @@
+{
+    "environmentName": "{{ env.name }}",
+    "environmentQuota":{
+      "cpuQuota": {{ env.cpu_quota | default('100') }},
+      "memoryQuota": {{ env.mem_quota | default('500') }},
+      "gpuQuota": {{ env.gpu_quota | default('10') }}
+   },
+    "address": "{{ env.cm_address }}",
+    "user": "{{ env.cm_user }}",
+    "authenticationToken": "{{ env.cm_password }}",
+    "clusterNames": [
+      "{{ env.cluster_names }}"
+    ],
+    "kubeConfig": "{{ pvc_kube_config | default('') }}",
+    "storageClass": "",
+    "authenticationTokenType": "CLEARTEXT_PASSWORD",
+    "namespacePrefix": "cdp",
+    "domain": "{{ env_domain | default('') }}",
+    "dockerConfigJson": "",
+    "description": ""
+}

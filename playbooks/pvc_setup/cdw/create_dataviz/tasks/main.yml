@@ -32,6 +32,10 @@
     create_viz_template: 'create-viz-v1_5_4.json'
   when: pvc_version is version('1.5.4', '>=')
 
+- set_fact:
+    create_viz_template: 'create-viz-v1_5_5.json'
+  when: pvc_version is version('1.5.5', '>=')
+
 - name: Get Environment CRN
   uri:
     url: "{{ dwx_endpoint_api }}/environments"

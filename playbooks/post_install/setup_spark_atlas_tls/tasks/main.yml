@@ -1,0 +1,64 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+- name: Get keystore password 
+  slurp:
+    src: /var/lib/cloudera-scm-agent/agent-cert/cm-auto-host_key.pw
+  register: keystore_password_file
+
+- set_fact:
+    keystore_password: "{{ keystore_password_file['content'] | b64decode }}"
+
+- name: DEBUG - keystore_password
+  debug:
+    msg: "{{ keystore_password }}"
+  when: debug | default(false) 
+
+
+- name: Get Base truststore password
+  uri:
+    url: "{{ cloudera_manager_api_url }}/certs/truststorePassword"
+    user: "{{ cloudera_manager_user }}"
+    password: "{{ cloudera_manager_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+    body_format: json
+  register: cloudera_manager_truststore_password_api
+
+- set_fact:
+    truststore_password: "{{ cloudera_manager_truststore_password_api.content }}"
+
+- name: DEBUG - truststore_password
+  debug:
+    msg: "{{ truststore_password }}"
+  when: debug | default(false)
+
+- name: Add TLS settings for Spark with Atlas 
+  lineinfile:
+    path: /etc/spark/conf.cloudera.spark3_on_yarn/atlas-application.properties
+    line: |
+      atlas.kafka.ssl.truststore.location=/var/lib/cloudera-scm-agent/agent-cert/cm-auto-in_cluster_truststore.jks
+      atlas.kafka.ssl.truststore.password={{ truststore_password }}
+      atlas.kafka.ssl.keystore.location=/var/lib/cloudera-scm-agent/agent-cert/cm-auto-host_keystore.jks
+      atlas.kafka.ssl.keystore.password={{ keystore_password }}
+      atlas.kafka.ssl.key.password=${{ keystore_password }}
+    create: yes

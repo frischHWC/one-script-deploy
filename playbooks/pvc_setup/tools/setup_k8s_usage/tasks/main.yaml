@@ -17,28 +17,13 @@
 # under the License.
 #
 ---
-default_password: ${DEFAULT_PASSWORD}
-free_ipa: ${FREE_IPA} 
-cloudera_manager_host: ${NODE_0} 
-cloudera_manager_user: admin 
-cloudera_manager_password: admin 
-ranger_user: admin 
-ranger_password: ${DEFAULT_PASSWORD} 
-auto_tls: ${TLS} 
-ipa_server: ${NODE_IPA} 
-cluster_name: ${CLUSTER_NAME} 
-debug: ${DEBUG}
-default_admin_user: ${DEFAULT_ADMIN_USER}
-kerberos: ${KERBEROS}
+- name: Git clone k8s usage resource
+  git:
+    repo: "https://github.com/frischHWC/k8s-resources-usage.git"
+    dest: "~/"
 
-users:
-  - name: ${DEFAULT_ADMIN_USER}
-    password: ${DEFAULT_PASSWORD}
-    group: admin_group
-    is_admin: true
-  - name: superman
-    password: ${DEFAULT_PASSWORD}
-    group: hero
-  - name: batman
-    password: ${DEFAULT_PASSWORD}
-    group: hero
+- name: Make it executable
+  file:
+    path: ~/k8s-resources-usage/compute_k8s_resources.sh
+    mode: '0755'
+    remote_src: yes 

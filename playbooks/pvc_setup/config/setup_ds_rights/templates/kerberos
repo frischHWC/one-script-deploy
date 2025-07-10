@@ -1,0 +1,10 @@
+Request is: ------geckoformboundary7da202664fa94f7b3983ee7a10912094
+Content-Disposition: form-data; name="principal"
+
+{{ user.name }}
+------geckoformboundary7da202664fa94f7b3983ee7a10912094
+Content-Disposition: form-data; name="file"; filename="{{ user.keytab }}"
+Content-Type: application/octet-stream
+
+{{ keytab }}
+------geckoformboundary7da202664fa94f7b3983ee7a10912094--

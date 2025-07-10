@@ -19,7 +19,7 @@
 ---
 # Set default env
 - set_fact:
-    default_env: "{{ pvc_app_domain.split('.')[0]  }}-env"
+    default_env: "{{ pvc_app_domain.split('.')[0]  }}"
 
 - name: DEBUG - default_env
   debug:

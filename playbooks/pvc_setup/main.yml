@@ -214,48 +214,6 @@
         user: "{{ item }}"
       ignore_errors: yes
 
-### CDW ####
-- name: Create Cloudera Data Warehouse's minimal sizes
-  hosts: "{{ cloudera_manager_host }}"
-  gather_facts: true
-  tasks: 
-    - name: create CDWs
-      include_role:
-        name: cdw/cdw_minimal_size
-      with_items: "{{ warehouses }}"
-      vars: 
-        warehouse: "{{ item }}"
-      when: cdw | default(false) and pvc_version is version('1.5.4', '>=') and pvc_eco_resources
-      ignore_errors: yes
-
-
-- name: Create Cloudera Data Warehouse
-  hosts: "{{ cloudera_manager_host }}"
-  gather_facts: true
-  tasks: 
-    - name: create CDWs
-      include_role:
-        name: cdw/create_cdw
-      with_items: "{{ warehouses }}"
-      vars: 
-        warehouse: "{{ item }}"
-      when: cdw | default(false)
-      ignore_errors: yes
-
-- name: Create Cloudera Data Vizs
-  hosts: "{{ cloudera_manager_host }}"
-  gather_facts: false
-  tasks: 
-    - name: create Data Vizs
-      include_role:
-        name: cdw/create_dataviz
-      with_items: "{{ vizs }}"
-      vars: 
-        viz: "{{ item }}"
-      when: dataviz | default(false)
-      ignore_errors: yes
-
-
 #### CDE ####
 - name: Create Cloudera Data Engineering
   hosts: "{{ cloudera_manager_host }}"
@@ -270,6 +228,7 @@
       when: cde | default(false)
       ignore_errors: yes
 
+      
 - name: Sign CDE Certs
   hosts: localhost
   gather_facts: false
@@ -378,11 +337,60 @@
       ignore_errors: yes
 
 - name: Install cdswctl 
-  hosts: "{{ cloudera_manager_host }}"
+  hosts: "{{ pvc_ecs_server_host }}"
   gather_facts: false
   roles: 
     - role: cml/setup_cdswctl
       when: setup_pvc_tools and cml | default(false)
+
+- name: Install cmlutils 
+  hosts: "{{ pvc_ecs_server_host }}"
+  gather_facts: false
+  roles: 
+    - role: cml/setup_cmlutils
+      when: setup_pvc_tools and cml | default(false)  
+
+
+### CDW ####
+- name: Create Cloudera Data Warehouse's minimal sizes
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: true
+  tasks: 
+    - name: create CDWs
+      include_role:
+        name: cdw/cdw_minimal_size
+      with_items: "{{ warehouses }}"
+      vars: 
+        warehouse: "{{ item }}"
+      when: cdw | default(false) and pvc_version is version('1.5.4', '>=') and pvc_eco_resources
+      ignore_errors: yes
+
+- name: Create Cloudera Data Warehouse
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: true
+  tasks: 
+    - name: create CDWs
+      include_role:
+        name: cdw/create_cdw
+      with_items: "{{ warehouses }}"
+      vars: 
+        warehouse: "{{ item }}"
+      when: cdw | default(false)
+      ignore_errors: yes
+
+- name: Create Cloudera Data Vizs
+  hosts: "{{ cloudera_manager_host }}"
+  gather_facts: false
+  tasks: 
+    - name: create Data Vizs
+      include_role:
+        name: cdw/create_dataviz
+      with_items: "{{ vizs }}"
+      vars: 
+        viz: "{{ item }}"
+      when: dataviz | default(false)
+      ignore_errors: yes
+
 
 ### User's DS Rights ###
 - name: Setting up users' rights for Data Services

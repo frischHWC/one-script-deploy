@@ -63,7 +63,7 @@
 - set_fact:
     is_env_existing: "{{ false if env_crn == '' else true }}"
 
-- name: Fail if cluster is not exist
+- name: Fail if cluster does not exist
   fail:
     msg: "Cluster with name: {{ virtual_cluster.env_name }} do not exist. Please see dpx-liftie logs and thunderhead-environments2-api logs"
   when: not is_env_existing
@@ -100,7 +100,7 @@
     msg: "{{ dex_cde_is_existing }}"
 
 
-# Check PvC version if >= 1.4.1 and use _v1.4.1
+# Set templates according to versions
 - set_fact:
     activate_cde_template: 'activate_cde.json'
 
@@ -135,6 +135,7 @@
     create_vc_template: 'create_vc_v1.5.5.json'
   when: pvc_version is version('1.5.5', '>=')
 
+# Create Service
 - name: Create CDE Service
   uri:
     url: "{{ dex_endpoint_api }}/cluster"
@@ -155,6 +156,11 @@
 - set_fact:
     cde_service_id: "{{ create_cde.json.id }}"
   when: not dex_cde_is_existing
+
+- name: DEBUG - cde_service_id
+  debug:
+    msg: "{{ cde_service_id }}"
+  when: not dex_cde_is_existing and debug | default(false)
 
 - name: Check CDE Service Activation
   uri:
@@ -190,15 +196,64 @@
 - set_fact:
     cde_vc_id: "{{ cde_vcs.json | community.general.json_query(query_id) }}"
   vars:
-    query_id: "[?name == '{{ virtual_cluster.name }}'].id | [0]"
+    query_id: "[?name == '{{ virtual_cluster.name }}' && status == 'AppInstalled'].id | [0]"
+
+- name: DEBUG - cde_vc_id
+  debug:
+    msg: "{{ cde_vc_id }}"
+  when: debug | default(false)
 
 - set_fact:
     dex_vc_is_existing: "{{ false if cde_vc_id == '' else true }}"
 
+- name: DEBUG - dex_vc_is_existing
+  debug:
+    msg: "{{ dex_vc_is_existing }}"
+  when: debug | default(false)
+
+#  If required, delete it before 
+- name: Delete VC if required
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance/{{ cde_vc_id }}"
+    method: DELETE
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: [200, 202]
+    return_content: yes
+    validate_certs: no
+  changed_when: yes
+  register: delete_vc_answer
+  when: virtual_cluster.to_recreate and dex_vc_is_existing
+
+- name: DEBUG - delete_vc_answer
+  debug:
+    msg: "{{ delete_vc_answer }}"
+  when: debug | default(false)
+
+- name: Check CDE VC has been deleted
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance/{{ cde_vc_id }}"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_vc_activation
+  until: " cde_vc_activation.json.status == 'AppDeleted' "
+  retries: 50
+  delay: 30
+  when: virtual_cluster.to_recreate and dex_vc_is_existing
+
+
+# Create VC
 - name: Wait 15 seconds before creating vc
   wait_for:
     timeout: 15
-  when: not dex_vc_is_existing
 
 - name: Create CDE VC
   uri:
@@ -215,11 +270,16 @@
     validate_certs: no
   register: create_cde
   changed_when: yes
-  when: not dex_vc_is_existing
+  when: not dex_vc_is_existing or (virtual_cluster.to_recreate and dex_vc_is_existing)
 
 - set_fact:
     cde_vc_id: "{{ create_cde.json.id }}"
-  when: not dex_vc_is_existing
+  when: not dex_vc_is_existing or (virtual_cluster.to_recreate and dex_vc_is_existing)
+
+- name: DEBUG - cde_vc_id
+  debug:
+    msg: "{{ cde_vc_id }}"
+  when: not dex_vc_is_existing or (virtual_cluster.to_recreate and dex_vc_is_existing) and debug | default(false)
 
 - name: Check CDE VC Activation
   uri:
@@ -236,6 +296,157 @@
   until: " cde_vc_activation.json.status == 'AppInstalled' "
   retries: 50
   delay: 30
-  when: not dex_vc_is_existing
+  when: not dex_vc_is_existing or (virtual_cluster.to_recreate and dex_vc_is_existing)
 
-# TODO: Use helm charts to lower CDE 
+
+
+##################
+# Reducing Resources
+##################
+# TODO: Try to use helm charts to lower CDE 
+
+- set_fact:
+    dex_base_ns: "dex-base-{{ cde_service_id.split('-')[1] }}"
+
+- name: DEBUG - dex_base_ns
+  debug:
+    msg: "{{ dex_base_ns }}"
+  when: debug | default(false)
+
+- set_fact:
+    dex_app_ns: "{{ cde_vc_id }}"
+
+- name: DEBUG - dex_app_ns
+  debug:
+    msg: "{{ dex_app_ns }}"
+  when: debug | default(false)
+
+
+# Lower Service resources 
+
+- name: Lower CDE cdp-cde-embedded-db memory
+  shell: "kubectl set resources sts cdp-cde-embedded-db -n {{ dex_base_ns }} --requests=memory=2Gi"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE cdp-cde-embedded-db cpu
+  shell: "kubectl set resources sts cdp-cde-embedded-db -n {{ dex_base_ns }} --requests=cpu=0.5"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE dex-base-configs-manager cpu
+  shell: "kubectl set resources deployment dex-base-configs-manager -n {{ dex_base_ns }} --requests=cpu=0.250"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE dex-base-configs-manager memory
+  shell: "kubectl set resources deployment dex-base-configs-manager -n {{ dex_base_ns }} --requests=memory=512Mi"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE dex-base-dex-authz cpu
+  shell: "kubectl set resources deployment dex-base-dex-authz  -n {{ dex_base_ns }} --requests=cpu=0.250"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE dex-base-dex-authz memory
+  shell: "kubectl set resources deployment dex-base-dex-authz  -n {{ dex_base_ns }} --requests=memory=1Gi"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE  dex-base-dex-downloads  cpu
+  shell: "kubectl set resources deployment  dex-base-dex-downloads  -n {{ dex_base_ns }} --requests=cpu=0.250"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE  dex-base-dex-downloads  memory
+  shell: "kubectl set resources deployment  dex-base-dex-downloads  -n {{ dex_base_ns }} --requests=memory=1Gi"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE dex-base-keytab-management  cpu
+  shell: "kubectl set resources deployment dex-base-keytab-management  -n {{ dex_base_ns }} --requests=cpu=0.250"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE dex-base-keytab-management  memory
+  shell: "kubectl set resources deployment dex-base-keytab-management  -n {{ dex_base_ns }} --requests=memory=512Mi"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE  dex-base-knox  memory
+  shell: "kubectl set resources deployment  dex-base-knox  -n {{ dex_base_ns }} --requests=memory=1Gi"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE  dex-base-management-api  cpu
+  shell: "kubectl set resources deployment  dex-base-management-api  -n {{ dex_base_ns }} --requests=cpu=0.5"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE  dex-base-management-api  memory
+  shell: "kubectl set resources deployment  dex-base-management-api  -n {{ dex_base_ns }} --requests=memory=2Gi"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE dex-base-nginx-controller  cpu
+  shell: "kubectl set resources deployment dex-base-nginx-{{ cde_service_id.split('-')[1] }}-controller  -n {{ dex_base_ns }} --requests=cpu=0.250"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE dex-base-nginx-controller memory
+  shell: "kubectl set resources deployment dex-base-nginx-{{ cde_service_id.split('-')[1] }}-controller -n {{ dex_base_ns }} --requests=memory=512Mi"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE  dex-base-tgtgen  cpu
+  shell: "kubectl set resources deployment  dex-base-tgtgen  -n {{ dex_base_ns }} --requests=cpu=0.250"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE  dex-base-tgtgen  memory
+  shell: "kubectl set resources deployment  dex-base-tgtgen  -n {{ dex_base_ns }} --requests=memory=512Mi"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+
+# Lower VC resources
+- name: Lower CDE dex-app-shs  cpu
+  shell: "kubectl set resources deployment {{ cde_vc_id }}-shs  -n {{ dex_app_ns }} --requests=cpu=0.250"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE dex-app-shs  memory
+  shell: "kubectl set resources deployment {{ cde_vc_id }}-shs  -n {{ dex_app_ns }} --requests=memory=1Gi"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE dex-app-livy  cpu
+  shell: "kubectl set resources deployment {{ cde_vc_id }}-livy  -n {{ dex_app_ns }} --requests=cpu=0.5"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE dex-app-livy  memory
+  shell: "kubectl set resources deployment {{ cde_vc_id }}-livy  -n {{ dex_app_ns }} --requests=memory=2Gi"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE dex-app-airflow-scheduler cpu
+  shell: "kubectl set resources deployment  {{ cde_vc_id }}-airflow-scheduler  -n {{ dex_app_ns }} --requests=cpu=0.5"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE  dex-app-airflow-scheduler  memory
+  shell: "kubectl set resources deployment  {{ cde_vc_id }}-airflow-scheduler  -n {{ dex_app_ns }} --requests=memory=1Gi"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE  dex-app-airflowapi  memory
+  shell: "kubectl set resources deployment  {{ cde_vc_id }}-airflowapi  -n {{ dex_app_ns }} --requests=memory=512Mi"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CDE dex-app-api  cpu
+  shell: "kubectl set resources deployment {{ cde_vc_id }}-api  -n {{ dex_app_ns }} --requests=cpu=0.250"
+  when: pvc_eco_resources
+  ignore_errors: true

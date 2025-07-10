@@ -101,13 +101,17 @@
     return_content: yes
     validate_certs: no
   register: mlr_delete_answer
-  when: mlr_crn != '' 
+  when: mlr_crn != '' and ml_inf.to_recreate
 
 - name: DEBUG - mlr_delete_answer
   debug:
     msg: "{{ mlr_delete_answer }}"
-  when: mlr_crn != '' 
+  when: mlr_crn != '' and ml_inf.to_recreate
 
+- name: Wait for Deletion to be done
+  pause:
+    seconds: 10
+  when: mlr_crn != '' and ml_inf.to_recreate
 
 # Create ML Inference Service
 - name: Create CML Inference Service
@@ -123,4 +127,5 @@
     status_code: [200, 202]
     return_content: yes
     validate_certs: no
+  when: mlr_crn == '' or ( mlr_crn != '' and ml_inf.to_recreate )
 

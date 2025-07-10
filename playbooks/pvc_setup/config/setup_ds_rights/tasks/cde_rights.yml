@@ -83,6 +83,7 @@
     cde_vc_id: "{{ cde_vcs.json | community.general.json_query(query_id) }}"
   vars:
     query_id: "[?name == '{{ vc.name }}' ].id | [0]"
+  when: debug | default(false)
 
 - name: DEBUG - cde_vc_id
   debug:
@@ -111,6 +112,7 @@
 - name: DEBUG - cde_vc_endpoint
   debug:
     msg: "{{ cde_vc_endpoint }}"
+  when: debug | default(false)
 
 - set_fact:
     cde_vc_endpoint_hostname: "{{ cde_vc_endpoint.split('//')[1].split('/')[0] }}"
@@ -118,6 +120,7 @@
 - name: DEBUG - cde_vc_endpoint_hostname
   debug:
     msg: "{{ cde_vc_endpoint_hostname }}"
+  when: debug | default(false)
 
 
 - name: Write user principal to file

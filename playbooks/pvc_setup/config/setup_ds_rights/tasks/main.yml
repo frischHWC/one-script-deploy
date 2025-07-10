@@ -52,19 +52,32 @@
   when: debug | default(false)
 
 
-# Add keytab to CDE if needed
+# Add keytab to CDE if needed 
 - name: Set rights for CDE
   include_tasks: "cde_rights.yml"
   with_items: "{{ user.virtual_clusters }}"
   loop_control:
     loop_var: vc
-  when: cde | default(false)
+  when: cde | default(false) and pvc_version is version('1.5.5','<')
 
+# As of 1.5.5, there is now a need to go through API call to upload a keytab
+# - name: Set rights for CDE (post 1.5.5)
+#   include_tasks: "cde_keytab_1.5.5.yml"
+#   with_items: "{{ user.virtual_clusters }}"
+#   loop_control:
+#     loop_var: vc
+#   when: cde | default(false) and pvc_version is version('1.5.5','>=')
 
+# TODO: As of 1.5.5, now users need to have their rights on service and VC level
+- name: Set rights for CDE
+  include_tasks: "cde_rights_1_5_5.yml"
+  with_items: "{{ user.virtual_clusters }}"
+  loop_control:
+    loop_var: vc
+  when: cde | default(false) and pvc_version is version('1.5.5','>=')
 
 # TODO: Add keytab to CML if needed
 # How to get token to access CML (a cdswtoken is required to make requests) ???
 # Get cluster id with get to http://<cml_endpoint>/api/v1/site/config and get id.
 # Upload password to http://<cml_endpoint>/api/v1/users/admin/kerberos-credentials with request
 # {"principal":"test@FRISCH.COM","password":"test1234","clusterId":1} response id 204
-

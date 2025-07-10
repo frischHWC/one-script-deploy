@@ -7,7 +7,7 @@
     "is-default": true,
     "resources": {
       "viz-webapp": {
-        "cpu": "1",
+        "cpu": "0.5",
         "memory": "4096MB"
       }
     },

@@ -308,7 +308,84 @@
   retries: 60
   delay: 5
 
+#Delete VW if required
+- name: Get Hive Virtual Warehouse
+  uri:
+    url: "{{ dwx_endpoint_api }}/environments/{{ dwx_env_id }}/llaps/compute-{{ warehouse.name }}"
+    method: GET
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: [200, 202, 404]
+    return_content: yes
+    validate_certs: no
+  register: answer_to_hive_vw
+  when: warehouse.type == 'hive' | default(false)
+
+- set_fact:
+    vw_code: "{{ answer_to_hive_vw.json | community.general.json_query(query_id) }}"
+  vars:
+    query_id: "code"
+  when: warehouse.type == 'hive' | default(false)
+
+- name: DEBUG - vw_code
+  debug:
+    msg: "{{ vw_code }}"
+  when: warehouse.type == 'hive' | default(false)
+
+- set_fact:
+    hive_vw_is_existing: "{{ false if vw_code == '1002' else true }}"
+  when: warehouse.type == 'hive' | default(false)
+
+- name: DEBUG - hive_vw_is_existing
+  debug:
+    msg: "{{ hive_vw_is_existing }}"
+  when: warehouse.type == 'hive' | default(false)
+
+- name: Delete Hive Virtual Warehouse
+  uri:
+    url: "{{ dwx_endpoint_api }}/environments/{{ dwx_env_id }}/llaps/compute-{{ warehouse.name }}"
+    method: DELETE
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: [200, 202]
+    return_content: yes
+    validate_certs: no
+  register: answer_to_hive_activation
+  when: warehouse.type == 'hive' and (hive_vw_is_existing and warehouse.to_recreate) | default(false)
+
+
 # Create Hive VW:
+- name: Wait 15 seconds before creating VW
+  wait_for:
+    timeout: 15
+  when: warehouse.type == 'hive' | default(false)
+
+- name: Check VW does not exist
+  uri:
+    url: "{{ dwx_endpoint_api }}/environments/{{ dwx_env_id }}/llaps/compute-{{ warehouse.name }}"
+    method: GET
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: [200, 202, 404]
+    return_content: yes
+    validate_certs: no
+  register: answer_to_hive_vw
+  when: warehouse.type == 'hive' | default(false)
+  until: " answer_to_hive_vw.json.code == 1002 "
+  retries: 50
+  delay: 30
+
+- name: Wait 30 seconds before creating VW, to make sure namespace has been deleted
+  wait_for:
+    timeout: 30
+  when: warehouse.type == 'hive' and (hive_vw_is_existing and warehouse.to_recreate) | default(false)
+
 - name: JSON to create Hive VW
   debug:
     msg: "{{ lookup('template', '{{ create_hive_vw_template }}') }}"
@@ -328,9 +405,82 @@
     return_content: yes
     validate_certs: no
   register: answer_to_hive_activation
-  when: warehouse.type == 'hive' | default(false)
+  when: warehouse.type == 'hive' and ( not hive_vw_is_existing or (hive_vw_is_existing and warehouse.to_recreate)) | default(false)
+
+
+#Delete VW if required
+- name: Get Impala Virtual Warehouse
+  uri:
+    url: "{{ dwx_endpoint_api }}/environments/{{ dwx_env_id }}/impalas/impala-{{ warehouse.name }}"
+    method: GET
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: [200, 202, 404]
+    return_content: yes
+    validate_certs: no
+  register: answer_to_impala_vw
+  when: warehouse.type == 'impala' | default(false)
+
+- set_fact:
+    vw_code: "{{ answer_to_impala_vw.json | community.general.json_query(query_id) }}"
+  vars:
+    query_id: "code"
+  when: warehouse.type == 'impala' | default(false)
+
+- set_fact:
+    impala_vw_is_existing: "{{ false if vw_code == '1002' else true }}"
+  when: warehouse.type == 'impala' | default(false)
+
+- name: DEBUG - impala_vw_is_existing
+  debug:
+    msg: "{{ impala_vw_is_existing }}"
+  when: warehouse.type == 'impala' and debug | default(false)
+
+- name: Delete Impala Virtual Warehouse
+  uri:
+    url: "{{ dwx_endpoint_api }}/environments/{{ dwx_env_id }}/impalas/impala-{{ warehouse.name }}"
+    method: DELETE
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: [200, 202]
+    return_content: yes
+    validate_certs: no
+  register: answer_to_hive_activation
+  when: warehouse.type == 'impala' and (impala_vw_is_existing and warehouse.to_recreate) | default(false)
+
 
 # Create Impala VW
+- name: Wait 15 seconds before creating VW
+  wait_for:
+    timeout: 15
+  when: warehouse.type == 'impala' | default(false)
+
+- name: Check VW does not exist
+  uri:
+    url: "{{ dwx_endpoint_api }}/environments/{{ dwx_env_id }}/impalas/impala-{{ warehouse.name }}"
+    method: GET
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: [200, 202, 404]
+    return_content: yes
+    validate_certs: no
+  register: answer_to_hive_vw
+  when: warehouse.type == 'hive' | default(false)
+  until: " answer_to_hive_vw.json.code == 1002 "
+  retries: 50
+  delay: 30
+
+- name: Wait 30 seconds before creating VW, to make sure namespace has been deleted
+  wait_for:
+    timeout: 30
+  when: warehouse.type == 'impala' and (impala_vw_is_existing and warehouse.to_recreate) | default(false)
+
 - name: JSON to create Impala VW
   debug:
     msg: "{{ lookup('template', '{{ create_impala_vw_template }}') }}"
@@ -350,4 +500,4 @@
     return_content: yes
     validate_certs: no
   register: answer_to_impala_activation
-  when: warehouse.type == 'impala' | default(false)
+  when: warehouse.type == 'impala' and ( not impala_vw_is_existing or (impala_vw_is_existing and warehouse.to_recreate)) | default(false)

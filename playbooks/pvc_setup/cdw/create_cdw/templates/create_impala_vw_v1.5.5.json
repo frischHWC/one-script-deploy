@@ -1,15 +1,21 @@
 {
     "impalaName": "{{ warehouse.name }}",
     "warehouseId": "{{ dwx_dbc_id }}",
-    "template": "{{ warehouse.size | default(xsmall) }}-impala",
+    "tShirtSize": "{{ warehouse.size | default(xsmall) }}",
     "resourcePool": "{{ warehouse.vw_queue | default('root.default') }}",
-    "resourceTemplate": "{{ impala_template_id | default('impala-default') }}",
+    "resourceTemplate": "{{ impala_template_id | default('impala-low') }}",
+    "imageVersion": "2025.0.19.1-74",
+    "hueImageVersion": "2025.0.19.1-74",
     "enablePlatformJWTAuth": false,
+    "enableSSO": true,
+    "fengEnabled": false,
     "autoScaling": {
+
       "enableHA": {{ warehouse.enable_ha | default('true') }},
       "haType": "{{ warehouse.ha_type | default('activepassive') }}",
       "autoScaleMode": 0,
       "enableCatalogHA": {{ warehouse.enable_catalog_ha | default('true') }},
+       "enableStatestoreHA": {{ warehouse.enable_statestore_ha | default('true') }},
       "impalaEnableAllActiveCoordinators": {{ warehouse.all_coordinators_active | default('false') }},
       "impalaNumOfActiveCoordinators": {{ warehouse.num_active_coordinators | default('2') }},
 
@@ -26,10 +32,9 @@
       "impalaTriggerShutdownDelay": {{ warehouse.shutdown_delay | default('300') }},
       "impalaAutoscalingVersionNumber": 6,
 
-      "podConfigName": "Cdw Defaults",
+     
       "impalaAdditionalExecGroupSets": []
     },
-    "fengEnabled": false,
     "multithreading": {
       "useLegacyMultithreading": {{ warehouse.legacy_multithreading | default('true') }},
       "multithreadingVersion": 1
@@ -38,10 +43,7 @@
       "maxQueries": {{ warehouse.query_isolation_max_queries | default('0') }},
       "maxNodesPerQuery": {{ warehouse.query_isolation_max_nodes_per_query | default('0') }}
     },
-    "config": {
-      "ldapGroups": [
-        "{{ warehouse.allowed_group | default('') }}"
-      ],
-      "enableSSO": true
-    }
+    "userGroups": [
+       "{{ warehouse.allowed_group | default('') }}"
+    ]
 }

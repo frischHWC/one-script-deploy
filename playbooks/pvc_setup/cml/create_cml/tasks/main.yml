@@ -64,7 +64,7 @@
 - set_fact:
     is_workspace_existing: "{{ false if workspace_crn == '' else true }}"
 
-# Delete workspace if existing
+# Delete workspace if existing and needed
 - name: Delete existing workspace
   uri:
     url: "{{ cml_endpoint_api }}/deleteWorkspace"
@@ -79,12 +79,12 @@
     return_content: yes
     validate_certs: no
   register: cml_workspaces_list
-  when: is_workspace_existing
+  when: is_workspace_existing and workspace.to_recreate
 
 - name: Wait for Deletion to be done
   pause:
     seconds: 60
-  when: is_workspace_existing
+  when: is_workspace_existing and workspace.to_recreate
 
 - set_fact:
     create_cml_template: 'create_cml.json'
@@ -108,10 +108,12 @@
     return_content: yes
     validate_certs: no
   register: answer_to_create_cml
+  when: not is_workspace_existing or ( is_workspace_existing and workspace.to_recreate )
 
 - name: Wait for Creation to be acknowledged
   pause:
     seconds: 120
+  when: not is_workspace_existing or ( is_workspace_existing and workspace.to_recreate )
 
 # Wait for CML workspace to be created
 - name: Check CML creation
@@ -131,3 +133,32 @@
   until: " cml_activation_answer.json.workspace.instanceStatus == 'installation:finished' "
   retries: 60
   delay: 30
+  when: not is_workspace_existing or ( is_workspace_existing and workspace.to_recreate )
+
+
+# Reducing resources
+
+- name: Scale down web-hpa
+  shell: "kubectl patch hpa web-hpa  -n {{ workspace.name }} --patch $'spec:\n minReplicas: 1' "
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Scale down web
+  shell: "kubectl scale deployment web  -n {{ workspace.name }} --replicas=1"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CML web cpu
+  shell: "kubectl set resources deployment web  -n {{ workspace.name }} --requests=cpu=0.5"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CML db memory
+  shell: "kubectl set resources sts db  -n {{ workspace.name }} --requests=memory=0.5"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+- name: Lower CML db cpu
+  shell: "kubectl set resources sts db  -n {{ workspace.name }} --requests=cpu=0.5"
+  when: pvc_eco_resources
+  ignore_errors: true

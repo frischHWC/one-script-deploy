@@ -1,0 +1,163 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+
+- name: Get CDE Services
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_clusters
+
+- set_fact:
+    cde_service_id: "{{ cde_clusters.json | community.general.json_query(query) }}"
+  vars:
+    query: "[?name == '{{ vc.cde_service_name }}' && status != 'ClusterDeletionCompleted' ].id | [0]"
+
+- name: DEBUG - cde_service_id
+  debug:
+    msg: "{{ cde_service_id }}"
+  when: debug | default(false)
+
+- name: Get CDE VCs
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_vcs
+
+- set_fact:
+    cde_vc_id: "{{ cde_vcs.json | community.general.json_query(query_id) }}"
+  vars:
+    query_id: "[?name == '{{ vc.name }}' ].id | [0]"
+  when: debug | default(false)
+
+- name: DEBUG - cde_vc_id
+  debug:
+    msg: "{{ cde_vc_id }}"
+  when: debug | default(false)
+
+
+- name: Get CDE VCs
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+
+# Get User CRN
+- name: List Users and get its ID
+  uri:
+    url: "{{ cdp_endpoint_url }}/api/v1/iam/listUsers"
+    method: POST
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{\"pageSize\":500}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: users
+
+- set_fact:
+    user_crn: "{{ users.json | community.general.json_query(query) }}"
+  vars:
+    query: "users[?workloadUsername == '{{ user.name }}' ].crn | [0]"
+
+- name: DEBUG - user_crn
+  debug:
+    msg: "{{ user_crn }}"
+  when: debug | default(false)
+
+# Service level 
+# https://console-cdp.apps.lastpvc-8.vpc.cloudera.com/dex/api/v1/cluster/cluster-g5xxkjfb/role/assign
+# {"assigneeCrn":"crn:altus:iam:us-west-1:51a4579f-d85e-49d1-b41e-620e71fe2368:user:923bb53c-2cae-4a39-93e7-29d1ef191be6","resourceRoleCrn":"crn:altus:iam:us-west-1:altus:resourceRole:DEServiceAdmin"}
+
+- set_fact:
+    user_role: "{{ vc.service_rights }}"
+  when: vc.service_rights is defined
+
+- name: DEBUG - user_role
+  debug:
+    msg: "{{ user_role }}"
+  when: debug | default(false) and vc.service_rights is defined
+
+- name: Assign Service Role
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/role/assign"
+    method: POST
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', 'assignment.json') }}"
+    status_code: [200, 500]
+    return_content: yes
+    validate_certs: no
+  when: vc.service_rights is defined
+
+
+# VC level:
+# https://console-cdp.apps.lastpvc-8.vpc.cloudera.com/dex/api/v1/cluster/cluster-g5xxkjfb/instance/dex-app-rrt9tskb/role/assign
+# {"assigneeCrn":"crn:altus:iam:us-west-1:51a4579f-d85e-49d1-b41e-620e71fe2368:user:923bb53c-2cae-4a39-93e7-29d1ef191be6","resourceRoleCrn":"crn:altus:iam:us-west-1:altus:resourceRole:DEVirtualClusterAdmin"}
+#
+
+- set_fact:
+    user_role: "{{ vc.vc_rights }}"
+  when: vc.vc_rights is defined
+
+- name: DEBUG - user_role
+  debug:
+    msg: "{{ user_role }}"
+  when: debug | default(false) and vc.vc_rights is defined
+
+- name: Assign VC Role
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance/{{ cde_vc_id }}/role/assign"
+    method: POST
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{{ lookup('template', 'assignment.json') }}"
+    status_code: [200, 500]
+    return_content: yes
+    validate_certs: no
+  when: vc.vc_rights is defined

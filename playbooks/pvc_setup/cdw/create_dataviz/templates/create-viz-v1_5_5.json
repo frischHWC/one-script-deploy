@@ -1,7 +1,7 @@
 {
     "vizName":"{{ viz.name }}",
-    "template":"{{ viz.size }}-viz",
-    "resourceTemplate": "{{ viz_template_id | default('viz-default') }}",
+    "resourceTemplate": "{{ viz_template_id | default('viz-low') }}",
+    "resourcePool": "{{ viz.queue | default('root.default') }}",
     "userGroups":["{{ viz.user_group | default('admin_group') }}"],
     "adminGroups":["{{ viz.admin_group | default('admin_group') }}"],
     "tags":[]

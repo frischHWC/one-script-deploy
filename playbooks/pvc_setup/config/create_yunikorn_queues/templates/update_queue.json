@@ -1,0 +1,44 @@
+{
+  "pool": {
+    "path": "{{ queue.name }}",
+    "quota": {
+      "memory": "{{ queue.mem_max | default('100G') }}",
+      "cpu": "{{ queue.cpu_max | default('25') }}",
+      "nvidia.com/gpu": "{{ queue.gpu_max | default(0) }}"
+    },
+    "guaranteedResources": {
+      "memory": "{{ queue.mem_guaranteed | default('100G') }}",
+      "cpu": "{{ queue.cpu_guaranteed | default('25') }}",
+      "nvidia.com/gpu": "{{ queue.gpu_guaranteed | default('0') }}"
+    },
+    "owners": [
+      
+    ],
+    "admins": [
+      
+    ],
+    "policy": {
+      "validity": "NEVER EXPIRES",
+      "allocation": {
+        "distribution": "ELASTIC",
+        "order": "FIFO",
+        "queueing": false
+      }
+    },
+    "metadata": {
+      
+    },
+    "scheduling": {
+      "preemption": {
+        "enabled": true,
+        "fence": false,
+        "delay": 30
+      },
+      "priority": {
+        "enabled": true,
+        "fence": false,
+        "offset": 0
+      }
+    }
+  }
+}

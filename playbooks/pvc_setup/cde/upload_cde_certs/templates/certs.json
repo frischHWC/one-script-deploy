@@ -1,0 +1,6 @@
+{
+"certificate_details": {
+    "certificate": "{{ cde_crt }}",
+    "key": "{{ cde_key }}"
+    }
+}

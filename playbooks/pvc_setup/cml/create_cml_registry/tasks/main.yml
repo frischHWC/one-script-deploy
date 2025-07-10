@@ -100,13 +100,17 @@
     return_content: yes
     validate_certs: no
   register: mlr_delete_answer
-  when: mlr_crn != '' 
+  when: mlr_crn != '' and ml_registry.to_recreate
 
 - name: DEBUG - mlr_delete_answer
   debug:
     msg: "{{ mlr_delete_answer }}"
-  when: mlr_crn != '' 
+  when: mlr_crn != '' and ml_registry.to_recreate 
 
+- name: Wait for Deletion to be done
+  pause:
+    seconds: 10
+  when: mlr_crn != '' and ml_registry.to_recreate
 
 # Create ML Registry
 - name: Create CML Registry
@@ -122,4 +126,68 @@
     status_code: [200, 202]
     return_content: yes
     validate_certs: no
+  when: mlr_crn == '' or ( mlr_crn != '' and ml_registry.to_recreate )
 
+
+# Reducing Resources
+- name: Wait 15 seconds for creation before lowering resources
+  wait_for:
+    timeout: 15
+
+# Get model registry namespace
+- name: List ML Registries
+  uri:
+    url: "{{ cml_endpoint_api }}/listModelRegistries"
+    method: POST
+    headers: 
+      Accept: "*/*"
+      Accept-Encoding: gzip, deflate, br
+      Content-Type: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{}"
+    status_code: [200, 202]
+    return_content: yes
+    validate_certs: no
+  register: ml_registries_answer
+
+- name: DEBUG - ml_registries_answer
+  debug:
+    msg: "{{ ml_registries_answer }}"
+  when: debug | default(false)
+
+- set_fact:
+    mlr_ns: "{{ ml_registries_answer.json | community.general.json_query(query) }}"
+  vars:
+    query: "modelRegistries[?environmentName == '{{ ml_registry.env_name }}' ].namespace | [0]"
+
+- name: DEBUG - mlr_ns
+  debug:
+    msg: "{{ mlr_ns }}"
+  when: debug | default(false)
+
+
+# Lower resources
+
+- name: Lower CML model-registry-v2 memory
+  shell: "kubectl set resources deployment model-registry-v2  -n {{ mlr_ns }} --requests=memory=1Gi"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+
+- name: Lower CML model-registry-v2 cpu
+  shell: "kubectl set resources deployment model-registry-v2  -n {{ mlr_ns }} --requests=cpu=0.250"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+
+- name: Lower CML model-registry-db memory
+  shell: "kubectl set resources deployment model-registry-db  -n {{ mlr_ns }} --requests=memory=2Gi"
+  when: pvc_eco_resources
+  ignore_errors: true
+
+
+- name: Scale down model-registry-v2
+  shell: "kubectl scale deployment model-registry-v2  -n {{ mlr_ns }} --replicas=1"
+  when: pvc_eco_resources
+  ignore_errors: true

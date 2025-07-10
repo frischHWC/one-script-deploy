@@ -984,9 +984,9 @@ then
         export ANSIBLE_ALL_FILE="ansible-cdp-71X/ansible-cdp-pvc-719/all"
         export ANSIBLE_CLUSTER_YML_FILE="ansible-cdp-71X/ansible-cdp-pvc-719/cluster.yml"
         export ANSIBLE_EXTRA_VARS_YML_FILE="ansible-cdp-71X/ansible-cdp-pvc-719/extra_vars.yml"
-        export PVC_VERSION="1.5.4-h15"
-        export CM_VERSION="7.13.1.100"
-        export CDH_VERSION="7.1.9.1034"
+        export PVC_VERSION="1.5.5"
+        export CM_VERSION="7.13.1.300"
+        export CDH_VERSION="7.1.9.1042"
         export CFM_VERSION="2.1.7.1000"
         export CEM_VERSION="2.2.0.0"
         export CSA_VERSION="1.13.2.0"
@@ -1835,7 +1835,7 @@ fi
 if [ "${PVC}" = "true" ] && [ "${CONFIGURE_PVC}" = "true" ]
 then
     logger info "############ #bold:Configuring PvC cluster#end_bold ############" 
-    launch_playbook pvc_setup "PvC Configured" "Could not configure PVC" 3600 5400 0 false
+    launch_playbook pvc_setup "PvC Configured" "Could not configure PVC" 4500 7200 0 false
 fi
 
 if [ "${DATA_LOAD}" = "true" ]
@@ -1887,7 +1887,6 @@ if [ "${PVC}" = "true" ] && [ "${PVC_POST_INSTALL}" = "true" ]
 then
     logger info "############ #bold:Prerequisites for k8s Operator#end_bold ############" 
     # Little trick because kubernetes packages requires a specific version of python (3.11) with python packages installed
-    #launch_playbook pvc_post_install_prereqs "PvC Post Installation Prereqs Done" "Could not install python and kubernetes packages" 120 480 0 false
     export ANSIBLE_PYTHON_3_PARAMS="-e ansible_python_interpreter=/usr/bin/python3.11"
     logger info "############ #bold:Adding k8s Operator to Kubernetes cluster#end_bold ############" 
     launch_playbook pvc_post_install "PvC Post Installation Done" "Could not add operators and deployments to PVC" 3600 5400 0 false
@@ -1945,5 +1944,6 @@ logger info " Examples:"
 logger info ""
 logger info:cyan "  ansible-playbook -i ~/cluster-${CLUSTER_NAME}/hosts ansible_playbook.yml --extra-vars \"\" "
 logger info:cyan "  ansible all -i ~/cluster-${CLUSTER_NAME}/hosts -a \"cat /etc/hosts\" "
+logger info:cyan "  ansible-console -i ~/cluster-${CLUSTER_NAME}/hosts "
 logger info ""
 

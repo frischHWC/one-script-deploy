@@ -80,6 +80,50 @@
   debug:
     msg: "{{ dwx_env_status }}"
 
+# Delete Data Viz if existing
+- name: Check if Data Viz exists
+  uri:
+    url: "{{ dwx_endpoint_api }}/environments/{{ dwx_env_id }}/vizs/viz-{{ viz.name }}"
+    method: GET
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: [200, 202, 500]
+    return_content: yes
+    validate_certs: no
+  register: dviz_details
+
+- name: DEBUG - dviz_details
+  debug:
+    msg: "{{ dviz_details }}"
+  when: debug | default(false)
+
+- set_fact:
+    viz_is_existing: "{{ false if dviz_details.status == 500 else true }}"
+
+- name: DEBUG - viz_is_existing
+  debug:
+    msg: "{{ viz_is_existing }}"
+  when: debug | default(false)
+
+- name: Delete Data Viz
+  uri:
+    url: "{{ dwx_endpoint_api }}/environments/{{ dwx_env_id }}/vizs/viz-{{ viz.name }}"
+    method: DELETE
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: [200, 202]
+    return_content: yes
+    validate_certs: no
+  when: viz_is_existing and viz.to_recreate
+
+- name: Wait 30 seconds before creating viz as it has been just deleted
+  wait_for:
+    timeout: 30
+  when: viz_is_existing and viz.to_recreate
 
 # Create Data Viz and get its id
 - name: Create Data Viz
@@ -96,11 +140,13 @@
     return_content: yes
     validate_certs: no
   register: answer_to_register_viz
+  when: not viz_is_existing or (viz_is_existing and viz.to_recreate)  | default(false)
 
 - set_fact:
     dviz_id: "{{ answer_to_register_viz.json | community.general.json_query(query) }}"
   vars:
     query: "vizId"
+  when: not viz_is_existing or (viz_is_existing and viz.to_recreate)  | default(false)
 
 # TODO: Starting from 1.5.1, we must use environments API (dwx/api/v2/environments), that in [0].clusterState.vizs. name of the viz . viz.status
 - name: Get Environments to get Viz ID
@@ -115,23 +161,24 @@
     return_content: yes
     validate_certs: no
   register: dwx_environments
-  when: pvc_version is version('1.5.1', '>=')
+  when: (not viz_is_existing or (viz_is_existing and viz.to_recreate)) and pvc_version is version('1.5.1', '>=')
 
 - name: DEBUG - dwx_environments
   debug:
     msg: "{{ dwx_environments }}"
-  when: pvc_version is version('1.5.1', '>=')
+  when: (not viz_is_existing or (viz_is_existing and viz.to_recreate)) and pvc_version is version('1.5.1', '>=')
     
 - set_fact:
     dviz_id: "{{ dwx_environments.json | community.general.json_query(query) }}"
   vars:
     query: "clusters[?name == '{{ viz.env_name }}' ].clusterState.vizs.[*] | [0] | [0] [?viz.displayName == '{{ viz.name }}' ] | [0].viz.id"
-  when: pvc_version is version('1.5.1', '>=')
+  when: (not viz_is_existing or (viz_is_existing and viz.to_recreate)) and pvc_version is version('1.5.1', '>=')
 
 
 - name: DEBUG - dviz_id
   debug:
     msg: "{{ dviz_id }}"
+  when: (not viz_is_existing or (viz_is_existing and viz.to_recreate) ) and debug | default(false)
 
 # Check it is up and running
 - name: Check data viz is up and running
@@ -149,9 +196,10 @@
   until: " dviz_status.json.Viz.viz.status == 'Running' "
   retries: 60
   delay: 5
+  when: not viz_is_existing or (viz_is_existing and viz.to_recreate)
 
 
-# Add in the config map viz-saml-conf the tow lines; required_admin_groups=["admin_group"] & required_groups=["admin_group"] at the end
+# Add in the config map viz-saml-conf the two lines; required_admin_groups=["admin_group"] & required_groups=["admin_group"] at the end
 - name: Touch config map file
   file:
     path: "/tmp/cf-{{ dviz_id }}"

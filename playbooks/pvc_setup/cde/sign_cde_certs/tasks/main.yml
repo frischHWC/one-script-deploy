@@ -61,7 +61,7 @@
 - set_fact:
     cde_vc_id: "{{ cde_vcs.json | community.general.json_query(query_id) }}"
   vars:
-    query_id: "[?name == '{{ virtual_cluster.name }}'].id | [0]"
+    query_id: "[?name == '{{ virtual_cluster.name }}' && status == 'AppInstalled'].id | [0]"
 
 
 # Get VC endpoint

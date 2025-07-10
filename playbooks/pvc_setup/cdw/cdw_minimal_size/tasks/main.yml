@@ -24,9 +24,10 @@
 - name: DEBUG - dwx_endpoint_api
   debug:
     msg: "{{ dwx_endpoint_api }}"
+  when: debug | default(false)
 
 
-- name: Push DBC minimal resourcces template
+- name: Push CDW minimal resources template
   uri:
     url: "{{ dwx_endpoint_api }}/resources/templates"
     method: PUT
@@ -77,12 +78,15 @@
 - name: DEBUG - hive_template_id
   debug:
     msg: "{{ hive_template_id }}"
+  when: debug | default(false)
 
 - name: DEBUG - impala_template_id
   debug:
     msg: "{{ impala_template_id }}"
+  when: debug | default(false)
 
 - name: DEBUG - viz_template_id
   debug:
     msg: "{{ viz_template_id }}"
+  when: debug | default(false)
 

@@ -42,3 +42,25 @@
   debug:
     msg: "{{ queue_creation }}"
   when: debug | default(false)
+
+
+- name: Setup resources on queue
+  uri:
+    url: "{{ pvc_api_call }}/compute/updateResourcePool"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body: "{{ lookup('template', 'update_queue.json') }}"
+    body_format: json
+    status_code: [200, 500]
+    return_content: yes
+    validate_certs: no
+  register: queue_update
+  ignore_errors: true
+
+- name: DEBUG - queue_update
+  debug:
+    msg: "{{ queue_update }}"
+  when: debug | default(false)

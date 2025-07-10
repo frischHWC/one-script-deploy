@@ -17,13 +17,5 @@
 # under the License.
 #
 ---
-- name: Git clone k8s usage resource
-  git:
-    repo: "https://github.com/frischHWC/k8s-resources-usage.git"
-    dest: "~/k8s-resources-usage/"
-    force: true
-
-- name: Make it executable
-  file:
-    path: ~/k8s-resources-usage/compute_k8s_resources.sh
-    mode: '0755'
+dependencies:
+  - role: common/get_cookie

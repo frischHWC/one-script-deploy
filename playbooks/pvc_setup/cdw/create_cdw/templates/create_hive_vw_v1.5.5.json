@@ -1,9 +1,16 @@
 {
     "computeName": "{{ warehouse.name }}",
     "warehouseId": "{{ dwx_dbc_id }}",
-    "template": "{{ warehouse.size | default(xsmall) }}",
-    "resourceTemplate": "{{ hive_template_id | default('hive-default') }}",
+    "tShirtSize": "{{ warehouse.size | default(xsmall) }}",
+    "resourcePool": "{{ warehouse.vw_queue | default('root.default') }}",
+    "enableSSO": true,
+    "imageVersion": "2025.0.19.1-74",
+    "hueImageVersion": "2025.0.19.1-74",
+    "resourceTemplate": "{{ hive_template_id | default('hive-low') }}",
     "enablePlatformJWTAuth": false,
+    "hiveserverHaMode": "{{ warehouse.hive_server_ha_mode | default('disabled') }}",
+    "EBSLLAPSpillGB": null,
+    "logQueries": {{ warehouse.log_queries | default('false') }},
     "autoScaling": {
       "minClusters": {{ warehouse.min_nodes | default('1') }},
       "maxClusters": {{ warehouse.max_nodes | default('5') }},
@@ -14,17 +21,15 @@
       "maxNodesPerQuery": {{ warehouse.max_nodes_per_query | default('4') }},
       "nodeCount": {{ warehouse.node_count | default('3') }},
       "enableQueryIsolation": {{ warehouse.enable_query_isolation | default('false') }},
-      "autoScaleType": "{{ warehouse.auto_scale_type | default('Wait Time') }}"
+      "autoScaleType": "{{ warehouse.auto_scale_type | default('Wait Time') }}",
+      "EBSLLAPCache": false
     },
     "queryIsolation": {
       "maxQueries": {{ warehouse.query_isolation_max_queries | default('0') }},
       "maxNodesPerQuery": {{ warehouse.query_isolation_max_nodes_per_query | default('0') }}
     },
-    "config": {
-      "ldapGroups": [
-        "{{ warehouse.allowed_group | default('') }}"
-      ],
-      "enableSSO": true
-    },
+    "userGroups": [
+       "{{ warehouse.allowed_group | default('') }}"
+    ],
     "tags": [],
 }

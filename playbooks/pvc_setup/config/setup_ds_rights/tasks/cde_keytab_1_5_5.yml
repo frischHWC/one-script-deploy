@@ -1,0 +1,280 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+
+- name: List Environments and get its crn
+  uri:
+    url: "{{ env_endpoint_api }}/listEnvironments"
+    method: POST
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{\"pageSize\":500}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: env_details
+
+- set_fact:
+    env_crn: "{{ env_details.json | community.general.json_query(query) }}"
+  vars:
+    query: "environments[?environmentName == '{{ vc.env_name }}' ].crn | [0]"
+
+- name: DEBUG - env_crn
+  debug:
+    msg: "{{ env_crn }}"
+  when: debug | default(false)
+
+- name: Get CDE Services
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_clusters
+
+- set_fact:
+    cde_service_id: "{{ cde_clusters.json | community.general.json_query(query) }}"
+  vars:
+    query: "[?name == '{{ vc.cde_service_name }}' && status != 'ClusterDeletionCompleted' ].id | [0]"
+
+- name: DEBUG - cde_service_id
+  debug:
+    msg: "{{ cde_service_id }}"
+  when: debug | default(false)
+
+- name: Get CDE VCs
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_vcs
+
+- set_fact:
+    cde_vc_id: "{{ cde_vcs.json | community.general.json_query(query_id) }}"
+  vars:
+    query_id: "[?name == '{{ vc.name }}' ].id | [0]"
+  when: debug | default(false)
+
+- name: DEBUG - cde_vc_id
+  debug:
+    msg: "{{ cde_vc_id }}"
+  when: debug | default(false)
+
+
+- name: Get CDE VC Details
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster/{{ cde_service_id }}/instance/{{ cde_vc_id }}"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_vc_details
+
+### Post pvc-1.5.5, rights are set at Service and VC level
+
+
+
+
+### Post 1.5.5, make call user-auth/api/v1/kerberos 
+
+- name: Get CDE Services
+  uri:
+    url: "{{ dex_endpoint_api }}/cluster"
+    method: GET
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: cde_clusters
+  when: pvc_version is version('1.5.5','>=')
+
+- set_fact:
+    cde_service_hostname: "{{ cde_clusters.json | community.general.json_query(query) }}"
+  vars:
+    query: "[?name == '{{ vc.cde_service_name }}' && status != 'ClusterDeletionCompleted' ].clusterInfo.BaseDomain | [0]"
+  when: pvc_version is version('1.5.5','>=')
+
+- name: DEBUG - cde_service_hostname
+  debug:
+    msg: "{{ cde_service_hostname }}"
+  when: debug | default(false) and pvc_version is version('1.5.5','>=')
+
+- name: Slurp keytab file
+  slurp:
+    src: "{{ user.keytab }}"
+  register: slurped_keytab
+  when: pvc_version is version('1.5.5','>=')
+
+- name: Decode keytab file 
+  set_fact:
+    keytab: "{{ slurped_keytab.content }}"
+  when: pvc_version is version('1.5.5','>=')
+
+
+# Get Cookie for user 
+
+# Get LDAP Provider for request
+- name: Get LDAP Provider
+  uri:
+    url: "{{ cdp_endpoint_url }}/api/v1/iam/describeLdapProvider"
+    method: POST
+    status_code: [200]
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{\"ldapProviderName\":\"cm-ldap\"}"
+    return_content: yes
+    validate_certs: no
+  register: ldap_provider
+  when: pvc_version is version('1.5.5','>=')
+
+- set_fact:
+    ldap_provider_id: "{{ ldap_provider.json | community.general.json_query(query_id) }}"
+  vars:
+    query_id: "ldapProvider.identityProviderConnectorId"
+  when: pvc_version is version('1.5.5','>=')
+
+- name: DEBUG - ldap_provider_id
+  debug:
+    msg: "{{ ldap_provider_id }}"
+  when: debug | default(false) and pvc_version is version('1.5.5','>=')
+
+
+# Get Account id
+- name: List Users and get its ID
+  uri:
+    url: "{{ cdp_endpoint_url }}/api/v1/iam/listUsers"
+    method: POST
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body_format: json
+    body: "{\"pageSize\":500}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: users
+  when: pvc_version is version('1.5.5','>=')
+
+- set_fact:
+    account_id: "{{ users.json | community.general.json_query(query) }}"
+  vars:
+    query: "users[?workloadUsername == '{{ user.name }}' ].userId | [0]"
+  when: pvc_version is version('1.5.5','>=')
+
+- name: DEBUG - account_id
+  debug:
+    msg: "{{ account_id }}"
+  when: debug | default(false) and pvc_version is version('1.5.5','>=')
+
+
+
+# Get Cookie
+- name: Get Authentication Cookie
+  uri:
+    url: "{{ cdp_endpoint_url }}/authenticate/callback/ldap?accountId={{ account_id }}&idpConnectorId={{ ldap_provider_id }}&loginRedirect={{ cdp_endpoint_url }}/commonconsole"
+    method: POST
+    body: "username={{ user.name }}&password={{ user.password }}"
+    status_code: [200, 302, 303]
+    return_content: yes
+    validate_certs: no
+    follow_redirects: no
+  register: pvc_call_for_authcookie
+  when: pvc_version is version('1.5.5','>=')
+
+- name: DEBUG - pvc_call_for_authcookie
+  debug:
+    msg: "{{ pvc_call_for_authcookie }}"
+  when: debug | default(false) and pvc_version is version('1.5.5','>=')
+
+- set_fact:
+    auth_cookie: "{{ pvc_call_for_authcookie.set_cookie.split('cdp-pvt-session-token=')[1].split(';')[0] }};"
+
+- name: DEBUG - auth_cookie
+  debug:
+    msg: "{{ auth_cookie }}"
+  when: debug | default(false) and pvc_version is version('1.5.5','>=')
+
+- set_fact:
+    all_cookies: "{{ first_cookie }}cdp-pvt-session-token={{ auth_cookie }}"
+  when: pvc_version is version('1.5.5','>=')
+
+- name: DEBUG - all_cookies
+  debug:
+    msg: "{{ all_cookies }}"
+  when: debug | default(false) and pvc_version is version('1.5.5','>=')
+
+
+- name: Push keytab
+  uri:
+    url: "{{ cde_service_hostname }}/user-auth/api/v1/kerberos "
+    method: POST
+    headers:
+      Content-Type: multipart/form-data; boundary=----geckoformboundary7da202664fa94f7b3983ee7a10912094
+      Cookie: "{{ all_cookies }}"
+    body: "{{ lookup('template', 'kerberos') }}"
+    status_code: 200
+    return_content: yes
+    validate_certs: no
+  register: answer_kerberos
+  when: pvc_version is version('1.5.5','>=')
+
+- name: DEBUG - answer_kerberos
+  debug:
+    msg: "{{ answer_kerberos }}"
+  when: debug | default(false) and pvc_version is version('1.5.5','>=')
+
+# Request is: ------geckoformboundary7da202664fa94f7b3983ee7a10912094
+# Content-Disposition: form-data; name="principal"
+
+# francois@FRISCH.COM
+# ------geckoformboundary7da202664fa94f7b3983ee7a10912094
+# Content-Disposition: form-data; name="file"; filename="superman.keytab"
+# Content-Type: application/octet-stream
+
+#
+#
+#
+#
+# ------geckoformboundary7da202664fa94f7b3983ee7a10912094--
+

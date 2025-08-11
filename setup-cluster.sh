@@ -58,14 +58,14 @@ export ENCRYPTION_ACTIVATED_NO_KTS="true"
 
 # Versions
 export JDK_VERSION="17"
-export CM_VERSION="7.13.1.0"
-export CDH_VERSION="7.3.1.0"
+export CM_VERSION="7.13.1.402"
+export CDH_VERSION="7.3.1.400"
 export CSA_VERSION="1.14.0.0"
 export CFM_VERSION="2.2.9.0"
 export CEM_VERSION="2.2.0.0"
 export SPARK3_VERSION="3.3.7191000.3"
 export OBSERVABILITY_VERSION="3.5.3-h1"
-export PVC_VERSION="1.5.4-h15"
+export PVC_VERSION="1.5.5-h2"
 export DATAVIZ_VERSION="8.0.3"
 
 export AMBARI_VERSION="2.7.5.0"
@@ -1151,10 +1151,10 @@ then
     else    
         export CM_REPO="https://archive.cloudera.com/p/cm${CM_VERSION:0:1}/${CM_VERSION}/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}"
         
-        # Starting from CM 7.13, URLs changed to cm-public
-        if [ "${CM_VERSION:0:1}" = "7" ] && [ "${CM_VERSION:2:4}" = "13" ]
+        # Starting from CM 7+ there are patch URLs
+        if [ "${CM_VERSION}" = "7.13.1.402" ]
         then
-            export CM_REPO="https://archive.cloudera.com/p/cm-public/${CM_VERSION}/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}"
+            export CM_REPO="https://archive.cloudera.com/p/cm7/patch/${CM_VERSION}/${OS_BY_CLDR}${OS_VERSION:0:1}/${OS_INSTALLER_BY_CLDR}"
         fi
     fi
 fi

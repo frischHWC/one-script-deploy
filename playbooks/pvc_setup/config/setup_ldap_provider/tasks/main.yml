@@ -51,6 +51,21 @@
   set_fact:
     ipa_crt: "{{ slurped_ca_crt.content | b64decode }}"
 
+
+- name: ldap.json file 
+  set_fact:
+    ldap_json_file: "ldap.json"
+
+- name: ldap.json file 
+  set_fact:
+    ldap_json_file: "ldap-1_5_5_SP1.json"
+  when: pvc_version is version('1.5.5', '>')
+
+- name: DEBUG - ldap_json_file
+  debug:
+    msg: "{{ ldap_json_file }}"
+  when: debug | default(false)
+
 - name: Set LDAP provider
   uri:
     url: "{{ pvc_api_call }}/iam/createLdapProvider"
@@ -59,7 +74,7 @@
       Content-Type: application/json
       Accept: application/json
       Cookie: "{{ all_cookies }}"
-    body: "{{ lookup('template', 'ldap.json') }}"
+    body: "{{ lookup('template', '{{ ldap_json_file }}') }}"
     body_format: json
     status_code: [200, 400, 409]
     return_content: yes
@@ -81,7 +96,30 @@
       Content-Type: application/json
       Accept: application/json
       Cookie: "{{ all_cookies }}"
-    body: "{{ lookup('template', 'ldap.json') }}"
+    body: "{{ lookup('template', '{{ ldap_json_file }}') }}"
+    body_format: json
+    status_code: [200, 400, 409]
+    return_content: yes
+    validate_certs: no
+  register: ldap_provider_answer
+  ignore_errors: true
+
+- name: DEBUG - ldap_provider_answer
+  debug:
+    msg: "{{ ldap_provider_answer }}"
+  when: debug | default(false)
+
+
+# Starting from 1.5.5SP1, we need to set identity provider
+- name: Set LDAP provider
+  uri:
+    url: "{{ pvc_api_call }}/iam/setDefaultIdentityProvider"
+    method: POST
+    headers: 
+      Content-Type: application/json
+      Accept: application/json
+      Cookie: "{{ all_cookies }}"
+    body: "{\"nameOrCrn\":\"cm-ldap\"}"
     body_format: json
     status_code: [200, 400, 409]
     return_content: yes
